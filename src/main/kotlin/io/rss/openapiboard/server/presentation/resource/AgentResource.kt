@@ -2,6 +2,8 @@ package io.rss.openapiboard.server.presentation.resource
 
 import io.rss.openapiboard.server.services.AppRecordBusiness
 import io.rss.openapiboard.server.persistence.entities.AppRecord
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
 import javax.inject.Inject
@@ -10,6 +12,9 @@ import javax.ws.rs.core.MediaType
 
 /** Exposes endpoints to partner clients to feed the system */
 
+@Tag(name = "Agent resource",
+        description = """Resource that receives API definitions to be registered.
+            |Usually should be called from plugins or other tools.""")
 @Path("agent")
 class AgentResource {
 
@@ -19,6 +24,7 @@ class AgentResource {
     @GET
     fun test() = "Hello Ricardo"    // TODO remove
 
+    @Operation(description = "Feeds this application base. Accepts a multipart with data for an AppRegistry.")
     @PUT
     @Path("{namespace}/{name}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
