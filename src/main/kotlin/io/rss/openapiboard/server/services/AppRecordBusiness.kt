@@ -8,9 +8,10 @@ import org.springframework.util.Assert
 import javax.inject.Inject
 
 /**
+ * Service on business layer for AppRecord
  *
+ * @author ricardo saturnino
  */
-
 @Service
 class AppRecordBusiness {
 
@@ -21,16 +22,22 @@ class AppRecordBusiness {
     @Inject
     lateinit var repository: AppRecordRepository
 
-    fun createOrUpdate(appRecord: AppRecord) {
+    @Inject
+    lateinit var snapshotService: AppSnapshotService
+
+    fun createOrUpdate(appRecord: AppRecord): AppRecord {
         Assert.state(appRecord.name != null) {"Name must not be null"}
         Assert.state(appRecord.namespace != null) {"Namespace must not be null"}
         Assert.state(! appRecord.source.isNullOrBlank()) {"Api specification must have some value"}
         Assert.state(! appRecord.address.isNullOrBlank()) {"App address must have some value"}
+
         if (appRecord.source.isNullOrBlank()) {
             appRecord.source = DEFAULT_VERSION
         }
-        repository.save(appRecord)
-        // TODO feed history
+
+        return repository.save(appRecord).also {
+            snapshotService.feed(it)
+        }
     }
 
     fun listNamespaces(): List<String> = repository.findAllNamespace()

@@ -9,13 +9,13 @@ import javax.ws.rs.ext.Provider
  * */
 
 @Provider
-class IllegalStateExceptionMapper: ExceptionMapper<IllegalArgumentException> {
+class IllegalStateExceptionMapper: ExceptionMapper<IllegalStateException> {
 
-    override fun toResponse(exception: IllegalArgumentException): Response {
+    override fun toResponse(exception: IllegalStateException): Response {
         return Response.status(Response.Status.CONFLICT)
                 .entity(buildClientError(exception)).build()
     }
 
-    private fun buildClientError(ex: IllegalArgumentException): String =
+    private fun buildClientError(ex: IllegalStateException): String =
             "OPBOARD||00||${ex.message}"
 }

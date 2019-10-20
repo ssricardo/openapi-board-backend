@@ -1,7 +1,7 @@
 package io.rss.openapiboard.server.services.tmp
 
-import io.rss.openapiboard.server.persistence.dao.AppRecordRepository
 import io.rss.openapiboard.server.persistence.entities.AppRecord
+import io.rss.openapiboard.server.services.AppRecordBusiness
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import java.nio.file.Files
@@ -14,7 +14,7 @@ import javax.inject.Inject
 class TestDataLoadingService {
 
     @Inject
-    lateinit var repo: AppRecordRepository
+    lateinit var appService: AppRecordBusiness
 
     private companion object {
         const val PRODUCTION = "Production"
@@ -23,9 +23,11 @@ class TestDataLoadingService {
 
     @PostConstruct
     fun init() {
-        val petStoreSource =  Files.readAllLines(Paths.get("" +
+        val petStoreSource =  Files.newInputStream(Paths.get("" +
                 "D:\\dev\\git\\openapi-center\\openapi-board-server\\src\\test\\resources\\test-data\\petstore-expanded.yaml"))
-                .joinToString() // FIXME
+                .use {
+                    it.bufferedReader().readText()
+                } // FIXME
         val items = mutableListOf(AppRecord("Orders", PRODUCTION),
                 AppRecord("Orders", TEST),
                 AppRecord("Products", PRODUCTION),
@@ -48,7 +50,7 @@ class TestDataLoadingService {
             it.address = "http://localhost:808$ind/resource"
             it.source = petStoreSource
 
-            repo.save(it)
+            appService.createOrUpdate(it)
         }
 
         println("Loading completed")
