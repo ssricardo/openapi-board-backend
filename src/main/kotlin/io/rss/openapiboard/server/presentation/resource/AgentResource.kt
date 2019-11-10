@@ -21,8 +21,11 @@ class AgentResource {
     @Inject
     private lateinit var bService: AppRecordBusiness
 
+    @Operation(description = "Most basic endpoint, to test the connection")
     @GET
-    fun test() = "Hello Ricardo"    // TODO remove
+    @Path("ping")
+    @Produces(MediaType.WILDCARD)
+    fun test() = "Pong"
 
     @Operation(description = "Feeds this application base. Accepts a multipart with data for an AppRegistry.")
     @PUT

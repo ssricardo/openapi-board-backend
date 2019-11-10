@@ -8,7 +8,7 @@ import kotlin.IllegalArgumentException
 /**
  * Handles IllegalArgumentException
  *
- * IllegalArgument means that the request was not formatter as it should be
+ * IllegalArgument means that the request was not formatted as it should be
  */
 @Provider
 class IllegalArgumentException: ExceptionMapper<IllegalArgumentException> {

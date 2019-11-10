@@ -40,7 +40,7 @@ class AppRecordRepositoryTest {
 
     @Test
     internal fun `find all on namespace`() {
-        val res = tested.findNamesByNamespace("test")
+        val res = tested.findAppsByNamespace("test")
         assert(res.size == 2)
     }
 

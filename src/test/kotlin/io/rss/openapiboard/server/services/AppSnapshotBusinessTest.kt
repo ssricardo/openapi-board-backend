@@ -14,13 +14,13 @@ import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 import java.util.*
 
-internal class AppSnapshotServiceTest {
+internal class AppSnapshotBusinessTest {
 
     @Mock
     lateinit var repository: AppSnapshotRepository
 
     @InjectMocks
-    var tested = AppSnapshotService()
+    var tested = AppSnapshotBusiness()
 
     @BeforeEach
     internal fun setUp() {

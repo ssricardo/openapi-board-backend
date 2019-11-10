@@ -1,5 +1,6 @@
 package io.rss.openapiboard.server.persistence.dao
 
+import io.rss.openapiboard.server.persistence.AppVersionDto
 import io.rss.openapiboard.server.persistence.entities.AppRecord
 import io.rss.openapiboard.server.persistence.entities.AppRecordId
 import org.springframework.data.jpa.repository.JpaRepository
@@ -16,10 +17,10 @@ interface AppRecordRepository: JpaRepository<AppRecord, AppRecordId> {
     fun findAllNamespace(): List<String>
 
     @Query("""
-        SELECT a.name
+        SELECT NEW io.rss.openapiboard.server.persistence.AppVersionDto(a.name, a.version) 
         FROM AppRecord a
         WHERE a.namespace = ?1
     """)
-    fun findNamesByNamespace(namespace: String): List<String>
+    fun findAppsByNamespace(namespace: String): List<AppVersionDto>
 
 }

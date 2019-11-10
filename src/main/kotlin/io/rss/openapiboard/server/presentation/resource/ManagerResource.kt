@@ -1,10 +1,11 @@
 package io.rss.openapiboard.server.presentation.resource
 
+import io.rss.openapiboard.server.persistence.AppVersionDto
 import io.rss.openapiboard.server.persistence.entities.AppRecord
 import io.rss.openapiboard.server.persistence.entities.AppRecordId
 import io.rss.openapiboard.server.persistence.entities.AppSnapshotId
 import io.rss.openapiboard.server.services.AppRecordBusiness
-import io.rss.openapiboard.server.services.AppSnapshotService
+import io.rss.openapiboard.server.services.AppSnapshotBusiness
 import io.rss.openapiboard.server.services.to.AppComparison
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -28,7 +29,7 @@ class ManagerResource {
     private lateinit var bService: AppRecordBusiness
 
     @Inject
-    private lateinit var snapshotService: AppSnapshotService
+    private lateinit var snapshotService: AppSnapshotBusiness
 
     @Operation(description = "Retrieves the list of existing Namespaces")
     @GET
@@ -37,12 +38,14 @@ class ManagerResource {
         return bService.listNamespaces()
     }
 
+
+
     @Operation(description = "List Apps on the given namespace")
     @GET
     @Path("{namespace}")
-    fun getAppOnNamespace(@PathParam("namespace") nm: String?): List<String> {
-        nm?.let {
-            return bService.listNamesByNamespace(it)
+    fun getAppOnNamespace(@PathParam("namespace") nm: String?): List<AppVersionDto> {
+        nm?.let { it ->
+            return bService.listAppsByNamespace(it)
         } ?: throw IllegalStateException("Namespace is required to list apps per domain")
     }
 
@@ -61,7 +64,7 @@ class ManagerResource {
         return snapshotService.listVersionsByAppNamespace(app, nm)
     }
 
-    @Operation(description = "Temporary endpoint")
+    @Operation(description = "Temporary endpoint")   // TODO: remove
     @GET
     @Path("describe")
     @Produces("text/vnd.yaml")

@@ -14,7 +14,7 @@ import javax.inject.Inject
 /** Provides CRUD operations for AppSnapshop, making use of Async in some cases */
 
 @Service
-class AppSnapshotService {
+class AppSnapshotBusiness {
 
     @Inject
     lateinit var repository: AppSnapshotRepository

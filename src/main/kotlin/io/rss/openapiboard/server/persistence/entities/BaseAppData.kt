@@ -5,7 +5,7 @@ import javax.persistence.*
 
 /** Common mapping for AppRegistry and AppSnapshot */
 @MappedSuperclass
-open abstract class BaseAppData {
+abstract class BaseAppData {
 
     @Column(name="app_version", length = 26)
     open var version: String? = null
