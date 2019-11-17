@@ -1,5 +1,6 @@
 package io.rss.openapiboard.server.presentation.provider
 
+import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
 import javax.ws.rs.ext.Provider
@@ -13,9 +14,15 @@ class IllegalStateExceptionMapper: ExceptionMapper<IllegalStateException> {
 
     override fun toResponse(exception: IllegalStateException): Response {
         return Response.status(Response.Status.CONFLICT)
+                .type(MediaType.APPLICATION_JSON_TYPE)
                 .entity(buildClientError(exception)).build()
     }
 
-    private fun buildClientError(ex: IllegalStateException): String =
-            "OPBOARD||00||${ex.message}"
+    data class AppValidationError(val cause: String, val code: Int = 0) {
+        val rApp = "OPBOARD"
+    }
+
+    private fun buildClientError(ex: IllegalStateException) =
+            AppValidationError(ex.message
+                    ?: throw IllegalArgumentException("Validation error MUST have a cause description"))
 }

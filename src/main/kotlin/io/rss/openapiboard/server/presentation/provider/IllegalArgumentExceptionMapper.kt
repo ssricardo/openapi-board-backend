@@ -6,12 +6,12 @@ import javax.ws.rs.ext.Provider
 import kotlin.IllegalArgumentException
 
 /**
- * Handles IllegalArgumentException
+ * Handles IllegalArgumentExceptionMapper
  *
  * IllegalArgument means that the request was not formatted as it should be
  */
 @Provider
-class IllegalArgumentException: ExceptionMapper<IllegalArgumentException> {
+class IllegalArgumentExceptionMapper: ExceptionMapper<IllegalArgumentException> {
 
     override fun toResponse(exception: IllegalArgumentException): Response {
         return Response.status(Response.Status.BAD_REQUEST.statusCode,
