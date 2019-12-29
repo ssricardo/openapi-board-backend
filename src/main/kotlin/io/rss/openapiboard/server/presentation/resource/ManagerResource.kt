@@ -25,6 +25,10 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 class ManagerResource {
 
+    private companion object {
+        const val SLASH_REPL = "[[SLASH]]"
+    }
+
     @Inject
     private lateinit var bService: AppRecordBusiness
 
@@ -38,14 +42,12 @@ class ManagerResource {
         return bService.listNamespaces()
     }
 
-
-
     @Operation(description = "List Apps on the given namespace")
     @GET
     @Path("{namespace}")
     fun getAppOnNamespace(@PathParam("namespace") nm: String?): List<AppVersionDto> {
         nm?.let { it ->
-            return bService.listAppsByNamespace(it)
+            return bService.listAppsByNamespace(decodeUrlPart(it))
         } ?: throw IllegalStateException("Namespace is required to list apps per domain")
     }
 
@@ -53,7 +55,8 @@ class ManagerResource {
     @GET
     @Path("{namespace}/{app}")
     fun loadAppRecord(@PathParam("namespace") nm: String, @PathParam("app") app: String): AppRecord? {
-        return bService.loadAppRecord(AppRecordId(app, nm))
+        return bService.loadAppRecord(AppRecordId(
+                decodeUrlPart(app), decodeUrlPart(nm)))
     }
 
     @Operation(description = "Retrieves existing versions of apps snapshots")
@@ -61,7 +64,8 @@ class ManagerResource {
     @Path("versions/{namespace}/{app}")
     fun getAppVersionList(@PathParam("namespace") nm: String,
                           @PathParam("app") app: String): List<String> {
-        return snapshotService.listVersionsByAppNamespace(app, nm)
+        return snapshotService.listVersionsByAppNamespace(
+                decodeUrlPart(app), decodeUrlPart(nm))
     }
 
     @Operation(description = "Temporary endpoint")   // TODO: remove
@@ -99,4 +103,6 @@ class ManagerResource {
                         compVersion ?: throw IllegalArgumentException("Parameter required: c2ver"))
         )
     }
+
+    private fun decodeUrlPart(txt: String) = txt.replace(SLASH_REPL, "/")
 }
