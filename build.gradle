@@ -78,7 +78,7 @@ docker {
 	springBootApplication {
 		baseImage = 'openjdk:8-alpine'
 		ports = [8080]
-//		images = ['awesome-spring-boot:1.115', 'awesome-spring-boot:latest']
+		images = ['oaboard-server:oab', 'oaboard-server:latest']
 		jvmArgs = []
 	}
 }

@@ -23,36 +23,42 @@ class TestDataLoadingService {
 
     @PostConstruct
     fun init() {
-        val petStoreSource =  Files.newInputStream(Paths.get("" +
-                "D:\\dev\\git\\openapi-center\\openapi-board-server\\src\\test\\resources\\test-data\\petstore-expanded.yaml"))
-                .use {
-                    it.bufferedReader().readText()
-                } // FIXME
-        val items = mutableListOf(AppRecord("Orders", PRODUCTION),
-                AppRecord("Orders", TEST),
-                AppRecord("Products", PRODUCTION),
-                AppRecord("Products", TEST),
-                AppRecord("People", PRODUCTION),
-                AppRecord("People", TEST),
-                AppRecord("Disks", PRODUCTION),
-                AppRecord("Songs", PRODUCTION)
-                )
+        try {
+            val petStoreSource =  Files.newInputStream(Paths.get("" +
+                    "D:\\dev\\git\\openapi-center\\openapi-board-server\\src\\test\\resources\\test-data\\petstore-expanded.yaml"))
+                    .use {
+                        it.bufferedReader().readText()
+                    } // FIXME
+            val items = mutableListOf(AppRecord("Orders", PRODUCTION),
+                    AppRecord("Orders", TEST),
+                    AppRecord("Products", PRODUCTION),
+                    AppRecord("Products", TEST),
+                    AppRecord("People", PRODUCTION),
+                    AppRecord("People", TEST),
+                    AppRecord("Disks", PRODUCTION),
+                    AppRecord("Songs", PRODUCTION)
+                    )
 
-        for (i in 1 .. 5) {
-            val src  = items[i]
-            for (j in 1..3) {
-                items.add(AppRecord(src.name, "feature/${i}_$j"))
+            for (i in 1 .. 5) {
+                val src  = items[i]
+                for (j in 1..3) {
+                    items.add(AppRecord(src.name, "feature/${i}_$j"))
+                }
             }
+
+            items.forEachIndexed { ind, it ->
+                it.version =  if (it.namespace!!.startsWith("feature")) "1.1-SNAPSHOT" else "1.0"
+                it.address = "http://localhost:808$ind/resource"
+                it.source = petStoreSource
+
+                appService.createOrUpdate(it)
+            }
+
+            println("Loading completed")
+        } catch (e: Exception) {
+            println("""Error on loading fake data. Ignoring...
+                |${e.message}
+            """.trimMargin())
         }
-
-        items.forEachIndexed { ind, it ->
-            it.version =  if (it.namespace!!.startsWith("feature")) "1.1-SNAPSHOT" else "1.0"
-            it.address = "http://localhost:808$ind/resource"
-            it.source = petStoreSource
-
-            appService.createOrUpdate(it)
-        }
-
-        println("Loading completed")
     }
 }
