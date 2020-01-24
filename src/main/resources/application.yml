@@ -4,8 +4,19 @@ spring:
 #      - test
 
   datasource:
-    url: jdbc:h2:~/openapi-board
+#    url: jdbc:h2:~/openapi-board
+    driver-class-name: ${db_classname}
+    url: jdbc:${db_url}
+    username: ${db_username}
+    password: ${db_password}
 
+  jpa:
+    hibernate:
+      ddl-auto: create
+
+    properties:
+      hibernate:
+        dialect: ${hibernate_dialect}
   h2:
     console:
       enabled: true

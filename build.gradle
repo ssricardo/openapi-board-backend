@@ -25,6 +25,8 @@ repositories {
 
 configurations {
 	provided
+	devClasspath
+	prodClasspath
 }
 
 sourceSets {
@@ -45,7 +47,8 @@ dependencies {
 
 	provided("io.swagger.core.v3:swagger-annotations:2.0.0")
 
-	runtimeOnly("com.h2database:h2")
+	devClasspath("com.h2database:h2")
+	prodClasspath group: 'mysql', name: 'mysql-connector-java', version: '8.0.18'
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(module: "junit")
@@ -86,3 +89,41 @@ docker {
 group = "io.rss"
 version = "0.0.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
+
+
+// ------------------------------------ Env settings ----------------------------------
+
+task bootRunTest(type: org.springframework.boot.gradle.tasks.run.BootRun, dependsOn: 'build') {
+	group = 'Application'
+
+	doFirst() {
+		systemProperty 'spring.profiles.active', 'test'
+		systemProperty 'db_classname', 'org.h2.Driver'
+		systemProperty 'db_url', 'h2:~/openapi-board'
+		systemProperty 'hibernate_dialect', 'org.hibernate.dialect.H2Dialect'
+		systemProperty 'db_username', 'sa'
+		systemProperty 'db_password', ''
+
+		main = bootJar.mainClassName
+		sourceSets.main.runtimeClasspath += configurations.devClasspath
+		classpath = sourceSets.main.runtimeClasspath
+	}
+}
+
+task buildProduction(type: org.springframework.boot.gradle.tasks.run.BootRun, dependsOn: 'build') {
+	group = 'Application'
+
+	doFirst() {
+		main = bootJar.mainClassName
+		sourceSets.main.runtimeClasspath += configurations.prodClasspath
+		classpath = sourceSets.main.runtimeClasspath
+
+		systemProperty 'spring.profiles.active', 'test'
+		systemProperty 'db_classname', 'com.mysql.jdbc.Driver'
+		systemProperty 'db_url', 'mysql://localhost:3306/oab'
+		systemProperty 'hibernate_dialect', 'org.hibernate.dialect.MySQL5InnoDBDialect'
+		systemProperty 'db_username', 'oab'
+		systemProperty 'db_password', '123456'
+	}
+}
+

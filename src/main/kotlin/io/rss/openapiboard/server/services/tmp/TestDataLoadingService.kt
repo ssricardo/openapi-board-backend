@@ -8,6 +8,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import javax.annotation.PostConstruct
 import javax.inject.Inject
+import kotlin.random.Random
 
 @Profile("test")
 @Service
@@ -15,6 +16,8 @@ class TestDataLoadingService {
 
     @Inject
     lateinit var appService: AppRecordBusiness
+
+    val randomizer = Random(30)
 
     private companion object {
         const val PRODUCTION = "Production"
@@ -24,8 +27,10 @@ class TestDataLoadingService {
     @PostConstruct
     fun init() {
         try {
-            val petStoreSource =  Files.newInputStream(Paths.get("" +
-                    "D:\\dev\\git\\openapi-center\\openapi-board-server\\src\\test\\resources\\test-data\\petstore-expanded.yaml"))
+            print("========================== Trying to create test data ============================")
+
+            val petStoreSource =  Files.newInputStream(Paths.get(
+                    "/home/ricardo/temp/oaboard-server/petstore-expanded.yaml"))
                     .use {
                         it.bufferedReader().readText()
                     } // FIXME
@@ -39,7 +44,7 @@ class TestDataLoadingService {
                     AppRecord("Songs", PRODUCTION)
                     )
 
-            for (i in 1 .. 5) {
+            for (i in 1 .. 10) {
                 val src  = items[i]
                 for (j in 1..3) {
                     items.add(AppRecord(src.name, "feature/${i}_$j"))
@@ -49,7 +54,7 @@ class TestDataLoadingService {
             items.forEachIndexed { ind, it ->
                 it.version =  if (it.namespace!!.startsWith("feature")) "1.1-SNAPSHOT" else "1.0"
                 it.address = "http://localhost:808$ind/resource"
-                it.source = petStoreSource
+                it.source = getRandomChangedSource(petStoreSource)
 
                 appService.createOrUpdate(it)
             }
@@ -60,5 +65,22 @@ class TestDataLoadingService {
                 |${e.message}
             """.trimMargin())
         }
+    }
+
+    private fun getRandomChangedSource(petStoreSource: String): String {
+        var result = petStoreSource
+        if (randomizer.nextBoolean()) {
+            result = result.replace("200", "300")
+        }
+        if (randomizer.nextBoolean()) {
+            result = result.replace("name", "alias")
+        }
+        if (randomizer.nextBoolean()) {
+            result = result.replace("NewPet", "Dino")
+        }
+        if (randomizer.nextBoolean()) {
+            result = result.replace("/pets", "/books")
+        }
+        return result
     }
 }
