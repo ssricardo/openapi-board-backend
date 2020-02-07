@@ -33,7 +33,6 @@ sourceSets {
 	main { compileClasspath += configurations.provided }
 }
 
-
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-jersey")
@@ -83,26 +82,93 @@ docker {
 		ports = [8080]
 		images = ['oaboard-server:oab', 'oaboard-server:latest']
 		jvmArgs = []
+
 	}
+
 }
 
 group = "io.rss"
 version = "0.0.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
-
-
 // ------------------------------------ Env settings ----------------------------------
+
+def h2DB = [
+		db_classname: 'org.h2.Driver',
+		db_url: 'h2:~/openapi-board',
+		hibernate_dialect: 'org.hibernate.dialect.H2Dialect',
+		db_username: 'sa',
+		db_password: "''"
+]
+
+def mySqlDB = [
+		db_classname: 'com.mysql.jdbc.Driver',
+		hibernate_dialect: 'org.hibernate.dialect.MySQL5InnoDBDialect',
+		db_url: 'mysql://localhost:3306/oab',
+		db_username: 'oab',
+		db_password: '123456'
+]
+
+// ------------------------------------ Env-dependent tasks ----------------------------------
+
+// With MySQL
+task buildProduction(group: 'docker') {
+
+	doFirst {
+		sourceSets {
+			main { runtimeClasspath += configurations.prodClasspath }
+		}
+
+		dockerSyncBuildContext {
+			into ('libs') {
+				from configurations.prodClasspath
+			}
+		}
+
+		dockerCreateDockerfile {
+			mySqlDB.each {e ->
+				environmentVariable e.key, e.value
+			}
+		}
+	}
+	dependsOn('clean')
+	finalizedBy('build', 'dockerCreateDockerfile')
+}
+
+// With H2
+task buildTest(group: 'docker') {
+	doFirst {
+		sourceSets {
+			main { runtimeClasspath += configurations.devClasspath }
+		}
+
+		dockerSyncBuildContext {
+			into ('libs') {
+				from configurations.devClasspath
+			}
+		}
+
+		dockerCreateDockerfile {
+			environmentVariable 'spring.profiles.active', 'test'
+			h2DB.each {e ->
+				environmentVariable e.key, e.value
+			}
+		}
+	}
+	dependsOn('clean')
+	finalizedBy('build', 'dockerCreateDockerfile')
+}
+
+// ------------------------------------ Local run tasks ----------------------------------
 
 task bootRunTest(type: org.springframework.boot.gradle.tasks.run.BootRun, dependsOn: 'build') {
 	group = 'Application'
 
 	doFirst() {
 		systemProperty 'spring.profiles.active', 'test'
-		systemProperty 'db_classname', 'org.h2.Driver'
-		systemProperty 'db_url', 'h2:~/openapi-board'
-		systemProperty 'hibernate_dialect', 'org.hibernate.dialect.H2Dialect'
-		systemProperty 'db_username', 'sa'
-		systemProperty 'db_password', ''
+
+		h2DB.each {e ->
+			systemProperty e.key, e.value
+		}
 
 		main = bootJar.mainClassName
 		sourceSets.main.runtimeClasspath += configurations.devClasspath
@@ -110,7 +176,7 @@ task bootRunTest(type: org.springframework.boot.gradle.tasks.run.BootRun, depend
 	}
 }
 
-task buildProduction(type: org.springframework.boot.gradle.tasks.run.BootRun, dependsOn: 'build') {
+task bootRunMySQL(type: org.springframework.boot.gradle.tasks.run.BootRun, dependsOn: 'build') {
 	group = 'Application'
 
 	doFirst() {
@@ -119,11 +185,9 @@ task buildProduction(type: org.springframework.boot.gradle.tasks.run.BootRun, de
 		classpath = sourceSets.main.runtimeClasspath
 
 		systemProperty 'spring.profiles.active', 'test'
-		systemProperty 'db_classname', 'com.mysql.jdbc.Driver'
-		systemProperty 'db_url', 'mysql://localhost:3306/oab'
-		systemProperty 'hibernate_dialect', 'org.hibernate.dialect.MySQL5InnoDBDialect'
-		systemProperty 'db_username', 'oab'
-		systemProperty 'db_password', '123456'
+		mySqlDB.each {e ->
+			systemProperty e.key, e.value
+		}
 	}
 }
 

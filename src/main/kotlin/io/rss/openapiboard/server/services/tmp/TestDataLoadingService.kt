@@ -30,7 +30,7 @@ class TestDataLoadingService {
             print("========================== Trying to create test data ============================")
 
             val petStoreSource =  Files.newInputStream(Paths.get(
-                    "/home/ricardo/temp/oaboard-server/petstore-expanded.yaml"))
+                    "/home/ricardo/projects/ricardo/openapi-board/openapi-board/samples/petstore-expanded.yaml"))
                     .use {
                         it.bufferedReader().readText()
                     } // FIXME
