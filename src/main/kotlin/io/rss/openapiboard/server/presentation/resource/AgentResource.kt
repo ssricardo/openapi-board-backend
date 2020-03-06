@@ -9,6 +9,7 @@ import java.io.InputStream
 import javax.inject.Inject
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
 /** Exposes endpoints to partner clients to feed the system */
 
@@ -30,16 +31,18 @@ class AgentResource {
     @Operation(description = "Feeds this application base. Accepts a multipart with data for an AppRegistry.")
     @PUT
     @Path("{namespace}/{name}")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun sendAppData(@PathParam("namespace") nm: String, @PathParam("name") name: String,
                     @FormDataParam("file") apiSpec: InputStream,
-                    @FormParam("version") versionParam: String,
-                    @FormParam("url") url: String) {
+                    @FormDataParam("version") versionParam: String,
+                    @FormDataParam("url") url: String): Response {
 
         bService.createOrUpdate(AppRecord(name, nm).apply {
             version = versionParam
             address = url
             source = String(apiSpec.readBytes())
         })
+
+        return Response.ok().build()
     }
 }
