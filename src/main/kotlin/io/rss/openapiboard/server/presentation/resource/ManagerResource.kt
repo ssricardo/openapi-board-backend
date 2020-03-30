@@ -74,7 +74,7 @@ class ManagerResource {
     @Produces("text/vnd.yaml")
     fun getSelfAppRecord():String? {
         Files.newInputStream(
-            Paths.get("D:\\dev\\git\\openapi-center\\openapi-board-server\\build\\swagger\\openapi.yaml"))
+            Paths.get("D:\\dev\\git\\openapi-center\\openapi-board-server\\build\\swagger\\openapi.yaml"))  // FIXME
             .use {
                 return it.bufferedReader()
                     .readText()
@@ -85,7 +85,7 @@ class ManagerResource {
     @POST
     @Path("compare")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-        fun createComparison(@Parameter(description = "Name of 1st app") @FormParam("srcName") srcName: String?,
+    fun createComparison(@Parameter(description = "Name of 1st app") @FormParam("srcName") srcName: String?,
                          @Parameter(description = "Namespace of 1st app") @FormParam("srcNs") srcNs: String?,
                          @Parameter(description = "Version of 1st app") @FormParam("srcVersion") srcVersion: String?,
                          @Parameter(description = "Name of 2nd app")  @FormParam("compareName") compName: String?,

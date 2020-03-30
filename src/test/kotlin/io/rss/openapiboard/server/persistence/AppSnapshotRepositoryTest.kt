@@ -4,6 +4,7 @@ import io.rss.openapiboard.server.persistence.dao.AppSnapshotRepository
 import io.rss.openapiboard.server.persistence.entities.AppRecordId
 import io.rss.openapiboard.server.persistence.entities.AppSnapshot
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
@@ -13,6 +14,7 @@ import javax.persistence.EntityManager
 
 @ExtendWith(SpringExtension::class)
 @DataJpaTest
+@Tag("db")
 class AppSnapshotRepositoryTest {
 
     @Inject

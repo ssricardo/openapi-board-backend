@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 
 @Tag(name = "Health resource", description = "Simple basic resource to use for health check")
 @Path("test")
-class BasicResource {
+class TestResource {
 
     @GET
     fun hello(): String {

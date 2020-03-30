@@ -7,9 +7,6 @@ import javax.persistence.*
 @MappedSuperclass
 abstract class BaseAppData {
 
-    @Column(name="app_version", length = 26)
-    open var version: String? = null
-
     @Column(name="api_source")
     @Lob
     var source: String? = null

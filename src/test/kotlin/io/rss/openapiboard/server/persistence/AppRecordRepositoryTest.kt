@@ -6,6 +6,7 @@ import io.rss.openapiboard.server.persistence.entities.AppRecordId
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
@@ -15,6 +16,7 @@ import javax.persistence.EntityManager
 
 @ExtendWith(SpringExtension::class)
 @DataJpaTest
+@Tag("db")
 class AppRecordRepositoryTest {
 
     @Inject

@@ -7,13 +7,20 @@ import javax.persistence.*
 @Table(name = "app_record")
 @Entity
 @IdClass(AppRecordId::class)
-data class AppRecord (
+data class AppRecord(
 
         @Id
         var name: String? = null,
 
         @Id
-        var namespace: String? = null): BaseAppData()
+        var namespace: String? = null) : BaseAppData() {
+
+        @Column(name = "app_version", length = 30)
+        var version: String? = null
+
+        @Column(name = "app_path", length = 200)
+        var path: String? = null
+}
 
 @Embeddable
 data class AppRecordId (

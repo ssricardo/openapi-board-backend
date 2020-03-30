@@ -21,6 +21,9 @@ internal class AppRecordBusinessTest {
     @Mock
     lateinit var snapshotService: AppSnapshotBusiness
 
+    @Mock
+    lateinit var sideOperationsProcessor: SideOperationsProcessor
+
     @InjectMocks
     var tested = AppRecordBusiness()
 

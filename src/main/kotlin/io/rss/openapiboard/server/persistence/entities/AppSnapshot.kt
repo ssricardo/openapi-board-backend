@@ -21,7 +21,7 @@ data class AppSnapshot (
 
         @Id
         @Column(name="version_number", length = 26)
-        override var version: String? = null
+        var version: String? = null
 
         ): BaseAppData()
 
