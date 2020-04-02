@@ -10,11 +10,16 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.Mockito.mock
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.stereotype.Component
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.persistence.EntityManager
+import javax.validation.Validator
 
 @ExtendWith(SpringExtension::class)
 @DataJpaTest
@@ -26,6 +31,8 @@ class RequestMemoryRepositoryTest {
 
     @Inject
     lateinit var em: EntityManager
+
+    var operationId: Int? = null
 
     @BeforeEach
     internal fun setUp() {
@@ -40,14 +47,17 @@ class RequestMemoryRepositoryTest {
             address = "http://server"
             source = fileContent
         })
-        em.persist(AppOperation().apply {
+        val ope = AppOperation().apply {
             appRecord = app
             path = "/books"
-        })
+        }
+        em.persist(ope)
+        em.flush()
+        operationId = ope.id
     }
 
     @Test
-    internal fun persistRequest() {
+    fun persistRequest() {
         val request = RequestMemory().apply {
             body ="""
                 {
@@ -57,8 +67,9 @@ class RequestMemoryRepositoryTest {
                 }
             """.trimIndent()
             title = "My test Request"
-            operation = em.getReference(AppOperation::class.java, 1)
+            operation = em.getReference(AppOperation::class.java, operationId)
             visibility = RequestVisibility.PUBLIC
+            contentType = "application/json"
         }
         request.headers.add(HeadersMemory().apply {
             name = "contentType"
@@ -71,12 +82,19 @@ class RequestMemoryRepositoryTest {
 
     @Test
     internal fun removeHeaderQuery() {
-        tested.clearUpHeaders(1)
-        // just checks query syntax pl
+        tested.clearUpHeaders(1) // just checks query syntax
     }
 
     @Test
     internal fun deleteRequest() {
         tested.deleteOperationRequest(1, 1L)
+    }
+
+    @Test
+    fun findByAppNamespace() {
+        tested.findByAppNamespace(AppRecord().apply {
+            name = "TestApp"
+            namespace = "Production"
+        })
     }
 }

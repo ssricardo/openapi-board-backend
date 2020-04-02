@@ -34,7 +34,7 @@ internal class AppRecordBusinessTest {
 
     @Test
     @DisplayName("must not save when missing fields")
-    internal fun saveOrUpdateMissingData() {
+    fun saveOrUpdateMissingData() {
         assertAll (
             {
                 assertThrows(BoardApplicationException::class.java) { tested.createOrUpdate(AppRecord()) }
@@ -47,17 +47,17 @@ internal class AppRecordBusinessTest {
     }
 
     @Test
-    internal fun saveOK() {
+    fun saveOK() {
         val app = AppRecord("test", "local").apply {
             version = "1.0"
             source = "{}"
             address = "http://google.com"
         }
-        `when`(repository.save(app)).thenReturn(app)
+        `when`(repository.saveAndFlush(app)).thenReturn(app)
 
         tested.createOrUpdate(app)
 
-        verify(repository, times(1)).save(app)
+        verify(repository, times(1)).saveAndFlush(app)
         verify(snapshotService, times(1)).feed(app)
     }
 }

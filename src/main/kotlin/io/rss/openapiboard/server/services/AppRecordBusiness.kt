@@ -58,7 +58,11 @@ class AppRecordBusiness {
 
 
     /** Finds the AppRecord related to given parameter and loads it with field "source" */
-    fun loadAppRecord(id: AppRecordId): AppRecord? =
-        repository.findById(id).orElse(null)
+    fun loadAppRecord(id: AppRecordId): AppRecord? {
+        return repository.findById(id)
+//                .map { }      // TODO: check detach
+                .map(sideOperationsProcessor::enrichAppRecordSource)
+                .orElse(null)
+    }
 
 }

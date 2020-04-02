@@ -1,5 +1,6 @@
 package io.rss.openapiboard.server.persistence.dao
 
+import io.rss.openapiboard.server.persistence.entities.AppRecord
 import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
@@ -17,4 +18,14 @@ interface RequestMemoryRepository: JpaRepository<RequestMemory, Long> {
     @Modifying
     @Query("DELETE FROM RequestMemory rm WHERE rm.id = :requestId AND rm.operation.id = :operationId")
     fun deleteOperationRequest(@Param("operationId") operationId: Int, @Param("requestId") requestId: Long)
+
+    @Query("""
+        SELECT r 
+        FROM RequestMemory r
+            JOIN FETCH r.headers h
+            JOIN r.operation.appRecord ap 
+        WHERE
+            ap = :app 
+    """)
+    fun findByAppNamespace(app: AppRecord): List<RequestMemory>
 }

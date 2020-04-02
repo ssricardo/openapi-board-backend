@@ -8,12 +8,14 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
+import org.springframework.context.annotation.ComponentScan
+import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import javax.inject.Inject
 import javax.persistence.EntityManager
 
 @ExtendWith(SpringExtension::class)
-@DataJpaTest
+@DataJpaTest()
 @Tag("db")
 class AppSnapshotRepositoryTest {
 

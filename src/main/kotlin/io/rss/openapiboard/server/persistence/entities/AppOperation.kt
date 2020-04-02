@@ -1,5 +1,6 @@
 package io.rss.openapiboard.server.persistence.entities
 
+import io.rss.openapiboard.server.persistence.AppOperationType
 import javax.persistence.*
 
 @Entity
@@ -19,4 +20,8 @@ data class AppOperation(
 
     @Column(length = 350)
     var path: String? = null
+
+    @Column(length = 10)
+    @Enumerated
+    var methodType: AppOperationType? = null
 }

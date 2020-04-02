@@ -1,5 +1,9 @@
 package io.rss.openapiboard.server.services
 
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectWriter
+import io.rss.openapiboard.server.persistence.AppOperationType
 import io.rss.openapiboard.server.persistence.dao.AppOperationRepository
 import io.rss.openapiboard.server.persistence.dao.RequestMemoryRepository
 import io.rss.openapiboard.server.persistence.entities.AppOperation
@@ -7,18 +11,25 @@ import io.rss.openapiboard.server.persistence.entities.AppRecord
 import io.rss.openapiboard.server.persistence.entities.request.HeadersMemory
 import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
 import io.rss.openapiboard.server.persistence.entities.request.RequestVisibility
-import io.swagger.v3.parser.OpenAPIV3Parser
+import io.swagger.parser.OpenAPIParser
+import io.swagger.v3.oas.models.Operation
+import io.swagger.v3.oas.models.PathItem
+import io.swagger.v3.oas.models.Paths
+import io.swagger.v3.oas.models.examples.Example
+import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
+import javax.annotation.PostConstruct
 import javax.inject.Inject
 import javax.transaction.Transactional
-import javax.validation.Valid
 import javax.validation.Validator
 
 @Service
 class SideOperationsProcessor {
 
-    private val parser = OpenAPIV3Parser()
+    private companion object {
+        val LOGGER = LoggerFactory.getLogger(SideOperationsProcessor::class.java)
+    }
 
     @Inject
     private lateinit var operationRepository: AppOperationRepository
@@ -29,6 +40,18 @@ class SideOperationsProcessor {
     @Inject
     private lateinit var validator: Validator
 
+    private lateinit var parser:OpenAPIParser
+    private lateinit var openWriter:ObjectWriter
+
+    @PostConstruct
+    fun init() {
+        parser = OpenAPIParser()
+        val mapper = ObjectMapper()
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        openWriter = mapper.writer()    // For while, only JSON supported
+//        openWriter = mapper.writerWithDefaultPrettyPrinter()
+    }
+
     @Async
     @Transactional()
     fun processAppRecord(app: AppRecord) {
@@ -36,18 +59,27 @@ class SideOperationsProcessor {
     }
 
     private fun processAppOperations(inputApp: AppRecord) {
-        val parseResult = parser.readContents(inputApp.source)
+        inputApp.source ?: return logNoExecution("Source is null for AppRecord ${inputApp.namespace}/${inputApp.name}")
+        val parseResult = parser.readContents(inputApp.source, null, null)
+
         if (parseResult.messages.isNotEmpty()) {
-            // TODO log and return
-            println("Deu ruim... ${parseResult.messages}")
-//            return
+            LOGGER.warn("Processing OpenAPI for record ${inputApp.namespace}/${inputApp.name} result warnings: ${parseResult.messages}")
         }
 
-        parseResult.openAPI.paths.forEach { pStr, _ ->
-            operationRepository.saveAndFlush(AppOperation().apply {
-                appRecord = inputApp
-                path = pStr
-            })
+        parseResult?.openAPI?.paths ?: return logNoExecution("Either parsed OpenAPI or paths is null")
+        parseResult.openAPI.paths.forEach { pStr, _ -> storeAppOperation(inputApp, pStr) }
+    }
+
+    private fun storeAppOperation(inputApp: AppRecord, pStr: String?) {
+        operationRepository.save(AppOperation().apply {
+            appRecord = inputApp
+            path = pStr
+        })
+    }
+
+    private fun logNoExecution(message: String) {
+        if (LOGGER.isDebugEnabled) {
+            LOGGER.debug("Skipping OpenAPI enriching, due to: $message")
         }
     }
 
@@ -77,4 +109,52 @@ class SideOperationsProcessor {
     fun removeRequest(operationId: Int, requestId: Long) {
         requestRepository.deleteOperationRequest(operationId, requestId)
     }
+
+    @Transactional(Transactional.TxType.NOT_SUPPORTED)
+    fun enrichAppRecordSource(inputApp: AppRecord): AppRecord {
+        inputApp.source ?: return inputApp
+        val openApi = parser.readContents(inputApp.source, null, null)?.openAPI
+        val paths = openApi?.paths ?: return inputApp
+
+        requestRepository.findByAppNamespace(inputApp)
+            .filter { it.operation != null }
+            .forEach { processMatchingPath(paths, it) }
+
+        return inputApp.apply { source = openWriter.writeValueAsString(openApi) }
+    }
+
+    private fun processMatchingPath(paths: Paths, rm: RequestMemory) =
+        paths[rm.operation!!.path]?.let { pi -> processMatchingContent(rm, pi) }
+
+    private fun processMatchingContent(rm: RequestMemory, pi: PathItem) {
+        val content = getHttpMethodForOperation(rm.operation!!, pi)
+                ?.requestBody?.content ?: return
+        val mediaType = rm.contentType ?: return
+
+        content[mediaType]?.let { media ->
+            addMemoryAsExample(media, rm)
+        }
+    }
+
+    private fun getHttpMethodForOperation(operation: AppOperation, pi: PathItem): Operation? {
+        return when(operation.methodType) {
+            AppOperationType.GET -> pi.get
+            AppOperationType.DELETE -> pi.delete
+            AppOperationType.POST -> pi.post
+            AppOperationType.PUT -> pi.put
+            AppOperationType.OPTIONS -> pi.options
+            else -> null
+        }
+    }
+
+    private fun addMemoryAsExample(content: io.swagger.v3.oas.models.media.MediaType, rm: RequestMemory) {
+        content.examples = content.examples ?: mutableMapOf()
+        content.examples?.let { ex ->
+            ex["someName"] = Example().apply {
+                this.summary = rm.title
+                this.value = rm.body
+            }
+        }
+    }
+
 }

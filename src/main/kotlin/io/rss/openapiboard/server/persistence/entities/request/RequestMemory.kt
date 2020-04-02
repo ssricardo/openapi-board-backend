@@ -37,6 +37,9 @@ data class RequestMemory (
     @NotNull
     var visibility: RequestVisibility? = null
 
-    @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
+    @Column(nullable =  false, length = 30)
+    var contentType: String? = null
+
+    @OneToMany(mappedBy = "request", cascade = [CascadeType.ALL], orphanRemoval = true)
     val headers: MutableList<HeadersMemory>  = mutableListOf()
 }
