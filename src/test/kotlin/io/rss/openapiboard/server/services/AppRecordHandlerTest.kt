@@ -13,19 +13,19 @@ import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.MockitoAnnotations
 
-internal class AppRecordBusinessTest {
+internal class AppRecordHandlerTest {
 
     @Mock
     lateinit var repository: AppRecordRepository
 
     @Mock
-    lateinit var snapshotService: AppSnapshotBusiness
+    lateinit var snapshotService: AppSnapshotHandler
 
     @Mock
     lateinit var sideOperationsProcessor: SideOperationsProcessor
 
     @InjectMocks
-    var tested = AppRecordBusiness()
+    var tested = AppRecordHandler()
 
     @BeforeEach
     internal fun setUp() {

@@ -14,7 +14,7 @@ import javax.inject.Inject
  * @author ricardo saturnino
  */
 @Service
-class AppRecordBusiness {
+class AppRecordHandler {
 
     private companion object {
         const val DEFAULT_VERSION = "No-Version"
@@ -24,7 +24,7 @@ class AppRecordBusiness {
     lateinit var repository: AppRecordRepository
 
     @Inject
-    lateinit var snapshotService: AppSnapshotBusiness
+    lateinit var snapshotService: AppSnapshotHandler
 
     @Inject
     lateinit var sideOperationsProcessor: SideOperationsProcessor

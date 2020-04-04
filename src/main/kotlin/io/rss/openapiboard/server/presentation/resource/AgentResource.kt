@@ -1,6 +1,6 @@
 package io.rss.openapiboard.server.presentation.resource
 
-import io.rss.openapiboard.server.services.AppRecordBusiness
+import io.rss.openapiboard.server.services.AppRecordHandler
 import io.rss.openapiboard.server.persistence.entities.AppRecord
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -20,7 +20,7 @@ import javax.ws.rs.core.Response
 class AgentResource {
 
     @Inject
-    private lateinit var bService: AppRecordBusiness
+    private lateinit var appHandlerService: AppRecordHandler
 
     @Operation(description = "Most basic endpoint, to test the connection")
     @GET
@@ -37,7 +37,7 @@ class AgentResource {
                     @FormDataParam("version") versionParam: String,
                     @FormDataParam("url") url: String): Response {
 
-        bService.createOrUpdate(AppRecord(name, nm).apply {
+        appHandlerService.createOrUpdate(AppRecord(name, nm).apply {
             version = versionParam
             address = url
             source = String(apiSpec.readBytes())

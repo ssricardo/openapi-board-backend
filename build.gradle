@@ -96,7 +96,8 @@ java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 def h2DB = [
 		db_classname: 'org.h2.Driver',
-		db_url: 'h2:mem:openapi-board',
+//		db_url: 'h2:mem:openapi-board',
+		db_url: 'h2:~/openapi-board',
 		hibernate_dialect: 'org.hibernate.dialect.H2Dialect',
 		db_username: 'sa',
 		db_password: "''"

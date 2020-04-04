@@ -4,8 +4,8 @@ import io.rss.openapiboard.server.persistence.AppVersionDto
 import io.rss.openapiboard.server.persistence.entities.AppRecord
 import io.rss.openapiboard.server.persistence.entities.AppRecordId
 import io.rss.openapiboard.server.persistence.entities.AppSnapshotId
-import io.rss.openapiboard.server.services.AppRecordBusiness
-import io.rss.openapiboard.server.services.AppSnapshotBusiness
+import io.rss.openapiboard.server.services.AppRecordHandler
+import io.rss.openapiboard.server.services.AppSnapshotHandler
 import io.rss.openapiboard.server.services.to.AppComparison
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -30,10 +30,10 @@ class ManagerResource {
     }
 
     @Inject
-    private lateinit var bService: AppRecordBusiness
+    private lateinit var bService: AppRecordHandler
 
     @Inject
-    private lateinit var snapshotService: AppSnapshotBusiness
+    private lateinit var snapshotService: AppSnapshotHandler
 
     @Operation(description = "Retrieves the list of existing Namespaces")
     @GET
@@ -51,12 +51,20 @@ class ManagerResource {
         } ?: throw IllegalStateException("Namespace is required to list apps per domain")
     }
 
-    @Operation(description = "Loads the definition file of the given [namespace + app]")
+    @Operation(description = "Loads the internal App record [namespace + app] without it's source ")
     @GET
     @Path("{namespace}/{app}")
     fun loadAppRecord(@PathParam("namespace") nm: String, @PathParam("app") app: String): AppRecord? {
         return bService.loadAppRecord(AppRecordId(
-                decodeUrlPart(app), decodeUrlPart(nm)))
+                decodeUrlPart(app), decodeUrlPart(nm))) // TODO: check
+    }
+
+    @Operation(description = "Loads the definition file of the given [namespace + app]")
+    @GET
+    @Path("source/{namespace}/{app}")
+    fun loadAppSource(@PathParam("namespace") nm: String, @PathParam("app") app: String): String? {
+        return bService.loadAppRecord(AppRecordId(
+                decodeUrlPart(app), decodeUrlPart(nm)))?.source
     }
 
     @Operation(description = "Retrieves existing versions of apps snapshots")

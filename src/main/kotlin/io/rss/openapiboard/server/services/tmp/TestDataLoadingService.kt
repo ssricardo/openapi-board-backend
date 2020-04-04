@@ -1,7 +1,7 @@
 package io.rss.openapiboard.server.services.tmp
 
 import io.rss.openapiboard.server.persistence.entities.AppRecord
-import io.rss.openapiboard.server.services.AppRecordBusiness
+import io.rss.openapiboard.server.services.AppRecordHandler
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import java.nio.file.Files
@@ -10,12 +10,12 @@ import javax.annotation.PostConstruct
 import javax.inject.Inject
 import kotlin.random.Random
 
-@Profile("test")
+@Profile("ignore")
 @Service
 class TestDataLoadingService {
 
     @Inject
-    lateinit var appService: AppRecordBusiness
+    lateinit var appService: AppRecordHandler
 
     val randomizer = Random(30)
 

@@ -9,7 +9,10 @@ import io.rss.openapiboard.server.persistence.entities.request.RequestVisibility
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.Mockito.mock
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.context.annotation.Bean
@@ -20,6 +23,7 @@ import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.persistence.EntityManager
 import javax.validation.Validator
+import javax.ws.rs.core.MediaType
 
 @ExtendWith(SpringExtension::class)
 @DataJpaTest
@@ -50,23 +54,25 @@ class RequestMemoryRepositoryTest {
         val ope = AppOperation().apply {
             appRecord = app
             path = "/books"
+            this.methodType = AppOperationType.POST
         }
         em.persist(ope)
         em.flush()
         operationId = ope.id
     }
 
-    @Test
-    fun persistRequest() {
+    @ParameterizedTest
+    @CsvSource("'My test Request', 'testValue'")
+    fun persistRequest(pTitle: String, someValue: String) {
         val request = RequestMemory().apply {
             body ="""
                 {
                     "openAPI": "v3",
-                     "basePath": "/test",
-                     paths: []
+                    "description": "/test",
+                    "some-key": $someValue
                 }
             """.trimIndent()
-            title = "My test Request"
+            title = pTitle
             operation = em.getReference(AppOperation::class.java, operationId)
             visibility = RequestVisibility.PUBLIC
             contentType = "application/json"
@@ -74,8 +80,13 @@ class RequestMemoryRepositoryTest {
         request.headers.add(HeadersMemory().apply {
             name = "contentType"
             value = "application/json"
+            this.request = request
         })
-
+        request.headers.add(HeadersMemory().apply {
+            name = "cache"
+            value = "false"
+            this.request = request
+        })
 
         tested.saveAndFlush(request)
     }
@@ -92,9 +103,22 @@ class RequestMemoryRepositoryTest {
 
     @Test
     fun findByAppNamespace() {
-        tested.findByAppNamespace(AppRecord().apply {
-            name = "TestApp"
-            namespace = "Production"
-        })
+        tested.findByAppNamespace(AppRecord("TestApp", "Production"))
+    }
+
+    @Test
+    fun testQueryResults() {
+        persistRequest("First request", "Munich")
+        persistRequest("Second request", "Tokyo")
+
+        em.flush()
+        em.clear()
+
+        val result = tested.findByAppNamespace(AppRecord("ricardo", "testing"))
+
+        assertAll(
+                { assert(result.size == 2) },
+                { result[0].headers.size == 2 }
+        )
     }
 }

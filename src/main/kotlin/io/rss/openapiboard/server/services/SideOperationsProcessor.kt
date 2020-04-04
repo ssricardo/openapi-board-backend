@@ -16,6 +16,7 @@ import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.PathItem
 import io.swagger.v3.oas.models.Paths
 import io.swagger.v3.oas.models.examples.Example
+import io.swagger.v3.oas.models.media.MediaType
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
@@ -67,7 +68,7 @@ class SideOperationsProcessor {
         }
 
         parseResult?.openAPI?.paths ?: return logNoExecution("Either parsed OpenAPI or paths is null")
-        parseResult.openAPI.paths.forEach { pStr, _ -> storeAppOperation(inputApp, pStr) }
+        parseResult.openAPI.paths.forEach { pStr, pathObj -> storeAppOperation(inputApp, pStr) } //FIXME me register path type
     }
 
     private fun storeAppOperation(inputApp: AppRecord, pStr: String?) {
@@ -118,21 +119,21 @@ class SideOperationsProcessor {
 
         requestRepository.findByAppNamespace(inputApp)
             .filter { it.operation != null }
-            .forEach { processMatchingPath(paths, it) }
+            .forEachIndexed { index, reqMemory -> processMatchingPath(paths, reqMemory, index) }
 
         return inputApp.apply { source = openWriter.writeValueAsString(openApi) }
     }
 
-    private fun processMatchingPath(paths: Paths, rm: RequestMemory) =
-        paths[rm.operation!!.path]?.let { pi -> processMatchingContent(rm, pi) }
+    private fun processMatchingPath(paths: Paths, rm: RequestMemory, index: Int) =
+        paths[rm.operation!!.path]?.let { pi -> processMatchingContent(rm, pi, index) }
 
-    private fun processMatchingContent(rm: RequestMemory, pi: PathItem) {
+    private fun processMatchingContent(rm: RequestMemory, pi: PathItem, index: Int) {
         val content = getHttpMethodForOperation(rm.operation!!, pi)
                 ?.requestBody?.content ?: return
         val mediaType = rm.contentType ?: return
 
         content[mediaType]?.let { media ->
-            addMemoryAsExample(media, rm)
+            addMemoryAsExample(media, rm, index)
         }
     }
 
@@ -147,10 +148,10 @@ class SideOperationsProcessor {
         }
     }
 
-    private fun addMemoryAsExample(content: io.swagger.v3.oas.models.media.MediaType, rm: RequestMemory) {
+    private fun addMemoryAsExample(content: MediaType, rm: RequestMemory, index: Int) {
         content.examples = content.examples ?: mutableMapOf()
         content.examples?.let { ex ->
-            ex["someName"] = Example().apply {
+            ex["oab-example#$index"] = Example().apply {
                 this.summary = rm.title
                 this.value = rm.body
             }

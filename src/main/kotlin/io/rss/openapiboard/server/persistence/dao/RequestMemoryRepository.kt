@@ -2,11 +2,10 @@ package io.rss.openapiboard.server.persistence.dao
 
 import io.rss.openapiboard.server.persistence.entities.AppRecord
 import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Modifying
-import org.springframework.data.jpa.repository.Query
+import org.springframework.data.jpa.repository.*
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
+import javax.persistence.QueryHint
 
 @Repository
 interface RequestMemoryRepository: JpaRepository<RequestMemory, Long> {
@@ -22,10 +21,11 @@ interface RequestMemoryRepository: JpaRepository<RequestMemory, Long> {
     @Query("""
         SELECT r 
         FROM RequestMemory r
-            JOIN FETCH r.headers h
-            JOIN r.operation.appRecord ap 
+            JOIN FETCH r.operation oe 
+            JOIN FETCH oe.appRecord ap 
         WHERE
             ap = :app 
     """)
+    @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, value = "request.headers")
     fun findByAppNamespace(app: AppRecord): List<RequestMemory>
 }

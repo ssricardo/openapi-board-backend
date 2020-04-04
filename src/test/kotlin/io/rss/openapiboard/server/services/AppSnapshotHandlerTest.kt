@@ -14,13 +14,13 @@ import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 import java.util.*
 
-internal class AppSnapshotBusinessTest {
+internal class AppSnapshotHandlerTest {
 
     @Mock
     lateinit var repository: AppSnapshotRepository
 
     @InjectMocks
-    var tested = AppSnapshotBusiness()
+    var tested = AppSnapshotHandler()
 
     @BeforeEach
     internal fun setUp() {
@@ -91,13 +91,13 @@ internal class AppSnapshotBusinessTest {
     }
 
     @Test
-    internal fun createComparison() {
+    fun createComparison() {
         Mockito.`when`(repository.findById(AppSnapshotId("name", "namespace", "1.0")))
                 .thenReturn(Optional.of(AppSnapshot("name", "namespace")))
         Mockito.`when`(repository.findById(AppSnapshotId("name", "other", "2.0")))
                 .thenReturn(Optional.of(AppSnapshot("name", "other")))
 
-        val res = tested.createComparison(AppSnapshotId("name", "namespace", "1.0"),
+        tested.createComparison(AppSnapshotId("name", "namespace", "1.0"),
                 AppSnapshotId("name", "other", "2.0"))
     }
 }

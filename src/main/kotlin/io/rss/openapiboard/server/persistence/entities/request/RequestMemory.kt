@@ -9,6 +9,9 @@ import javax.validation.constraints.NotNull
  */
 @Entity
 @Table(name = "requests")
+@NamedEntityGraph(name = "request.headers", attributeNodes = [
+    NamedAttributeNode("headers")
+])
 data class RequestMemory (
 
         @Id
