@@ -7,9 +7,10 @@ import io.rss.openapiboard.server.persistence.entities.AppRecord
 import io.rss.openapiboard.server.persistence.entities.AppRecordId
 import org.springframework.stereotype.Service
 import javax.inject.Inject
+import javax.transaction.Transactional
 
 /**
- * Service on business layer for AppRecord
+ * Service on business layer for AppRecord, offers related CRUD operations
  *
  * @author ricardo saturnino
  */
@@ -58,9 +59,9 @@ class AppRecordHandler {
 
 
     /** Finds the AppRecord related to given parameter and loads it with field "source" */
+    @Transactional(Transactional.TxType.NOT_SUPPORTED)
     fun loadAppRecord(id: AppRecordId): AppRecord? {
         return repository.findById(id)
-//                .map { }      // TODO: check detach
                 .map(sideOperationsProcessor::enrichAppRecordSource)
                 .orElse(null)
     }

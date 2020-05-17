@@ -10,7 +10,7 @@ import javax.annotation.PostConstruct
 import javax.inject.Inject
 import kotlin.random.Random
 
-@Profile("ignore")
+@Profile("test")
 @Service
 class TestDataLoadingService {
 
@@ -30,7 +30,7 @@ class TestDataLoadingService {
             print("========================== Trying to create test data ============================")
 
             val petStoreSource =  Files.newInputStream(Paths.get(
-                    "/home/ricardo/projects/ricardo/openapi-board/openapi-board/samples/petstore-expanded.yaml"))
+                    "/home/ricardo/projects/ricardo/openapi-board/openapi-board-backend/src/test/resources/test-data/petstore-expanded.yaml"))
                     .use {
                         it.bufferedReader().readText()
                     } // FIXME
@@ -54,7 +54,8 @@ class TestDataLoadingService {
             items.forEachIndexed { ind, it ->
                 it.version =  if (it.namespace!!.startsWith("feature")) "1.1-SNAPSHOT" else "1.0"
                 it.address = "http://localhost:808$ind/resource"
-                it.source = getRandomChangedSource(petStoreSource)
+//                it.source = getRandomChangedSource(petStoreSource)
+                it.source = petStoreSource
 
                 appService.createOrUpdate(it)
             }
@@ -71,9 +72,6 @@ class TestDataLoadingService {
         var result = petStoreSource
         if (randomizer.nextBoolean()) {
             result = result.replace("200", "300")
-        }
-        if (randomizer.nextBoolean()) {
-            result = result.replace("name", "alias")
         }
         if (randomizer.nextBoolean()) {
             result = result.replace("NewPet", "Dino")

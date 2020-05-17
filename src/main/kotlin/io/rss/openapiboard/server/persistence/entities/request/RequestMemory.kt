@@ -2,6 +2,7 @@ package io.rss.openapiboard.server.persistence.entities.request
 
 import io.rss.openapiboard.server.persistence.entities.AppOperation
 import javax.persistence.*
+import javax.validation.constraints.NotEmpty
 import javax.validation.constraints.NotNull
 
 /**
@@ -23,17 +24,19 @@ data class RequestMemory (
     @ManyToOne
     var operation: AppOperation? = null
 
+    // TODO: memoria deveria para App e opcional namespace
+
     @Column(length = 50, nullable = false)
-    @NotNull
-    var title: String? = null
+    @NotEmpty
+    var title: String = ""
 
     @Lob
     @Column(nullable = false)
     @NotNull
     var body: String? = null
 
-    @Column
-    var owner: Int? = null
+    @Column(name = "ns_attached", nullable = false)
+    var nsAttached: Boolean = false
 
     @Column(nullable = false)
     @Enumerated
@@ -45,4 +48,7 @@ data class RequestMemory (
 
     @OneToMany(mappedBy = "request", cascade = [CascadeType.ALL], orphanRemoval = true)
     val headers: MutableList<HeadersMemory>  = mutableListOf()
+
+    @OneToMany(mappedBy = "request", cascade = [CascadeType.ALL], orphanRemoval = true)
+    val parameters = mutableListOf<ParameterMemory>()
 }

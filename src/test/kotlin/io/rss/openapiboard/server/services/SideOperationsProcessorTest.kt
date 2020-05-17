@@ -1,10 +1,14 @@
 package io.rss.openapiboard.server.services
 
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.whenever
 import io.rss.openapiboard.server.persistence.AppOperationType
 import io.rss.openapiboard.server.persistence.dao.AppOperationRepository
 import io.rss.openapiboard.server.persistence.dao.RequestMemoryRepository
 import io.rss.openapiboard.server.persistence.entities.AppOperation
 import io.rss.openapiboard.server.persistence.entities.AppRecord
+import io.rss.openapiboard.server.persistence.entities.request.ParameterKind
+import io.rss.openapiboard.server.persistence.entities.request.ParameterMemory
 import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -91,15 +95,16 @@ internal class SideOperationsProcessorTest {
     @Test
     fun enrichNoMemory() {
         val record = createSimpleAppRecord()
-        Mockito.`when`(requestRepository.findByAppNamespace(record)).thenReturn(listOf())
+        whenever(requestRepository.findByAppNamespace(record)) doReturn listOf()
         tested.enrichAppRecordSource(record)
+//        println(record.source)
     }
 
     @Test
     fun enrichSingleMemoryMatching() {
         val record = createSimpleAppRecord()
         val sampleOp = AppOperation(10).apply { path = "/pets"; appRecord = record; methodType = AppOperationType.POST }
-        Mockito.`when`(requestRepository.findByAppNamespace(record)).thenReturn(arrayListOf(
+        whenever(requestRepository.findByAppNamespace(record)).thenReturn(arrayListOf(
                 createRexMemory(sampleOp, MediaType.APPLICATION_JSON) ))
         val result = tested.enrichAppRecordSource(record)
         assert(sourceTest != result.source)
@@ -114,7 +119,7 @@ internal class SideOperationsProcessorTest {
     fun enrichSingleMemoryNonMatchingMatch(paramPath: String, paramContent: String, paramMethod: String) {
         val record = createSimpleAppRecord()
         val sampleOp = AppOperation(10).apply { path = paramPath; appRecord = record; methodType = AppOperationType.valueOf(paramMethod) }
-        Mockito.`when`(requestRepository.findByAppNamespace(record)).thenReturn(arrayListOf(
+        whenever(requestRepository.findByAppNamespace(record)).thenReturn(arrayListOf(
                 createRexMemory(sampleOp, paramContent)
         ))
         val result = tested.enrichAppRecordSource(record)
@@ -126,7 +131,7 @@ internal class SideOperationsProcessorTest {
     fun enrichMultipleMatching() {
         val record = createSimpleAppRecord()
         val sampleOp = AppOperation(10).apply { this.path = "/pets"; this.appRecord = record }
-        Mockito.`when`(requestRepository.findByAppNamespace(record)).thenReturn(arrayListOf(
+        whenever(requestRepository.findByAppNamespace(record)).thenReturn(arrayListOf(
             createRexMemory(sampleOp, MediaType.APPLICATION_JSON),
             RequestMemory(7897).apply {
                 this.title = "Clients new"
@@ -136,10 +141,26 @@ internal class SideOperationsProcessorTest {
             }
         ))
         val result = tested.enrichAppRecordSource(record)
-        println(result.source)
         assert(result.source?.contains("examples") == false)
         assert(result.source?.contains("Rex") == false)
         assert(result.source?.contains("Pluto") == false)
+    }
+
+    @Test
+    fun examplesForParameters() {
+        val record = createSimpleAppRecord()
+        val operation = AppOperation(10).apply {
+            this.path = "/pets/{id}"; this.appRecord = record; this.methodType = AppOperationType.GET }
+        val memory = createRexMemory(operation, MediaType.APPLICATION_JSON)
+        memory.parameters.add(ParameterMemory(ParameterKind.PATH, "id").apply { this.value = "pipoca" })
+        memory.parameters.add(ParameterMemory(ParameterKind.PATH, "city").apply { this.value = "Milano" })
+        memory.parameters.add(ParameterMemory(ParameterKind.QUERY, "id").apply { this.value = "idOnQuery" })
+        Mockito.`when`(requestRepository.findByAppNamespace(record)).thenReturn(arrayListOf(memory))
+
+        val result = tested.enrichAppRecordSource(record)
+        assert(result.source?.contains("pipoca") == true)
+        assert(result.source?.contains("Milano") == false)
+        assert(result.source?.contains("idOnQuery") == false)
     }
 
     private fun createRexMemory(sampleOp: AppOperation, paramContent: String): RequestMemory =

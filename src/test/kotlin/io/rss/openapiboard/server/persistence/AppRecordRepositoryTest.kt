@@ -83,4 +83,13 @@ class AppRecordRepositoryTest {
         assertNotNull(res)
         assertEquals(fileContent, res.source)
     }
+
+    @Test
+    internal fun `insert roles`() {
+        val res = tested.save(AppRecord("Super", "secret").apply {
+            allowedRoles.add("ADMIN")
+            allowedRoles.add("MASTER")
+        })
+        assert(res.allowedRoles.size == 2)
+    }
 }

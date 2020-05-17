@@ -1,5 +1,6 @@
 package io.rss.openapiboard.server.services
 
+import io.rss.openapiboard.server.helper.assertStringRequired
 import io.rss.openapiboard.server.persistence.dao.AppSnapshotRepository
 import io.rss.openapiboard.server.persistence.entities.AppRecord
 import io.rss.openapiboard.server.persistence.entities.AppRecordId
@@ -7,6 +8,8 @@ import io.rss.openapiboard.server.persistence.entities.AppSnapshot
 import io.rss.openapiboard.server.persistence.entities.AppSnapshotId
 import io.rss.openapiboard.server.services.exceptions.BoardApplicationException
 import io.rss.openapiboard.server.services.to.AppComparison
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import javax.inject.Inject
@@ -19,8 +22,12 @@ class AppSnapshotHandler {
     @Inject
     lateinit var repository: AppSnapshotRepository
 
+    private companion object {
+        val LOGGER: Logger = LoggerFactory.getLogger(AppSnapshotHandler::class.java)
+    }
+
     /**
-     * Stores a new
+     * Stores a new Snapshot, <b>Async</b>
      */
     @Async
     fun feed(app: AppRecord) {
@@ -34,12 +41,13 @@ class AppSnapshotHandler {
         }
         repository.save(snap)
 
-        println("${app.name} registered")
+        LOGGER.info("${app.name} registered")
     }
 
     /** Delegates searching of version list for given App/namespace */
     fun listVersionsByAppNamespace(app: String, namespace: String): List<String> {
-        // TODO assert not null
+        assertStringRequired(app) {"App name is required for this query"}
+        assertStringRequired(namespace) {"Namespace is required for this query"}
         return repository.findAppVersionList(AppRecordId(app, namespace))
     }
 

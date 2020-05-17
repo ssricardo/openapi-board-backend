@@ -43,7 +43,8 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
 	implementation("org.glassfish.jersey.media:jersey-media-multipart:2.29.1")
-	implementation("io.swagger.parser.v3:swagger-parser:2.0.18")
+	implementation("io.swagger.parser.v3:swagger-parser:2.0.19")
+
 	provided("io.swagger.core.v3:swagger-annotations:2.1.1")
 
 	devClasspath("com.h2database:h2")
@@ -57,6 +58,7 @@ dependencies {
 	testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.2")
 	testImplementation("org.junit.jupiter:junit-jupiter-engine:5.3.2")
 	testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: '3.1.0'
+	testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0"
 	testImplementation("com.h2database:h2")
 }
 
@@ -96,8 +98,8 @@ java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 def h2DB = [
 		db_classname: 'org.h2.Driver',
-//		db_url: 'h2:mem:openapi-board',
-		db_url: 'h2:~/openapi-board',
+		db_url: 'h2:mem:openapi-board',
+//		db_url: 'h2:~/openapi-board',
 		hibernate_dialect: 'org.hibernate.dialect.H2Dialect',
 		db_username: 'sa',
 		db_password: "''"

@@ -3,6 +3,8 @@ package io.rss.openapiboard.server.presentation.resource
 import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
 import io.rss.openapiboard.server.services.SideOperationsProcessor
 import io.rss.openapiboard.server.services.to.RequestMemoryInputTO
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.inject.Inject
 import javax.ws.rs.*
@@ -25,19 +27,13 @@ class RequestMemoryResource {
                                 @PathParam("app") appName: String)
             = processor.listOperationsByApp(appName, namespace)
 
+    @ApiOperation("Let creating and updating RequestMemory. ",
+            notes = "To update, the id is needed. Tries to create.")
     @PUT
     @Path("requests")
-    fun saveRequest(request: RequestMemoryInputTO): Response {
-        processor.saveRequest(request.operationId,
-                RequestMemory().apply {
-                    this.title = request.title
-                    this.body = request.body
-                    request.requestId?.let {
-                        this.id = it
-                    }
-                }, request.requestHeaders)
-
-        return Response.ok().build();
+    fun saveRequest(@ApiParam request: RequestMemoryInputTO): Response {
+        processor.saveRequest(request)
+        return Response.ok().build()
     }
 
     @DELETE
