@@ -56,7 +56,7 @@ class ManagerResource {
     @Path("{namespace}/{app}")
     fun loadAppRecord(@PathParam("namespace") nm: String, @PathParam("app") app: String): AppRecord? {
         return bService.loadAppRecord(AppRecordId(
-                decodeUrlPart(app), decodeUrlPart(nm))) // TODO: check
+                decodeUrlPart(app), decodeUrlPart(nm)))
     }
 
     @Operation(description = "Loads the definition file of the given [namespace + app]")

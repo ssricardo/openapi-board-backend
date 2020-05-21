@@ -1,14 +1,13 @@
 package io.rss.openapiboard.server
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
-import org.springframework.context.annotation.ComponentScan
 import org.springframework.scheduling.annotation.EnableAsync
 
 
-@SpringBootApplication
-@ComponentScan(basePackages = ["io.rss.openapiboard.server"])
-//@EnableWebSecurity()
+@SpringBootApplication(scanBasePackages = ["io.rss.openapiboard.server"])
+@EnableConfigurationProperties
 @EnableAsync
 class OpenapiBoardServerApplication
 

@@ -39,6 +39,17 @@ After build for production, the following configs are available as environment v
 * db_username
 * db_password
 
+### Building the Docker image
+
+Docker image may be prepared using gradle as well.  
+
+Run one of the tasks:
+
+* buildTest
+    * For H2 version
+* buildProduction
+    * For MySQL version
+
 ## Endpoints
 
 ### Manager endpoints
@@ -64,7 +75,17 @@ These are strings indicates the names of a given namespace and the app name.
     * 200 - OK
     * 400 - Bad request: Usually indicates that the arguments are incorrect
     * 409 - Conflict: Some validation has failed. For example, an app is in a given state that shouldn't be changed
+ 
+## Security
         
+There are two default roles, which are needed:
+
+* MANAGER
+    * Needed to use the frontend application
+* AGENT
+    * Needed to push new app definitions, usually to be done by a client 
+    
+> Further roles support TBD
 
 ## Architecture
 
@@ -92,7 +113,4 @@ The app itself is not big, so it's kept in a single module.
 
 > Some ideas for future
 
-- Add and configure security
-  - Users / roles
-  
-- Store requests samples
+- ...

@@ -20,3 +20,10 @@ spring:
   h2:
     console:
       enabled: true
+
+users:
+  entries:
+    -
+      name: ricardo
+      password: test
+      roles: ['MANAGER', 'AGENT']

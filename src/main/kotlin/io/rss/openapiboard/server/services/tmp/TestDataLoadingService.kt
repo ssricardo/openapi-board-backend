@@ -3,12 +3,18 @@ package io.rss.openapiboard.server.services.tmp
 import io.rss.openapiboard.server.persistence.entities.AppRecord
 import io.rss.openapiboard.server.services.AppRecordHandler
 import org.springframework.context.annotation.Profile
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.Authentication
+import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.authority.AuthorityUtils.createAuthorityList
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import java.nio.file.Files
 import java.nio.file.Paths
 import javax.annotation.PostConstruct
 import javax.inject.Inject
 import kotlin.random.Random
+
 
 @Profile("test")
 @Service
@@ -51,10 +57,15 @@ class TestDataLoadingService {
                 }
             }
 
+            val authorities: Collection<GrantedAuthority> = createAuthorityList("MANAGER")
+            val authentication: Authentication = UsernamePasswordAuthenticationToken(
+                    "admin", "MANAGER", authorities)
+            SecurityContextHolder.getContext().authentication = authentication
+
             items.forEachIndexed { ind, it ->
                 it.version =  if (it.namespace!!.startsWith("feature")) "1.1-SNAPSHOT" else "1.0"
                 it.address = "http://localhost:808$ind/resource"
-//                it.source = getRandomChangedSource(petStoreSource)
+                it.source = getRandomChangedSource(petStoreSource)
                 it.source = petStoreSource
 
                 appService.createOrUpdate(it)

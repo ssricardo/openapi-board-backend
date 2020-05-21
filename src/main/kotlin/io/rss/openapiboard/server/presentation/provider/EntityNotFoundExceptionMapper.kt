@@ -1,5 +1,7 @@
 package io.rss.openapiboard.server.presentation.provider
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import javax.persistence.EntityNotFoundException
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
@@ -9,8 +11,13 @@ import javax.ws.rs.ext.Provider
 @Provider
 class EntityNotFoundExceptionMapper: ExceptionMapper<EntityNotFoundException> {
 
+    private companion object {
+        val LOG: Logger = LoggerFactory.getLogger(EntityNotFoundExceptionMapper::class.java)
+    }
+
+
     override fun toResponse(exception: EntityNotFoundException): Response {
-        // TODO log
+        LOG.warn("EntityNotFoundException raised on REST level.", exception)
         return Response.status(Response.Status.BAD_REQUEST.statusCode,
                 """The application was found in some inconsistent state.  
                     |Check whether the request is following the rules""".trimMargin()).build()

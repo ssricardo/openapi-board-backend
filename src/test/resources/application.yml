@@ -1,0 +1,10 @@
+users:
+  entries:
+    -
+      name: admin
+      password: admin00
+      roles: ['manager', 'super saiyan']
+    -
+      name: agent
+      password: 123456
+      roles: ['agent']
