@@ -1,6 +1,7 @@
 package io.rss.openapiboard.server.persistence.entities.request
 
 import io.rss.openapiboard.server.persistence.entities.AppOperation
+import org.hibernate.annotations.BatchSize
 import javax.persistence.*
 import javax.validation.constraints.NotEmpty
 import javax.validation.constraints.NotNull
@@ -10,8 +11,8 @@ import javax.validation.constraints.NotNull
  */
 @Entity
 @Table(name = "requests")
-@NamedEntityGraph(name = "request.headers", attributeNodes = [
-    NamedAttributeNode("headers")
+@NamedEntityGraph(name = "request.parameters", attributeNodes = [
+    NamedAttributeNode("parameters")
 ])
 data class RequestMemory (
 
@@ -24,15 +25,12 @@ data class RequestMemory (
     @ManyToOne
     var operation: AppOperation? = null
 
-    // TODO: memoria deveria para App e opcional namespace
-
     @Column(length = 50, nullable = false)
     @NotEmpty
     var title: String = ""
 
     @Lob
-    @Column(nullable = false)
-    @NotNull
+    @Column(nullable = true)
     var body: String? = null
 
     @Column(name = "ns_attached", nullable = false)
@@ -43,12 +41,16 @@ data class RequestMemory (
     @NotNull
     var visibility: RequestVisibility? = null
 
+    /* ex: application/json. Needed to match an entry on the OpenAPI definition */
     @Column(nullable =  false, length = 30)
     var contentType: String? = null
 
     @OneToMany(mappedBy = "request", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val headers: MutableList<HeadersMemory>  = mutableListOf()
-
-    @OneToMany(mappedBy = "request", cascade = [CascadeType.ALL], orphanRemoval = true)
+    @BatchSize(size = 30)    // WARN: provider specific :(
     val parameters = mutableListOf<ParameterMemory>()
+
+    fun addParameterMemory(pm: ParameterMemory) {
+        pm.request = this
+        parameters.add(pm)
+    }
 }

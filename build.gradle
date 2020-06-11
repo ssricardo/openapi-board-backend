@@ -103,7 +103,7 @@ def h2DB = [
 		hibernate_dialect: 'org.hibernate.dialect.H2Dialect',
 		db_username: 'sa',
 		db_password: "''"
-]
+];
 
 def mySqlDB = [
 		db_classname: 'com.mysql.jdbc.Driver',
@@ -111,9 +111,18 @@ def mySqlDB = [
 		db_url: 'mysql://localhost:3306/oab',
 		db_username: 'oab',
 		db_password: '123456'
-]
+];
 
 // ------------------------------------ Env-dependent tasks ----------------------------------
+
+task copyTestResource(type: Copy) {
+	from "${project.projectDir}/src/test/resources"
+	into "${project.buildDir}/resources/main"
+
+	doFirst {
+		print "Copying files for testing..."
+	}
+}
 
 // With MySQL
 task buildProduction(group: 'docker') {
@@ -165,8 +174,12 @@ task buildTest(group: 'docker') {
 
 // ------------------------------------ Local run tasks ----------------------------------
 
-task bootRunTest(type: org.springframework.boot.gradle.tasks.run.BootRun, dependsOn: 'build') {
+task bootRunTest(type: org.springframework.boot.gradle.tasks.run.BootRun) {
 	group = 'Application'
+	dependsOn('build')
+
+//	sourceSets.main.resources.srcDirs += "src/test/resources"
+	sourceResources sourceSets.test
 
 	doFirst() {
 		systemProperty 'spring.profiles.active', 'test'

@@ -1,7 +1,7 @@
 package io.rss.openapiboard.server.persistence.dao
 
-import io.rss.openapiboard.server.persistence.entities.AppRecord
 import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
@@ -12,22 +12,24 @@ import org.springframework.stereotype.Repository
 @Repository
 interface RequestMemoryRepository: JpaRepository<RequestMemory, Long> {
 
-    @Modifying
-    @Query("DELETE FROM request_header h WHERE h.request_id = :requestId", nativeQuery = true)
-    fun clearUpHeaders(@Param("requestId") id: Long)
-
-    @Modifying
-    @Query("DELETE FROM RequestMemory rm WHERE rm.id = :requestId AND rm.operation.id = :operationId")
-    fun deleteOperationRequest(@Param("operationId") operationId: Int, @Param("requestId") requestId: Long)
-
+    /** Retrieves memories related to given app+namespace PLUS the same app name on 'master' namespace */
     @Query("""
         SELECT r 
         FROM RequestMemory r
             JOIN FETCH r.operation oe 
             JOIN FETCH oe.appRecord ap 
         WHERE
-            ap = :app 
+            (ap.name = :appName AND ap.namespace = :ns) OR (ap.name = :appName AND ap.namespace = 'master')
     """)
-    @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, value = "request.headers")
-    fun findByAppNamespace(app: AppRecord): List<RequestMemory>
+    @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, value = "request.parameters")
+    fun findByAppNamespace(@Param("appName") app: String, @Param("ns") namespace: String): List<RequestMemory>
+
+    @Query("""
+        SELECT rm
+        FROM RequestMemory rm 
+            JOIN FETCH rm.operation op 
+        WHERE (LOWER(rm.title) LIKE CONCAT(LOWER(:query), '%') ) OR (op.path LIKE CONCAT(LOWER(:query), '%') )
+    """)
+    @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, value = "request.parameters")
+    fun findRequestsByFilter(query: String, page: Pageable): List<RequestMemory>
 }

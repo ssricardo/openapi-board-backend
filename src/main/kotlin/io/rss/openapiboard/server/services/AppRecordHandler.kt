@@ -2,17 +2,11 @@ package io.rss.openapiboard.server.services
 
 import io.rss.openapiboard.server.config.security.Roles
 import io.rss.openapiboard.server.helper.assertStringRequired
-import io.rss.openapiboard.server.persistence.AppVersionDto
 import io.rss.openapiboard.server.persistence.dao.AppRecordRepository
 import io.rss.openapiboard.server.persistence.entities.AppRecord
 import io.rss.openapiboard.server.persistence.entities.AppRecordId
-import org.springframework.security.access.annotation.Secured
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.core.userdetails.User
 import org.springframework.stereotype.Service
-import javax.annotation.security.PermitAll
-import javax.annotation.security.RolesAllowed
 import javax.inject.Inject
 import javax.transaction.Transactional
 
@@ -36,8 +30,9 @@ class AppRecordHandler {
     lateinit var snapshotService: AppSnapshotHandler
 
     @Inject
-    lateinit var sideOperationsProcessor: SideOperationsProcessor
+    lateinit var appSourceProcessor: AppSourceProcessor
 
+    @Transactional
     fun createOrUpdate(appRecord: AppRecord): AppRecord {
         assertStringRequired(appRecord.name) {"Name must not be null"}
         assertStringRequired(appRecord.namespace) {"Namespace must not be null"}
@@ -56,7 +51,7 @@ class AppRecordHandler {
         return result
     }
 
-    private fun processSideOperations(result: AppRecord) = sideOperationsProcessor.processAppRecord(result)
+    private fun processSideOperations(result: AppRecord) = appSourceProcessor.processAppRecord(result)
 
     /** Gets all namespaces, delegating retrieval operation */
     fun listNamespaces(): List<String> = repository.findAllNamespace()
@@ -68,7 +63,7 @@ class AppRecordHandler {
     @Transactional(Transactional.TxType.NOT_SUPPORTED)
     fun loadAppRecord(id: AppRecordId): AppRecord? {
         return repository.findById(id)
-                .map(sideOperationsProcessor::enrichAppRecordSource)
+                .map(appSourceProcessor::enrichAppRecordSource)
                 .orElse(null)
     }
 

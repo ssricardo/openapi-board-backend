@@ -1,8 +1,8 @@
 package io.rss.openapiboard.server.presentation.resource
 
-import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
-import io.rss.openapiboard.server.services.SideOperationsProcessor
-import io.rss.openapiboard.server.services.to.RequestMemoryInputTO
+import io.rss.openapiboard.server.services.RequestMemoryHandler
+import io.rss.openapiboard.server.services.AppSourceProcessor
+import io.rss.openapiboard.server.services.to.RequestMemoryViewTO
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -19,27 +19,36 @@ import javax.ws.rs.core.Response
 class RequestMemoryResource {
 
     @Inject
-    private lateinit var processor: SideOperationsProcessor
+    private lateinit var processor: AppSourceProcessor
 
+    @Inject
+    private lateinit var handler: RequestMemoryHandler
+
+    // TODO: needed? used?
     @GET
     @Path("operations/{namespace}/{app}")
     fun listAppRecordOperations(@PathParam("namespace") namespace: String,
                                 @PathParam("app") appName: String)
             = processor.listOperationsByApp(appName, namespace)
 
-    @ApiOperation("Let creating and updating RequestMemory. ",
-            notes = "To update, the id is needed. Tries to create.")
+    @GET
+    @Path("requests")
+    @ApiOperation("Listing/Searching request-memories ", notes = "Requires a minimum query (q) according to specified in service")
+    fun listAllMemory(@QueryParam("q") query: String?,
+                      @QueryParam("pg") @DefaultValue("0") pageIndex: Int)
+        = handler.search(query, pageIndex)
+
     @PUT
     @Path("requests")
-    fun saveRequest(@ApiParam request: RequestMemoryInputTO): Response {
-        processor.saveRequest(request)
+    @ApiOperation("Let creating and updating RequestMemory. ", notes = "To update, the id is needed. Tries to create.")
+    fun saveRequest(@ApiParam request: RequestMemoryViewTO): Response {
+        handler.saveRequest(request)
         return Response.ok().build()
     }
 
     @DELETE
-    @Path("requests/{operationId}/{rid}")
-    fun removeRequest(@PathParam("operationId") operationId: Int,
-                      @PathParam("rid") requestId: Long) {
-        processor.removeRequest(operationId, requestId)
+    @Path("requests/{rid}")
+    fun removeRequest(@PathParam("rid") requestId: Long) {
+        handler.removeRequest(requestId)
     }
 }

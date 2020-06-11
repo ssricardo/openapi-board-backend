@@ -3,16 +3,12 @@ package io.rss.openapiboard.server.services
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.ObjectWriter
-import io.rss.openapiboard.server.helper.assertRequired
-import io.rss.openapiboard.server.helper.assertStringRequired
 import io.rss.openapiboard.server.persistence.AppOperationType
 import io.rss.openapiboard.server.persistence.dao.AppOperationRepository
 import io.rss.openapiboard.server.persistence.dao.RequestMemoryRepository
 import io.rss.openapiboard.server.persistence.entities.AppOperation
 import io.rss.openapiboard.server.persistence.entities.AppRecord
-import io.rss.openapiboard.server.persistence.entities.request.*
-import io.rss.openapiboard.server.services.exceptions.BoardApplicationException
-import io.rss.openapiboard.server.services.to.RequestMemoryInputTO
+import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
 import io.swagger.parser.OpenAPIParser
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.PathItem
@@ -26,13 +22,21 @@ import org.springframework.stereotype.Service
 import javax.annotation.PostConstruct
 import javax.inject.Inject
 import javax.transaction.Transactional
-import javax.validation.Validator
 
+/**
+ * Handles operations with actual source (API spec) of AppRecord.
+ * Performs validations and especially matching/mixing the original source with related RequestMemory.
+ *
+ * @see AppRecord
+ * @see RequestMemory
+ *
+ * @author ricardo saturnino
+ */
 @Service
-class SideOperationsProcessor {
+class AppSourceProcessor {
 
     private companion object {
-        val LOGGER: Logger = LoggerFactory.getLogger(SideOperationsProcessor::class.java)
+        val LOGGER: Logger = LoggerFactory.getLogger(AppSourceProcessor::class.java)
     }
 
     @Inject
@@ -40,9 +44,6 @@ class SideOperationsProcessor {
 
     @Inject
     private lateinit var requestRepository: RequestMemoryRepository
-
-    @Inject
-    private lateinit var validator: Validator
 
     private lateinit var parser:OpenAPIParser
     private lateinit var openWriter:ObjectWriter
@@ -100,71 +101,15 @@ class SideOperationsProcessor {
         return operationRepository.findByAppNamespace(appName, namespace)
     }
 
-    @Transactional
-    fun saveRequest(request: RequestMemoryInputTO): RequestMemory {
-        val requestMemory =  resolveRequestOperation(request)
-
-        validator.validate(request)
-
-        requestMemory.id?.let {
-            requestRepository.clearUpHeaders(it)
-        }
-        request.requestHeaders?.forEach { k, v ->
-            requestMemory.headers.add(HeadersMemory().apply {
-                this.name = k
-                this.value = v
-            })
-        }
-        return requestRepository.save(requestMemory)
-    }
-
-    private fun resolveRequestOperation(request: RequestMemoryInputTO): RequestMemory {
-        request.requestId?.let {
-            return requestRepository.getOne(it) // existing request
-        }
-
-        val invalidRequest = {"Request invalid. The follow fields are required: AppName, namespace, path, http method"}
-        assertStringRequired(request.appName, invalidRequest)
-        assertStringRequired(request.namespace, invalidRequest)
-        assertStringRequired(request.path, invalidRequest)
-        assertStringRequired(request.title, invalidRequest)
-        assertRequired(request.methodType, invalidRequest)
-
-        val operation = operationRepository.findSingleMatch(request.appName!!, request.namespace!!, request.path!!, request.methodType!!)
-                ?: throw BoardApplicationException("""No operation was found matching the request: 
-                    |[App: ${request.appName}, Namespace: ${request.namespace}, Path: ${request.path}, method: ${request.methodType}]""".trimMargin())
-
-        return createRequestMemory(operation, request)
-    }
-
-    private fun createRequestMemory(operation: AppOperation, request: RequestMemoryInputTO): RequestMemory {
-        return RequestMemory().apply {
-            this.operation = operation
-            visibility = RequestVisibility.PUBLIC
-            this.title = request.title!!
-            this.body = request.body
-            contentType = javax.ws.rs.core.MediaType.APPLICATION_JSON       // FUTURE: receive from request. For now, supports only JSON
-            request.pathParameters?.forEach { k, v ->
-                this.parameters.add(ParameterMemory(ParameterKind.PATH, k).apply { this.value = v })
-            }
-            request.queryParameters?.forEach { k, v ->
-                this.parameters.add(ParameterMemory(ParameterKind.QUERY, k).apply { this.value = v })
-            }
-        }
-    }
-
-    @Transactional
-    fun removeRequest(operationId: Int, requestId: Long) {
-        requestRepository.deleteOperationRequest(operationId, requestId)
-    }
-
     @Transactional(Transactional.TxType.NOT_SUPPORTED)
     fun enrichAppRecordSource(inputApp: AppRecord): AppRecord {
         inputApp.source ?: return inputApp
         val openApi = parser.readContents(inputApp.source, null, null)?.openAPI
         val paths = openApi?.paths ?: return inputApp
 
-        requestRepository.findByAppNamespace(inputApp)
+        requestRepository.findByAppNamespace(
+                inputApp.name ?: throw IllegalStateException(),
+                inputApp.namespace ?: throw IllegalStateException())
             .filter { it.operation != null }
             .forEachIndexed { index, reqMemory -> processMatchingPath(paths, reqMemory, index) }
 

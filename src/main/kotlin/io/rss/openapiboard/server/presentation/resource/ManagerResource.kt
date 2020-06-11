@@ -44,8 +44,8 @@ class ManagerResource {
 
     @Operation(description = "List Apps on the given namespace")
     @GET
-    @Path("{namespace}")
-    fun getAppOnNamespace(@PathParam("namespace") nm: String?): List<AppVersionDto> {
+    @Path("namespaces/apps")
+    fun getAppOnNamespace(@QueryParam("nm") nm: String?): List<AppVersionDto> {
         nm?.let { it ->
             return bService.listAppsByNamespace(decodeUrlPart(it))
         } ?: throw IllegalStateException("Namespace is required to list apps per domain")
@@ -53,25 +53,25 @@ class ManagerResource {
 
     @Operation(description = "Loads the internal App record [namespace + app] without it's source ")
     @GET
-    @Path("{namespace}/{app}")
-    fun loadAppRecord(@PathParam("namespace") nm: String, @PathParam("app") app: String): AppRecord? {
+    @Path("apps")
+    fun loadAppRecord(@QueryParam("nm") nm: String, @QueryParam("app") app: String): AppRecord? {
         return bService.loadAppRecord(AppRecordId(
                 decodeUrlPart(app), decodeUrlPart(nm)))
     }
 
     @Operation(description = "Loads the definition file of the given [namespace + app]")
     @GET
-    @Path("source/{namespace}/{app}")
-    fun loadAppSource(@PathParam("namespace") nm: String, @PathParam("app") app: String): String? {
+    @Path("source")
+    fun loadAppSource(@QueryParam("nm") nm: String, @QueryParam("app") app: String): String? {
         return bService.loadAppRecord(AppRecordId(
                 decodeUrlPart(app), decodeUrlPart(nm)))?.source
     }
 
     @Operation(description = "Retrieves existing versions of apps snapshots")
     @GET
-    @Path("versions/{namespace}/{app}")
-    fun getAppVersionList(@PathParam("namespace") nm: String,
-                          @PathParam("app") app: String): List<String> {
+    @Path("versions")
+    fun getAppVersionList(@QueryParam("nm") nm: String,
+                          @QueryParam("app") app: String): List<String> {
         return snapshotService.listVersionsByAppNamespace(
                 decodeUrlPart(app), decodeUrlPart(nm))
     }

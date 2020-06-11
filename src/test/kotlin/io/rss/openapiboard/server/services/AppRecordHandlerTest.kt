@@ -22,7 +22,7 @@ internal class AppRecordHandlerTest {
     lateinit var snapshotService: AppSnapshotHandler
 
     @Mock
-    lateinit var sideOperationsProcessor: SideOperationsProcessor
+    lateinit var appSourceProcessor: AppSourceProcessor
 
     @InjectMocks
     var tested = AppRecordHandler()

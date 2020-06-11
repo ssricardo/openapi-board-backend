@@ -3,27 +3,18 @@ package io.rss.openapiboard.server.persistence
 import io.rss.openapiboard.server.persistence.dao.RequestMemoryRepository
 import io.rss.openapiboard.server.persistence.entities.AppOperation
 import io.rss.openapiboard.server.persistence.entities.AppRecord
-import io.rss.openapiboard.server.persistence.entities.request.HeadersMemory
-import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
-import io.rss.openapiboard.server.persistence.entities.request.RequestVisibility
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertAll
+import io.rss.openapiboard.server.persistence.entities.request.*
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import org.mockito.Mockito.mock
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.stereotype.Component
+import org.springframework.data.domain.PageRequest
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.persistence.EntityManager
-import javax.validation.Validator
-import javax.ws.rs.core.MediaType
 
 @ExtendWith(SpringExtension::class)
 @DataJpaTest
@@ -37,13 +28,16 @@ class RequestMemoryRepositoryTest {
     lateinit var em: EntityManager
 
     var operationId: Int? = null
+    var operationIdMaster: Int? = null
 
-    @BeforeEach
-    internal fun setUp() {
+    companion object {
         val fileContent = javaClass
                 .getResource("/test-data/petstore-expanded.yaml")
                 .readText()
+    }
 
+    @BeforeEach
+    internal fun setUp() {
         val app = em.merge(AppRecord("ricardo", "testing").apply {
             path = "/base-path"
             version = "2.0"
@@ -57,8 +51,12 @@ class RequestMemoryRepositoryTest {
             this.methodType = AppOperationType.POST
         }
         em.persist(ope)
+
+        val appMaster = em.merge(app.copy(namespace = "master"))
+        val opeMaster = em.merge(ope.copy(id = null).apply { appRecord = appMaster })
         em.flush()
         operationId = ope.id
+        operationIdMaster = opeMaster.id
     }
 
     @ParameterizedTest
@@ -77,48 +75,63 @@ class RequestMemoryRepositoryTest {
             visibility = RequestVisibility.PUBLIC
             contentType = "application/json"
         }
-        request.headers.add(HeadersMemory().apply {
+        request.addParameterMemory(ParameterMemory().apply {
             name = "contentType"
             value = "application/json"
-            this.request = request
+            kind = ParameterKind.HEADER
         })
-        request.headers.add(HeadersMemory().apply {
+        request.addParameterMemory(ParameterMemory().apply {
             name = "cache"
             value = "false"
-            this.request = request
+            kind = ParameterKind.PATH
         })
 
         tested.saveAndFlush(request)
     }
 
     @Test
-    internal fun removeHeaderQuery() {
-        tested.clearUpHeaders(1) // just checks query syntax
-    }
-
-    @Test
-    internal fun deleteRequest() {
-        tested.deleteOperationRequest(1, 1L)
-    }
-
-    @Test
     fun findByAppNamespace() {
-        tested.findByAppNamespace(AppRecord("TestApp", "Production"))
+        tested.findByAppNamespace("TestApp", "Production")
     }
 
     @Test
-    fun testQueryResults() {
+    fun `query result with masters examples`() {
         persistRequest("First request", "Munich")
         persistRequest("Second request", "Tokyo")
 
+        val request = RequestMemory().apply {
+            body ="""
+                {
+                    "openAPI": "v2",
+                    "description": "/fromMaster",
+                }
+            """.trimIndent()
+            title = "ricardo"
+            operation = em.getReference(AppOperation::class.java, operationIdMaster)
+            visibility = RequestVisibility.PUBLIC
+            contentType = "application/json"
+        }
+
+        em.persist(request)
         em.flush()
         em.clear()
 
-        val result = tested.findByAppNamespace(AppRecord("ricardo", "testing"))
+        val result = tested.findByAppNamespace("ricardo", "testing")
 
         assertAll(
-                { assert(result.size == 2) },
-                { result[0].headers.size == 2 }
+                { assertEquals(3, result.size) },
+                { assertEquals(1, result[0].parameters.filter { it.kind == ParameterKind.HEADER }.size)  }
         )
+    }
+
+    @Test
+    internal fun testSearching() {
+        persistRequest("Germany", "Munich")
+        persistRequest("Georgia", "Tokyo")
+        persistRequest("Japan", "Tokyo")
+        em.flush()
+
+        val result = tested.findRequestsByFilter("ge", PageRequest.of(0, 100))
+        Assertions.assertEquals(2, result.size)
     }
 }
