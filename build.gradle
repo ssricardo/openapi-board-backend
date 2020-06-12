@@ -2,7 +2,6 @@
 buildscript {
 	dependencies {
 		classpath (group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.1.1')
-		classpath (group: 'dk.bankdata.gradle.swagger', name: 'gradle-swagger-plugin', version: '2.0.0')
 	}
 }
 
@@ -15,9 +14,8 @@ plugins {
 	id "org.jetbrains.kotlin.plugin.jpa" version "1.3.50"
 
 	id 'com.bmuschko.docker-spring-boot-application' version '6.1.1'
+	id "io.swagger.core.v3.swagger-gradle-plugin" version "2.1.2"
 }
-
-apply plugin: 'dk.bankdata.swagger'
 
 repositories {
 	mavenCentral()
@@ -69,16 +67,20 @@ compileKotlin {
 	}
 }
 
-swagger {
-	resourcePackages = ['io.rss.openapiboard.server.presentation.resource']
+resolve {
+	// careful: coupled with 'describe' endpoing
+	outputFileName = 'oaboard-api'
 
-	info {
-		title = 'OpenAPI Board Server'
-		version = '0.0.1'
-		description = 'This service provides storage and retrieving of OpenAPI documents. ' +
-				'Supporting multi versions and grouping by namespace'
-	}
+	outputFormat = 'yaml'
+	prettyPrint = true
+	classpath = sourceSets.main.runtimeClasspath
+	resourcePackages = ['io.rss.openapiboard.server.presentation.resource']
+	outputDir = file(project.buildDir.toPath().resolve('resources/main'))
+
+	// unfortunatelly not workink with yaml
+	openApiFile = file(project.rootDir.toPath().resolve('src/main/resources/swagger/openapi-config.json'))
 }
+bootJar.dependsOn('resolve')
 
 docker {
 	springBootApplication {
@@ -178,7 +180,6 @@ task bootRunTest(type: org.springframework.boot.gradle.tasks.run.BootRun) {
 	group = 'Application'
 	dependsOn('build')
 
-//	sourceSets.main.resources.srcDirs += "src/test/resources"
 	sourceResources sourceSets.test
 
 	doFirst() {

@@ -53,7 +53,7 @@ class AppSourceProcessor {
         parser = OpenAPIParser()
         val mapper = ObjectMapper()
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
-        openWriter = mapper.writer()    // FUTURE: For while, only JSON supported
+        openWriter = mapper.writer()    // for FUTURE: For while, only JSON supported
 //        openWriter = mapper.writerWithDefaultPrettyPrinter()
     }
 

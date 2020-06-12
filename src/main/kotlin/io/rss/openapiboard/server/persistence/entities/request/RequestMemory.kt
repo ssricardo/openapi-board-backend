@@ -2,6 +2,7 @@ package io.rss.openapiboard.server.persistence.entities.request
 
 import io.rss.openapiboard.server.persistence.entities.AppOperation
 import org.hibernate.annotations.BatchSize
+import java.io.Serializable
 import javax.persistence.*
 import javax.validation.constraints.NotEmpty
 import javax.validation.constraints.NotNull
@@ -19,7 +20,7 @@ data class RequestMemory (
         @Id
         @GeneratedValue
         var id: Long? = null
-) {
+): Serializable {
 
     @JoinColumn(nullable = false)
     @ManyToOne

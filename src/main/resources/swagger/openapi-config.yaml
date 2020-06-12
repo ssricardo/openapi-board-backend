@@ -1,0 +1,15 @@
+openAPI:
+  info:
+    version: '1.0'
+    title: 'OpenAPI Board Server'
+    description: |
+      This service provides storage and retrieving of OpenAPI documents.
+      Supporting multi versions and grouping by namespace'.
+
+      *General responses*:
+        * 200 - OK / success
+        * 204 - OK for operation that don't require response. Or operation processed but no result was found.
+        * 400 - Bad request: Usually indicates that the arguments are incorrect
+        * 409 - Conflict: Some validation has failed. For example, an app is in a given state that shouldn't be changed
+
+    termsOfService: https://github.com/ssricardo/openapi-board-backend

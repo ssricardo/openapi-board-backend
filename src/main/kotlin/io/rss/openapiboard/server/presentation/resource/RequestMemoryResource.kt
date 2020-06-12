@@ -11,8 +11,8 @@ import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Tag(name = "Requests memory resources",
-        description = "Endpoint related to handling sample request")
+@Tag(name = "Memory",
+        description = "Endpoints related to handling example/memory requests")
 @Path("app")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -23,13 +23,6 @@ class RequestMemoryResource {
 
     @Inject
     private lateinit var handler: RequestMemoryHandler
-
-    // TODO: needed? used?
-    @GET
-    @Path("operations/{namespace}/{app}")
-    fun listAppRecordOperations(@PathParam("namespace") namespace: String,
-                                @PathParam("app") appName: String)
-            = processor.listOperationsByApp(appName, namespace)
 
     @GET
     @Path("requests")
@@ -48,6 +41,7 @@ class RequestMemoryResource {
 
     @DELETE
     @Path("requests/{rid}")
+    @ApiOperation("Removes memory with given Id")
     fun removeRequest(@PathParam("rid") requestId: Long) {
         handler.removeRequest(requestId)
     }

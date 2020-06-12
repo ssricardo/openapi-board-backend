@@ -13,7 +13,7 @@ import javax.ws.rs.core.Response
 
 /** Exposes endpoints to partner clients to feed the system */
 
-@Tag(name = "Agent resource",
+@Tag(name = "Agent",
         description = """Resource that receives API definitions to be registered.
             |Usually should be called from plugins or other tools.""")
 @Path("agent")

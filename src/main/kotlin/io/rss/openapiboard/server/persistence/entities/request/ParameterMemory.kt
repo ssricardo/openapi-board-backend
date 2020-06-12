@@ -9,7 +9,7 @@ data class ParameterMemory (
 
         @Id
         @GeneratedValue()
-        var id: Long? = null) {
+        var id: Long? = null): Serializable {
 
     @Column(length = 10)
     @Enumerated(EnumType.STRING)

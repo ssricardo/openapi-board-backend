@@ -18,7 +18,7 @@ import javax.ws.rs.core.MediaType
 
 /** Exposes endpoints to the manager app */
 
-@Tag(name = "Manager Resources",
+@Tag(name = "Manager",
         description = "Resource for operations from Board's Presentation App")
 @Path("manager")
 @Produces(MediaType.APPLICATION_JSON)
@@ -76,13 +76,12 @@ class ManagerResource {
                 decodeUrlPart(app), decodeUrlPart(nm))
     }
 
-    @Operation(description = "Temporary endpoint")   // TODO: remove
+    @Operation(description = "Shows oaBoard self open API definitions")
     @GET
     @Path("describe")
     @Produces("text/vnd.yaml")
     fun getSelfAppRecord():String? {
-        Files.newInputStream(
-            Paths.get("D:\\dev\\git\\openapi-center\\openapi-board-server\\build\\swagger\\openapi.yaml"))  // FIXME
+        this.javaClass.getResourceAsStream("/oaboard-api.yaml")
             .use {
                 return it.bufferedReader()
                     .readText()

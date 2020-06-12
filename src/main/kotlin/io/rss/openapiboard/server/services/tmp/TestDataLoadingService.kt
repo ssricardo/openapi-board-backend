@@ -21,7 +21,7 @@ import javax.inject.Inject
 import javax.transaction.Transactional
 import kotlin.random.Random
 
-
+/** Populates the DB with sample data (for testing, demonstration). */
 @Profile("test")
 @Service
 class TestDataLoadingService {
@@ -37,6 +37,7 @@ class TestDataLoadingService {
     private companion object {
         const val PRODUCTION = "Production"
         const val TEST = "Test"
+        const val FEATURE = "feature/1_1"
     }
 
     @PostConstruct
@@ -44,11 +45,11 @@ class TestDataLoadingService {
         try {
             print("========================== Trying to create test data ============================")
 
-            val petStoreSource = Files.newInputStream(Paths.get(
-                    "/home/ricardo/projects/ricardo/openapi-board/openapi-board-backend/src/test/resources/test-data/petstore-expanded.yaml"))
+            val petStoreSource = javaClass.getResourceAsStream(
+                    "/swagger/sample-def-petstore.yaml")
                     .use {
                         it.bufferedReader().readText()
-                    } // FIXME
+                    }
             val items = mutableListOf(AppRecord("Orders", PRODUCTION),
                     AppRecord("Orders", TEST),
                     AppRecord("Products", PRODUCTION),
@@ -56,10 +57,12 @@ class TestDataLoadingService {
                     AppRecord("People", PRODUCTION),
                     AppRecord("People", TEST),
                     AppRecord("Disks", PRODUCTION),
-                    AppRecord("Songs", PRODUCTION)
+                    AppRecord("Songs", PRODUCTION),
+                    AppRecord("Disks", FEATURE),
+                    AppRecord("Songs", FEATURE)
                     )
 
-            for (i in 1..7) {
+            for (i in 1..5) {
                 val src  = items[i]
                 for (j in 1..3) {
                     items.add(AppRecord(src.name, "feature/${i}_$j"))
@@ -119,6 +122,12 @@ class TestDataLoadingService {
         }
         if (randomizer.nextBoolean()) {
             result = result.replace("/pets", "/books")
+        }
+        if (randomizer.nextBoolean()) {
+            result = result.replace("deletes a single pet based on the ID supplied", "deletes whatever it wants")
+        }
+        if (randomizer.nextBoolean()) {
+            result = result.replace("unexpected error", "Oh NOOO!")
         }
         return result
     }

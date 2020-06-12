@@ -1,5 +1,5 @@
 <!-- # oaboard-backend-app -->
-# Backend for  OpenAPI Board / Center
+# Backend for OpenAPI Board
 
 ## Running
 
@@ -51,6 +51,11 @@ Run one of the tasks:
     * For MySQL version
 
 ## Endpoints
+
+The API definitions is available on: `/manager/describe`.    
+On the UI, there's a special parameter to access it: `{host}/swagger/o/b?self-describe=true`.  
+
+> Abstract below
 
 ### Manager endpoints
 

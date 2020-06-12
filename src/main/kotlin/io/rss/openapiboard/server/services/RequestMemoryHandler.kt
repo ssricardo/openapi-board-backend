@@ -39,6 +39,7 @@ class RequestMemoryHandler {
 
     companion object {
         const val QUERY_PAGE_SIZE = 300
+        const val MIN_SIZE_SEARCHING = 2
     }
 
     @Transactional()
@@ -117,7 +118,8 @@ class RequestMemoryHandler {
      * */
     @org.springframework.transaction.annotation.Transactional(readOnly = true) // for lazy loading. provider specific due to readOnly
     fun search(query: String?, offset: Int): QueryResult<List<RequestMemoryViewTO>> {
-        assertValid((query?.length ?: 0) >= 2) {"This query requires at least 2 characteres. Found: ${query?.length}"}
+        assertValid((query?.length ?: 0) >= MIN_SIZE_SEARCHING) {
+            "This query requires at least $MIN_SIZE_SEARCHING characteres. Found: ${query?.length}" }
 
         val data = requestRepository.findRequestsByFilter(query ?: "", PageRequest.of(offset, QUERY_PAGE_SIZE))
                 .map(::convertMemoryToView)

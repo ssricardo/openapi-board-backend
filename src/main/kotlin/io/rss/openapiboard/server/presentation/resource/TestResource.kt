@@ -7,7 +7,7 @@ import java.security.Principal
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 
-@Tag(name = "Health resource", description = "Simple basic resource to use for health check")
+@Tag(name = "Health", description = "Simple basic resource to use for health check")
 @Path("test")
 class TestResource {
 
