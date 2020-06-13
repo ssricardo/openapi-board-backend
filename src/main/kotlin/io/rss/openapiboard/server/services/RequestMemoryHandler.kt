@@ -25,7 +25,7 @@ import javax.validation.Validator
 /** Handles CRUD operations related to RequestMemory and conversions to related TOs */
 
 @Service
-@PreAuthorize("hasAuthority('${Roles.MANAGER}')")
+@PreAuthorize("hasAuthority('${Roles.READER}')")
 class RequestMemoryHandler {
 
     @Inject
@@ -43,6 +43,7 @@ class RequestMemoryHandler {
     }
 
     @Transactional()
+    @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
     fun saveRequest(request: RequestMemoryViewTO): RequestMemory {
         val requestMemory =  resolveRequestOperation(request)
 
@@ -109,6 +110,7 @@ class RequestMemoryHandler {
     }
 
     @Transactional
+    @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
     fun removeRequest(requestId: Long) {
         requestRepository.deleteById(requestId)
     }

@@ -1,6 +1,7 @@
 package io.rss.openapiboard.server.config.security
 
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -17,16 +18,11 @@ import javax.inject.Inject
 
 @Configuration
 @EnableWebSecurity(debug = true)
-//@EnableGlobalMethodSecurity(jsr250Enabled = false, securedEnabled = false, prePostEnabled = true)
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 class SecurityConfig: WebSecurityConfigurerAdapter() {
 
     @Inject
     private lateinit var config: UserConfig
-
-    @Throws(Exception::class)
-    override fun configure(web: WebSecurity) {
-        web.ignoring().antMatchers("/**")
-    }
 
     override fun configure(auth: AuthenticationManagerBuilder) {
         val encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder()
@@ -39,10 +35,11 @@ class SecurityConfig: WebSecurityConfigurerAdapter() {
     }
 
     override fun configure(http: HttpSecurity) {
-        http.authorizeRequests()
-                .anyRequest().authenticated()
-                .and()
-                .httpBasic()
+        // naturally this still needs to be improved
+        http
+            .httpBasic()
+        .and()
+            .csrf().disable()
     }
 
 }

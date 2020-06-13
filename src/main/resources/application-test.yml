@@ -3,7 +3,7 @@ users:
     -
       name: admin
       password: test
-      roles: ['MANAGER', 'AGENT']
+      roles: ['READER', 'AGENT', 'MANAGER']
 
 spring:
   jpa:

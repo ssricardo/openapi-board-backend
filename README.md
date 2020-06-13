@@ -9,6 +9,7 @@ This app uses Gradle as build tools, therefore run it use Gradle's tasks.
 
 > ./gradlew build
 
+
 ### Specific Tasks
 
 The build has a customization to let us use either H2 or MySql version
@@ -85,8 +86,10 @@ These are strings indicates the names of a given namespace and the app name.
         
 There are two default roles, which are needed:
 
+* READER
+    * Needed to use the frontend application (reading operations)
 * MANAGER
-    * Needed to use the frontend application
+    * Needed to make changes using the frontend application
 * AGENT
     * Needed to push new app definitions, usually to be done by a client 
     

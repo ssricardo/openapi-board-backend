@@ -16,7 +16,7 @@ import javax.transaction.Transactional
  * @author ricardo saturnino
  */
 @Service
-@PreAuthorize("hasAnyAuthority('${Roles.AGENT}', '${Roles.MANAGER}')")
+@PreAuthorize("hasAnyAuthority('${Roles.AGENT}', '${Roles.READER}')")
 class AppRecordHandler {
 
     private companion object {
@@ -33,6 +33,7 @@ class AppRecordHandler {
     lateinit var appSourceProcessor: AppSourceProcessor
 
     @Transactional
+    @PreAuthorize("hasAnyAuthority('${Roles.AGENT}', '${Roles.MANAGER}')")
     fun createOrUpdate(appRecord: AppRecord): AppRecord {
         assertStringRequired(appRecord.name) {"Name must not be null"}
         assertStringRequired(appRecord.namespace) {"Namespace must not be null"}
