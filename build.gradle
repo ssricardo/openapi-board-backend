@@ -68,7 +68,7 @@ compileKotlin {
 }
 
 resolve {
-	// careful: coupled with 'describe' endpoing
+	// careful: coupled with 'describe' endpoint
 	outputFileName = 'oaboard-api'
 
 	outputFormat = 'yaml'
@@ -77,7 +77,7 @@ resolve {
 	resourcePackages = ['io.rss.openapiboard.server.presentation.resource']
 	outputDir = file(project.buildDir.toPath().resolve('resources/main'))
 
-	// unfortunatelly not workink with yaml
+	// unfortunately not working with yaml
 	openApiFile = file(project.rootDir.toPath().resolve('src/main/resources/swagger/openapi-config.json'))
 }
 bootJar.dependsOn('resolve')

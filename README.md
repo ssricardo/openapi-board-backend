@@ -5,7 +5,7 @@
 
 This app uses Gradle as build tools, therefore run it use Gradle's tasks.
 
-*You don't need to download gradle, just use the wrapper in this project.
+* You don't need to download gradle, just use the wrapper in this project.
 
 > ./gradlew build
 
@@ -94,7 +94,7 @@ There are two default roles, which are needed:
 
 ## Architecture
 
-This backend application is based on Kotlin over JVM, using mostly Java Web platforms. 
+This backend application is based on Kotlin over JVM, and uses mostly Java Web standards/frameworks.   
 The app itself is not big, so it's kept in a single module.  
 
 **Components:**  
@@ -104,18 +104,11 @@ The app itself is not big, so it's kept in a single module.
    
  * Spring Boot App
     * Spring JPA
- * Jax-RS and OpenAPI/Swagger
+ * Jax-RS and OpenAPI/Swagger 
 
 **Database**:  
 
  It uses standard SQL. 
  It's ready to run/ be built with either H2 or MySQL.  
  
-> Its model probably also fits well in a NoSQL DB. A SQL was chosen for being quicker to start with and it fits better JPA 
-
-
-## TODOs
-
-> Some ideas for future
-
-- ...
+> Its model probably also fits well in a NoSQL DB. A SQL was chosen as it was quicker to start with and it fits better JPA 
