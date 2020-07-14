@@ -1,6 +1,6 @@
 package io.rss.openapiboard.server.services
 
-import io.rss.openapiboard.server.config.security.Roles
+import io.rss.openapiboard.server.security.Roles
 import io.rss.openapiboard.server.helper.assertStringRequired
 import io.rss.openapiboard.server.persistence.dao.AppRecordRepository
 import io.rss.openapiboard.server.persistence.entities.AppRecord

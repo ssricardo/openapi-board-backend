@@ -1,6 +1,6 @@
 package io.rss.openapiboard.server.services
 
-import io.rss.openapiboard.server.config.security.Roles
+import io.rss.openapiboard.server.security.Roles
 import io.rss.openapiboard.server.helper.assertStringRequired
 import io.rss.openapiboard.server.persistence.dao.AppSnapshotRepository
 import io.rss.openapiboard.server.persistence.entities.AppRecord
@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
-import javax.annotation.security.RolesAllowed
 import javax.inject.Inject
 
 /** Provides CRUD operations for AppSnapshop, making use of Async in some cases */

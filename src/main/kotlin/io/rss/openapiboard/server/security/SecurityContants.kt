@@ -1,4 +1,4 @@
-package io.rss.openapiboard.server.config.security
+package io.rss.openapiboard.server.security
 
 object Roles {
 

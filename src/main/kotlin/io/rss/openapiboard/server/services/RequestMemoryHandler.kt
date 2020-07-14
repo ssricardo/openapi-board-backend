@@ -1,6 +1,6 @@
 package io.rss.openapiboard.server.services
 
-import io.rss.openapiboard.server.config.security.Roles
+import io.rss.openapiboard.server.security.Roles
 import io.rss.openapiboard.server.helper.assertRequired
 import io.rss.openapiboard.server.helper.assertStringRequired
 import io.rss.openapiboard.server.helper.assertValid

@@ -1,6 +1,6 @@
 package io.rss.openapiboard.server
 
-import io.rss.openapiboard.server.config.security.UserConfig
+import io.rss.openapiboard.server.security.config.UserConfig
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
 import org.springframework.boot.test.context.SpringBootTest
