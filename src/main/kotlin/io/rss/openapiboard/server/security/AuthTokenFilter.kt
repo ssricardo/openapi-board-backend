@@ -1,6 +1,6 @@
 package io.rss.openapiboard.server.security
 
-import io.rss.openapiboard.server.helper.AuthHelper
+import io.rss.openapiboard.server.helper.TokenHelper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -44,7 +44,7 @@ class AuthTokenFilter : OncePerRequestFilter() {
         val headerAuth = request.getHeader("Authorization")
         return if (headerAuth?.startsWith(BEARER_PREFIX) == true) {
             val token = headerAuth!!.removePrefix(BEARER_PREFIX)
-            AuthHelper.validateConvertToUser(token)
+            TokenHelper.validateConvertToUser(token)
         } else
             null
     }

@@ -12,9 +12,23 @@ spring:
       hibernate:
         format_sql: true
 
+
+  mail:
+    host: smtp.gmail.com
+    port: 572
+    username: ricardo.test
+    password: blaFromSecrets
+    properties:
+      - name: mail.smtp.auth
+        value: true
+
+
 server:
   h2:
     console:
       enabled: true
 #  servlet:
 #    context-path: /api
+
+env:
+  server-address: http://localhost:8080/

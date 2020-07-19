@@ -5,6 +5,7 @@ import io.rss.openapiboard.server.helper.assertStringRequired
 import io.rss.openapiboard.server.persistence.dao.AppRecordRepository
 import io.rss.openapiboard.server.persistence.entities.AppRecord
 import io.rss.openapiboard.server.persistence.entities.AppRecordId
+import io.rss.openapiboard.server.services.support.NotificationHandler
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import javax.inject.Inject
@@ -32,6 +33,8 @@ class AppRecordHandler {
     @Inject
     lateinit var appSourceProcessor: AppSourceProcessor
 
+    lateinit var notificationHandler: NotificationHandler
+
     @Transactional
     @PreAuthorize("hasAnyAuthority('${Roles.AGENT}', '${Roles.MANAGER}')")
     fun createOrUpdate(appRecord: AppRecord): AppRecord {
@@ -46,13 +49,14 @@ class AppRecordHandler {
 
         val result = repository.saveAndFlush(appRecord).also {
             snapshotService.feed(it)
+            notificationHandler.notifyUpdate(it)
         }
 
-        processSideOperations(result)
+        doSourceProcessing(result)
         return result
     }
 
-    private fun processSideOperations(result: AppRecord) = appSourceProcessor.processAppRecord(result)
+    private fun doSourceProcessing(result: AppRecord) = appSourceProcessor.processAppRecord(result)
 
     /** Gets all namespaces, delegating retrieval operation */
     fun listNamespaces(): List<String> = repository.findAllNamespace()

@@ -3,13 +3,13 @@ package io.rss.openapiboard.server.persistence
 import io.rss.openapiboard.server.persistence.dao.AppSnapshotRepository
 import io.rss.openapiboard.server.persistence.entities.AppRecordId
 import io.rss.openapiboard.server.persistence.entities.AppSnapshot
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
-import org.springframework.context.annotation.ComponentScan
-import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import javax.inject.Inject
 import javax.persistence.EntityManager
@@ -40,6 +40,13 @@ class AppSnapshotRepositoryTest {
         assert(res.size == 3)
         assert("2.0" in res)
         assert("5.0" !in res)
+    }
+
+    @Test
+    fun `find previous version`() {
+        val res = tested.findTopPreviousVersion("RicardoApp", "test", "3.0")
+        assertNotNull(res)
+        assertFalse(res!!.version == "3.0")
     }
 
     @Test

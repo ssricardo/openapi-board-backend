@@ -35,6 +35,8 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-jersey")
 	implementation("org.springframework.boot:spring-boot-starter-security")
+	implementation("org.springframework.boot:spring-boot-starter-mail")
+
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation ("com.auth0:java-jwt:3.10.3")
 
@@ -49,6 +51,7 @@ dependencies {
 	devClasspath("com.h2database:h2")
 	prodClasspath group: 'mysql', name: 'mysql-connector-java', version: '8.0.18'
 
+	/* Testing */
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(module: "junit")
 		exclude(module: "junit-vintage-engine")
@@ -65,6 +68,13 @@ compileKotlin {
 	kotlinOptions {
 		freeCompilerArgs = ["-Xjsr305=strict"]
 		jvmTarget = "1.8"
+	}
+}
+
+test {
+	useJUnitPlatform {
+		includeTags('no')
+//		excludeTags 'db'
 	}
 }
 

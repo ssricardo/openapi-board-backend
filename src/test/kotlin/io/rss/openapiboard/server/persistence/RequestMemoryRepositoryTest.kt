@@ -31,7 +31,7 @@ class RequestMemoryRepositoryTest {
     var operationIdMaster: Int? = null
 
     companion object {
-        val fileContent = javaClass
+        val fileContent = RequestMemoryRepositoryTest::class.java
                 .getResource("/test-data/petstore-expanded.yaml")
                 .readText()
     }

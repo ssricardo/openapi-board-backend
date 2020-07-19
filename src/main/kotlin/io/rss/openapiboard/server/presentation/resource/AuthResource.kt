@@ -1,6 +1,6 @@
 package io.rss.openapiboard.server.presentation.resource
 
-import io.rss.openapiboard.server.helper.AuthHelper
+import io.rss.openapiboard.server.helper.TokenHelper
 import io.rss.openapiboard.server.helper.assertStringRequired
 import io.rss.openapiboard.server.services.to.AuthenticationTO
 import org.springframework.security.authentication.AuthenticationManager
@@ -32,7 +32,7 @@ class AuthResource {
         request?.let {
             val authentication = authManager.authenticate(UsernamePasswordAuthenticationToken(request.user, request.password))
             SecurityContextHolder.getContext().authentication = authentication
-            return AuthHelper.convertToString(authentication)
+            return TokenHelper.convertToString(authentication)
         }
         return null
     }
