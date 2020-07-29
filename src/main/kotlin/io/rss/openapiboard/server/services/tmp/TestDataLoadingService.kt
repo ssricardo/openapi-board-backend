@@ -1,10 +1,12 @@
 package io.rss.openapiboard.server.services.tmp
 
 import io.rss.openapiboard.server.persistence.AppOperationType
+import io.rss.openapiboard.server.persistence.entities.AlertSubscription
 import io.rss.openapiboard.server.persistence.entities.AppRecord
 import io.rss.openapiboard.server.persistence.entities.request.ParameterKind
 import io.rss.openapiboard.server.services.AppRecordHandler
 import io.rss.openapiboard.server.services.RequestMemoryHandler
+import io.rss.openapiboard.server.services.support.SubscriptionHandler
 import io.rss.openapiboard.server.services.to.ParameterMemoryTO
 import io.rss.openapiboard.server.services.to.RequestMemoryViewTO
 import org.springframework.context.annotation.Profile
@@ -32,6 +34,9 @@ class TestDataLoadingService {
     @Inject
     lateinit var requestMemoryHandler: RequestMemoryHandler
 
+    @Inject
+    private lateinit var subscriptionHandler: SubscriptionHandler
+
     val randomizer = Random(30)
 
     private companion object {
@@ -41,6 +46,7 @@ class TestDataLoadingService {
     }
 
     @PostConstruct
+    @Transactional
     fun init() {
         try {
             print("========================== Trying to create test data ============================")
@@ -84,6 +90,7 @@ class TestDataLoadingService {
             }
 
             createExampleMemory(items)
+            createSubscriptions()
 
             println("Loading completed")
         } catch (e: Exception) {
@@ -91,6 +98,17 @@ class TestDataLoadingService {
                 |${e.message}
             """.trimMargin())
         }
+    }
+
+    private fun createSubscriptions() {
+        for (i in 0..10) {
+            subscriptionHandler.saveOrUpdate(AlertSubscription().apply {
+                appName = "Products"
+                email = "ricardo.test$i@testMail.com"
+                basePaths = mutableListOf("/pets", "/pets/id")
+            })
+        }
+        println("Subscriptions created")
     }
 
     private fun createExampleMemory(items: MutableList<AppRecord>) {

@@ -8,6 +8,7 @@ import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
+import org.springframework.security.config.annotation.web.builders.WebSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
 import org.springframework.security.config.http.SessionCreationPolicy
@@ -46,15 +47,19 @@ class SecurityConfig: WebSecurityConfigurerAdapter() {
         return super.authenticationManager()
     }
 
+    override fun configure(web: WebSecurity) {
+        web.ignoring().antMatchers("/test", "/auth/", "/auth/*")
+    }
+
     override fun configure(http: HttpSecurity) {
         http
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         .and()
             .exceptionHandling().authenticationEntryPoint(authEntryPoint)
-        .and()
-            .authorizeRequests()
-                .antMatchers("/test", "/auth/*")
-                    .permitAll()
+//        .and()
+//            .authorizeRequests()
+//                .antMatchers()
+//                    .permitAll()
         .and()
             .authorizeRequests()
                 .anyRequest()

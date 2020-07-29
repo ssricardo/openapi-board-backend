@@ -10,8 +10,7 @@ spring:
     show-sql: true
     properties:
       hibernate:
-        format_sql: true
-
+        format_sql: false
 
   mail:
     host: smtp.gmail.com
@@ -22,7 +21,6 @@ spring:
       - name: mail.smtp.auth
         value: true
 
-
 server:
   h2:
     console:
@@ -32,3 +30,6 @@ server:
 
 env:
   server-address: http://localhost:8080/
+
+#security:
+#  ignored: /**

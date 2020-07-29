@@ -33,6 +33,7 @@ class AppRecordHandler {
     @Inject
     lateinit var appSourceProcessor: AppSourceProcessor
 
+    @Inject
     lateinit var notificationHandler: NotificationHandler
 
     @Transactional

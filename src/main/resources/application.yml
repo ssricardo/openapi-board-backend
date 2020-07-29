@@ -17,6 +17,4 @@ spring:
     properties:
       hibernate:
         dialect: ${hibernate_dialect}
-  h2:
-    console:
-      enabled: true
+

@@ -2,6 +2,7 @@ package io.rss.openapiboard.server.presentation.resource
 
 import io.rss.openapiboard.server.services.support.SubscriptionHandler
 import io.rss.openapiboard.server.services.to.SubscriptionTO
+import javax.inject.Inject
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 
@@ -10,6 +11,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 class SubscriptionResource {
 
+    @Inject
     private lateinit var handler: SubscriptionHandler
 
     @GET
@@ -28,6 +30,5 @@ class SubscriptionResource {
     fun removeSubscription(@PathParam("id") id: Long) {
         handler.removeById(id)
     }
-
 
 }
