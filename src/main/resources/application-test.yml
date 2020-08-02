@@ -13,13 +13,20 @@ spring:
         format_sql: false
 
   mail:
-    host: smtp.gmail.com
-    port: 572
-    username: ricardo.test
-    password: blaFromSecrets
+    host: localhost
+    port: 1025
+    username: oab_server
+    password: superSecret
+    protcol: smtp
     properties:
-      - name: mail.smtp.auth
+#      - name: mail.smtp.auth
+#        value: true
+      - name: mail.smtp.starttls
         value: true
+
+mail:
+  notification:
+    enabled: true
 
 server:
   h2:
@@ -29,7 +36,11 @@ server:
 #    context-path: /api
 
 env:
-  server-address: http://localhost:8080/
+  server-address: http://localhost:8080
+
+jwt:
+  private:
+    key: DXnC^E8xFm6-ectU4rXv8T7jNnxW2rdXazwxQvWwshCiEzcLQvMbDYAKECFBtyWWzqQnv5tzpGoWRdbNxXPmaLKR/jSx_FSWoij88uHaLu6zVQPfvPRUwAmRimqcUTba
 
 #security:
 #  ignored: /**

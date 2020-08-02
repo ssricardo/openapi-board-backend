@@ -36,7 +36,7 @@ data class SubscriptionTO(private val wrapped: AlertSubscription = AlertSubscrip
         get() = wrapped.modifiedTime
 
         @JsonIgnore
-        set(value) {
+        set(_) {
             // ignore
         }
 
@@ -75,4 +75,5 @@ class SubscriptionDeserializer: JsonDeserializer<SubscriptionTO>() {
 
 }
 
+/** Carry result of retrieved data from Mail token */
 data class SubscriptionMailId(val appName: String, val email: String)

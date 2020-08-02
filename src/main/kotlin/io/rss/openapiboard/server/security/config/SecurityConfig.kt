@@ -32,6 +32,9 @@ class SecurityConfig: WebSecurityConfigurerAdapter() {
     @Inject
     private lateinit var authEntryPoint: AuthEntryPointJwt
 
+    @Inject
+    private lateinit var authManager: AuthenticationManager
+
     override fun configure(auth: AuthenticationManagerBuilder) {
         val encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder()
         var aConfig = auth.inMemoryAuthentication()
@@ -48,7 +51,9 @@ class SecurityConfig: WebSecurityConfigurerAdapter() {
     }
 
     override fun configure(web: WebSecurity) {
-        web.ignoring().antMatchers("/test", "/auth/", "/auth/*")
+        web.ignoring().antMatchers("/test", "/auth/", "/auth/*",
+                "/m/*" // Input from mail (with token)
+        )
     }
 
     override fun configure(http: HttpSecurity) {
@@ -56,10 +61,6 @@ class SecurityConfig: WebSecurityConfigurerAdapter() {
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         .and()
             .exceptionHandling().authenticationEntryPoint(authEntryPoint)
-//        .and()
-//            .authorizeRequests()
-//                .antMatchers()
-//                    .permitAll()
         .and()
             .authorizeRequests()
                 .anyRequest()
@@ -67,7 +68,7 @@ class SecurityConfig: WebSecurityConfigurerAdapter() {
         .and()
             .csrf().disable()
 
-        http.addFilterBefore(AuthTokenFilter(), UsernamePasswordAuthenticationFilter::class.java)
+        http.addFilterBefore(AuthTokenFilter(authManager), UsernamePasswordAuthenticationFilter::class.java)
     }
 
 }

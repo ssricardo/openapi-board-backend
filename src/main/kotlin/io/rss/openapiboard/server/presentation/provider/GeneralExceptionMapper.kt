@@ -44,7 +44,7 @@ class GeneralExceptionMapper: ExceptionMapper<Exception> {
         var currentProvider: ExceptionMapper<Throwable?>? = currentCause?.javaClass?.let { providers.getExceptionMapper(it) }
 
         while (currentCause != null && currentProvider == null) {
-            currentCause = currentCause?.cause
+            currentCause = currentCause.cause
             currentProvider =
                     currentCause?.javaClass?.let { providers.getExceptionMapper(it) }
         }

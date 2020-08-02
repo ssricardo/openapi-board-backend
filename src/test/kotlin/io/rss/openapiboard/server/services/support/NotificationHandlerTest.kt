@@ -56,7 +56,7 @@ class NotificationHandlerTest {
     @Test
     @Disabled("Not implemented yet")
     fun `no changes detected`() {
-        TODO("Not yet implemented")
+        TODO("Not yet implemented. Need to be done after changes detection implementation")
     }
 
     @Test

@@ -1,5 +1,7 @@
 package io.rss.openapiboard.server.config
 
+import io.rss.openapiboard.server.helper.TokenHelper
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.TaskExecutor
@@ -25,5 +27,12 @@ class GeneralConfig {
     @Bean
     fun getExecutorService(): ExecutorService {
         return Executors.newCachedThreadPool()
+    }
+
+    @Bean
+    fun getTokenHelper(@Value("\${jwt.private.key}") jwtKey: String): TokenHelper {
+        return TokenHelper.also {
+            it.setupAlgorithm(jwtKey)
+        }
     }
 }

@@ -11,12 +11,13 @@ import org.springframework.stereotype.Repository
 interface AlertSubscriptionRepository: JpaRepository<AlertSubscription, Long> {
 
     @Query("""
-        DELETE FROM AlertSubscription a 
-        WHERE a.email = :mail AND a.appName = :appId
+        SELECT a  
+        FROM AlertSubscription a  
+        WHERE a.email = :mail AND a.appName = :appId 
+            AND ROWNUM = 1
     """)
-    @Modifying
-    fun deleteByMailApp(@Param("mail") mail: String,
-                        @Param("appId") appId: String)
+    fun findByMailApp(@Param("mail") mail: String,
+                      @Param("appId") appId: String): AlertSubscription?
 
     @Query("""
         SELECT a 

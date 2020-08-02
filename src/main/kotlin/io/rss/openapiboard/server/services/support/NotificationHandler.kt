@@ -10,11 +10,14 @@ import io.rss.openapiboard.server.persistence.entities.AlertSubscription
 import io.rss.openapiboard.server.persistence.entities.AppRecord
 import io.rss.openapiboard.server.security.Roles
 import io.rss.openapiboard.server.services.to.SubscriptionMailId
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.mail.javamail.JavaMailSender
+import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.scheduling.annotation.Async
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import java.lang.IllegalStateException
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.ExecutorService
 import javax.annotation.PostConstruct
 import javax.inject.Inject
@@ -24,7 +27,9 @@ import javax.mail.internet.InternetAddress
 /** Responsible for notify the subscribers according to its needs */
 @Service
 @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
-class NotificationHandler {
+class NotificationHandler(
+        @Value("\${mail.notification.enabled}")
+        private val notificationEnabled: Boolean = false) {
 
     companion object {
         const val NOTIFICATION_MAIL_SUBJECT: String = "[OaBoard Notification] An application that you follow was updated"
@@ -51,6 +56,9 @@ class NotificationHandler {
 
     @Async
     fun notifyUpdate(appRecord: AppRecord) {
+        if (! notificationEnabled) {
+            return
+        }
         assertRequired(appRecord.name){"Invalid AppRecord given. Name is mandatory"}
 
         getAppChangeSpec(appRecord)?.let { change ->
@@ -80,7 +88,8 @@ class NotificationHandler {
     private fun submitNotification(change: AppChange, subs: AlertSubscription) {
         val unsubscribeLink = createUnsubsLink(change.app.name!!, subs.email!!)
         val mailContent = NotificationTemplate(change.app.lastModified,
-                change.app.name!!, unsubscribeLink)
+                appName = change.app.name!!, newVersion = change.app.version!!,
+                unsubscribeLink = unsubscribeLink)
 
         executorService.submit {
             sendMail(subs.email!!, mailContent)
@@ -89,18 +98,21 @@ class NotificationHandler {
 
     private fun createUnsubsLink(appName: String, email: String): String {
         val token = createToken(appName, email)
-        return "${envConfig.serverAddress}$PATH_UNSUBSCRIBE?tk=$token"
+        return "${envConfig.serverAddress}$PATH_UNSUBSCRIBE$token"
     }
 
     private fun sendMail(emailAddress: String, mailContent: String) {
         val message = emailSender.createMimeMessage().apply {
-            setFrom()
-            setRecipient(Message.RecipientType.BCC, InternetAddress(emailAddress))
             setSubject(NOTIFICATION_MAIL_SUBJECT)
-            setText(mailContent)
         }
 
-        emailSender.send(message)
+        val h = MimeMessageHelper(message, true, StandardCharsets.UTF_8.name()).apply {
+            setFrom("oaBoard@noreply")
+            setBcc(emailAddress)
+            setText(mailContent, true)
+        }
+
+        emailSender.send(h.mimeMessage)
     }
 
     private fun getListOfSubscribers(appName: String) =
@@ -108,9 +120,6 @@ class NotificationHandler {
 
     private fun createToken(appId: String, email: String): String =
             TokenHelper.generateMailToken(SubscriptionMailId(appId, email))
-
-    private fun parseToken(token: String): SubscriptionMailId =
-            TokenHelper.validateRetrieveMailInfo(token)
 
     /** Holds the diff and kind of diff: path removed? changed?... */
     data class AppChange(val app: AppRecord, val kind: String? = null)
