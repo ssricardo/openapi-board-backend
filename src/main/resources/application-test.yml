@@ -24,10 +24,6 @@ spring:
       - name: mail.smtp.starttls
         value: true
 
-mail:
-  notification:
-    enabled: true
-
 server:
   h2:
     console:
@@ -37,6 +33,8 @@ server:
 
 env:
   server-address: http://localhost:8080
+  mail-notification-enabled: true
+  main-namespace: Production
 
 jwt:
   private:

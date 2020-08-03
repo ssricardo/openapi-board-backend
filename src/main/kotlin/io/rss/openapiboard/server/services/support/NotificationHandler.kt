@@ -27,9 +27,7 @@ import javax.mail.internet.InternetAddress
 /** Responsible for notify the subscribers according to its needs */
 @Service
 @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
-class NotificationHandler(
-        @Value("\${mail.notification.enabled}")
-        private val notificationEnabled: Boolean = false) {
+class NotificationHandler() {
 
     companion object {
         const val NOTIFICATION_MAIL_SUBJECT: String = "[OaBoard Notification] An application that you follow was updated"
@@ -56,7 +54,7 @@ class NotificationHandler(
 
     @Async
     fun notifyUpdate(appRecord: AppRecord) {
-        if (! notificationEnabled) {
+        if (! envConfig.mailNotificationEnabled) {
             return
         }
         assertRequired(appRecord.name){"Invalid AppRecord given. Name is mandatory"}
@@ -71,7 +69,7 @@ class NotificationHandler(
 
     private fun getAppChangeSpec(appRecord: AppRecord): AppChange? {
         val previous = appSnapshotRepository.findTopPreviousVersion(appRecord.name!!,
-                "master", appRecord.version!!)
+                envConfig.mainNamespace, appRecord.version!!)
 
         // simplified first version. Idea for later: parse the definitions, find specific paths changed
 

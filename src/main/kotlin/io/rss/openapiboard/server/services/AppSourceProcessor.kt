@@ -121,7 +121,7 @@ class AppSourceProcessor {
 
     private fun processMatchingContent(rm: RequestMemory, pi: PathItem, index: Int) {
         val methodOperation = getHttpMethodForOperation(rm.operation!!, pi)
-        rm.parameters?.forEach { memParam ->
+        rm.parameters.forEach { memParam ->
             methodOperation?.parameters?.forEachIndexed { index, specParam ->
                 if (specParam.name == memParam.name && specParam.`in` == memParam.kind.toString().toLowerCase()) {
                     specParam.examples = specParam.examples ?: mutableMapOf()
