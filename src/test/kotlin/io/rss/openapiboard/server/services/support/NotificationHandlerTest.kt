@@ -1,16 +1,15 @@
 package io.rss.openapiboard.server.services.support
 
-import com.nhaarman.mockitokotlin2.atLeastOnce
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import io.rss.openapiboard.server.config.EnvironmentConfig
+import io.rss.openapiboard.server.helper.TokenHelper
 import io.rss.openapiboard.server.persistence.dao.AlertSubscriptionRepository
 import io.rss.openapiboard.server.persistence.dao.AppRecordRepository
+import io.rss.openapiboard.server.persistence.dao.AppSnapshotRepository
 import io.rss.openapiboard.server.persistence.entities.AlertSubscription
 import io.rss.openapiboard.server.persistence.entities.AppRecord
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -19,19 +18,17 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito
+import org.mockito.Spy
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.mail.javamail.JavaMailSender
 import java.time.LocalDateTime
 import java.util.concurrent.ExecutorService
-import javax.inject.Inject
-import javax.mail.internet.MimeMessage
 
 @ExtendWith(MockitoExtension::class)
 class NotificationHandlerTest {
 
     @Mock
-    lateinit var appRepository: AppRecordRepository
+    lateinit var appSnapshotRepository: AppSnapshotRepository
 
     @Mock
     lateinit var subscriptionRepository: AlertSubscriptionRepository
@@ -39,8 +36,8 @@ class NotificationHandlerTest {
     @Mock
     lateinit var executorService: ExecutorService
 
-    @Mock
-    lateinit var envConfig: EnvironmentConfig
+    @Spy
+    val envConfig = EnvironmentConfig("http://bla", true)
 
     @Mock
     private lateinit var emailSender: JavaMailSender
@@ -49,8 +46,8 @@ class NotificationHandlerTest {
     val tested = NotificationHandler()
 
     @BeforeEach
-    internal fun setUp() {
-        whenever(envConfig.serverAddress).thenReturn("http://testhost")
+    fun setUp() {
+        TokenHelper.setupAlgorithm("test")
     }
 
     @Test
@@ -71,7 +68,10 @@ class NotificationHandlerTest {
                 })
         )
         tested.notifyUpdate(AppRecord("videos","master")
-                .apply { lastModified = LocalDateTime.now() })
+                .apply {
+                    version = "1.5"
+                    lastModified = LocalDateTime.now()
+                })
         verify(executorService, times(2)).submit(any())
     }
 }

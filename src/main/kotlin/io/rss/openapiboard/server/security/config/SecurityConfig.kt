@@ -22,7 +22,7 @@ import javax.inject.Inject
  *  */
 
 @Configuration
-@EnableWebSecurity(debug = true)
+@EnableWebSecurity()
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 class SecurityConfig: WebSecurityConfigurerAdapter() {
 
@@ -51,7 +51,7 @@ class SecurityConfig: WebSecurityConfigurerAdapter() {
     }
 
     override fun configure(web: WebSecurity) {
-        web.ignoring().antMatchers("/test", "/auth/", "/auth/*",
+        web.ignoring().antMatchers("/test","/test/*", "/auth/", "/auth/*",
                 "/m/*" // Input from mail (with token)
         )
     }

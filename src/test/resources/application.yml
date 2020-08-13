@@ -8,3 +8,14 @@ users:
       name: agent
       password: 123456
       roles: ['agent']
+
+# App config -  Must be provided externally:
+
+env:
+  server-address: http://localhost:8080
+  mail-notification-enabled: false
+  main-namespace: Production
+
+jwt:
+  private:
+    key: simpleTestKey

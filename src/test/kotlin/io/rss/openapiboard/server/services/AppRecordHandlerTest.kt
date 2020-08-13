@@ -3,6 +3,7 @@ package io.rss.openapiboard.server.services
 import io.rss.openapiboard.server.persistence.dao.AppRecordRepository
 import io.rss.openapiboard.server.persistence.entities.AppRecord
 import io.rss.openapiboard.server.services.exceptions.BoardApplicationException
+import io.rss.openapiboard.server.services.support.NotificationHandler
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -23,6 +24,9 @@ internal class AppRecordHandlerTest {
 
     @Mock
     lateinit var appSourceProcessor: AppSourceProcessor
+
+    @Mock
+    lateinit var notificationHandler: NotificationHandler
 
     @InjectMocks
     var tested = AppRecordHandler()

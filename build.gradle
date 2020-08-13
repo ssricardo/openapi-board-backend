@@ -73,7 +73,6 @@ compileKotlin {
 
 test {
 	useJUnitPlatform {
-		includeTags('no')
 		excludeTags 'db'
 	}
 }
@@ -94,18 +93,17 @@ resolve {
 bootJar.dependsOn('resolve')
 
 docker {
+
 	springBootApplication {
 		baseImage = 'openjdk:8-alpine'
 		ports = [8080]
 		images = ['oaboard-server:oab', 'oaboard-server:latest']
 		jvmArgs = []
-
 	}
-
 }
 
 group = "io.rss"
-version = "0.0.1-SNAPSHOT"
+version = "0.9"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 // ------------------------------------ Env settings ----------------------------------
 
@@ -156,13 +154,21 @@ task buildProduction(group: 'docker') {
 				environmentVariable e.key, e.value
 			}
 		}
+
+		dockerBuildImage {
+			if (project.version.toString().contains('SNAPSHOT')) {
+				images = ['oaboard-server:latest']
+			} else {
+				images = ['oaboard-server:latest', 'oaboard-server:' + project.version()]
+			}
+		}
 	}
 	dependsOn('clean')
 	finalizedBy('build', 'dockerCreateDockerfile')
 }
 
 // With H2
-task buildTest(group: 'docker') {
+task buildH2(group: 'docker') {
 	doFirst {
 		sourceSets {
 			main { runtimeClasspath += configurations.devClasspath }
@@ -175,26 +181,34 @@ task buildTest(group: 'docker') {
 		}
 
 		dockerCreateDockerfile {
-			environmentVariable 'spring.profiles.active', 'test'
+//			environmentVariable 'spring.profiles.active', 'preLoad'
 			h2DB.each {e ->
 				environmentVariable e.key, e.value
 			}
 		}
+
+		dockerBuildImage {
+			if (project.version.toString().contains('SNAPSHOT')) {
+				images = ['oaboard-server-h2:latest']
+			} else {
+				images = ['oaboard-server-h2:latest', 'oaboard-server-h2:' + project.version()]
+			}
+		}
 	}
 	dependsOn('clean')
-	finalizedBy('build', 'dockerCreateDockerfile')
+	finalizedBy('build', 'dockerBuildImage')
 }
 
 // ------------------------------------ Local run tasks ----------------------------------
 
-task bootRunTest(type: org.springframework.boot.gradle.tasks.run.BootRun) {
+task bootRunH2(type: org.springframework.boot.gradle.tasks.run.BootRun) {
 	group = 'Application'
 	dependsOn('build')
 
 	sourceResources sourceSets.test
 
 	doFirst() {
-		systemProperty 'spring.profiles.active', 'test'
+		systemProperty 'spring.profiles.active', 'dev, preLoad'
 
 		h2DB.each {e ->
 			systemProperty e.key, e.value
@@ -214,7 +228,7 @@ task bootRunMySQL(type: org.springframework.boot.gradle.tasks.run.BootRun, depen
 		sourceSets.main.runtimeClasspath += configurations.prodClasspath
 		classpath = sourceSets.main.runtimeClasspath
 
-		systemProperty 'spring.profiles.active', 'test'
+		systemProperty 'spring.profiles.active', 'dev, preLoad'
 		mySqlDB.each {e ->
 			systemProperty e.key, e.value
 		}

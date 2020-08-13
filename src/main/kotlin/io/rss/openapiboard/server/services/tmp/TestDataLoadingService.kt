@@ -24,7 +24,7 @@ import javax.transaction.Transactional
 import kotlin.random.Random
 
 /** Populates the DB with sample data (for testing, demonstration). */
-@Profile("test")
+@Profile("preLoad")
 @Service
 class TestDataLoadingService {
 

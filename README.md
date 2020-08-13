@@ -1,9 +1,9 @@
 <!-- # oaboard-backend-app -->
-# Backend for OpenAPI Board
+# Backend for oaBoard
 
 ## Running
 
-This app uses Gradle as build tools, therefore run it use Gradle's tasks.
+This app uses Gradle as build tools, therefore to run it, use Gradle's tasks.
 
 * You don't need to download gradle, just use the wrapper in this project.
 
@@ -16,11 +16,11 @@ The build has a customization to let us use either H2 or MySql version
 
 Running with h2
 
-> ./gradlew bootRunTest
+> ./gradlew bootRunH2
 
 Build for H2
 
-> ./gradlew buildTest
+> ./gradlew buildH2
 
 Running with MySQL
 
@@ -32,9 +32,9 @@ Build for MySQL
 
 **Port**:  
 
-Running it locally, the port used is: *8080* (empty context)
+Running it locally, the port used is: *8080* (with empty context)
 
-After build for production, the following configs are available as environment variables:   
+After building for production, the following configs are available as environment variables:   
 
 * db_url
 * db_username
@@ -46,7 +46,7 @@ Docker image may be prepared using gradle as well.
 
 Run one of the tasks:
 
-* buildTest
+* buildH2
     * For H2 version
 * buildProduction
     * For MySQL version
@@ -62,7 +62,10 @@ On the UI, there's a special parameter to access it: `{host}/swagger/o/b?self-de
 
 Used for oaBoard frontend app
 
-> /manager [JSON - multiple paths]
+> /test [Use it initaly to checking]
+> /manager [Main endpoint - multiple paths]  
+
+> For the other ones, check the *Resource classes
 
 ### Agent
 
@@ -79,17 +82,17 @@ These are strings indicates the names of a given namespace and the app name.
 #### Responses
 
     * 200 - OK
-    * 400 - Bad request: Usually indicates that the arguments are incorrect
+    * 400 - Bad request: Usually indicates that there are problems with the arguments (wrong types, missing, order...)
     * 409 - Conflict: Some validation has failed. For example, an app is in a given state that shouldn't be changed
  
 ## Security
         
-There are two default roles, which are needed:
+There are 3 default roles, which are needed:
 
 * READER
     * Needed to use the frontend application (reading operations)
 * MANAGER
-    * Needed to make changes using the frontend application
+    * Needed to make changes using the frontend application and manage subscriptions
 * AGENT
     * Needed to push new app definitions, usually to be done by a client 
     
@@ -102,12 +105,14 @@ The app itself is not big, so it's kept in a single module.
 
 **Components:**  
 
- * The base language is Kotlin. But this one is compiled into Java; therefore it run on the JVM and 
-   most Java Frameworks/libraries can be used
+ * The base language is Kotlin, over the JVM  
+    (it is compiled into Java bytecode; therefore it runs on the JVM and most Java Frameworks/libraries can be used)
    
  * Spring Boot App
-    * Spring JPA
- * Jax-RS and OpenAPI/Swagger 
+    * Spring JPA 
+    * Spring Security    
+ * Jax-RS and OpenAPI/Swagger
+ * JWT Token for logged users 
 
 **Database**:  
 

@@ -28,8 +28,8 @@ server:
   h2:
     console:
       enabled: true
-#  servlet:
-#    context-path: /api
+
+# App config -  Must be provided externally:
 
 env:
   server-address: http://localhost:8080
@@ -39,6 +39,7 @@ env:
 jwt:
   private:
     key: DXnC^E8xFm6-ectU4rXv8T7jNnxW2rdXazwxQvWwshCiEzcLQvMbDYAKECFBtyWWzqQnv5tzpGoWRdbNxXPmaLKR/jSx_FSWoij88uHaLu6zVQPfvPRUwAmRimqcUTba
+
 
 #security:
 #  ignored: /**

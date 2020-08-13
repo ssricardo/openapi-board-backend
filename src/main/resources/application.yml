@@ -18,3 +18,11 @@ spring:
       hibernate:
         dialect: ${hibernate_dialect}
 
+logging:
+  level:
+    root: INFO
+    org.springframework.web: WARN
+    org.glassfish.jersey.logging: INFO
+
+
+# Specific App configs:
