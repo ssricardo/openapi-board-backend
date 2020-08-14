@@ -34,11 +34,7 @@ Build for MySQL
 
 Running it locally, the port used is: *8080* (with empty context)
 
-After building for production, the following configs are available as environment variables:   
-
-* db_url
-* db_username
-* db_password
+After building for production, some environment variables need to be mapped for the DB configuration. Check it bellow
 
 ### Building the Docker image
 
@@ -120,3 +116,39 @@ The app itself is not big, so it's kept in a single module.
  It's ready to run/ be built with either H2 or MySQL.  
  
 > Its model probably also fits well in a NoSQL DB. A SQL was chosen as it was quicker to start with and it fits better JPA 
+
+## Kubernetes config
+
+On the kube config, an additional Spring configuration is mapped. The following configuration is required:  
+
+        env:
+          server-address: http://this server reference
+          mail-notification-enabled: true
+          main-namespace: Production
+        
+        jwt:
+          private:
+            key: someSecretKeyHere 
+    
+        # Optional: 
+        spring:
+          mail:
+            host: localhost
+            port: 1025
+            username: oab_server
+            password: superSecret
+            protcol: smtp
+            properties:
+        #      - name: mail.smtp.auth
+        #        value: true
+              - name: mail.smtp.starttls
+                value: true
+    
+Besides that, any standard Spring configuration may also be used.   
+    
+In addition, the following configs are required as environment variables:   
+
+* db_url
+* db_username
+* db_password
+
