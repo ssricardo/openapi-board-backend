@@ -6,5 +6,5 @@ enum class RequestVisibility {
 
     USER,
 
-    GROUP
+    GIVEN_AUTHORITY
 }

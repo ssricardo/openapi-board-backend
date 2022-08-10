@@ -1,10 +1,10 @@
 package io.rss.openapiboard.server.services.tmp
 
-import io.rss.openapiboard.server.persistence.AppOperationType
+import io.rss.openapiboard.server.persistence.MethodType
 import io.rss.openapiboard.server.persistence.entities.AlertSubscription
-import io.rss.openapiboard.server.persistence.entities.AppRecord
-import io.rss.openapiboard.server.persistence.entities.request.ParameterKind
-import io.rss.openapiboard.server.services.AppRecordHandler
+import io.rss.openapiboard.server.persistence.entities.ApiRecord
+import io.rss.openapiboard.server.persistence.entities.request.ParameterType
+import io.rss.openapiboard.server.services.ApiRecordHandler
 import io.rss.openapiboard.server.services.RequestMemoryHandler
 import io.rss.openapiboard.server.services.support.SubscriptionHandler
 import io.rss.openapiboard.server.services.to.ParameterMemoryTO
@@ -16,8 +16,6 @@ import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.AuthorityUtils.createAuthorityList
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
-import java.nio.file.Files
-import java.nio.file.Paths
 import javax.annotation.PostConstruct
 import javax.inject.Inject
 import javax.transaction.Transactional
@@ -29,7 +27,7 @@ import kotlin.random.Random
 class TestDataLoadingService {
 
     @Inject
-    lateinit var appService: AppRecordHandler
+    lateinit var appService: ApiRecordHandler
 
     @Inject
     lateinit var requestMemoryHandler: RequestMemoryHandler
@@ -56,22 +54,22 @@ class TestDataLoadingService {
                     .use {
                         it.bufferedReader().readText()
                     }
-            val items = mutableListOf(AppRecord("Orders", PRODUCTION),
-                    AppRecord("Orders", TEST),
-                    AppRecord("Products", PRODUCTION),
-                    AppRecord("Products", TEST),
-                    AppRecord("People", PRODUCTION),
-                    AppRecord("People", TEST),
-                    AppRecord("Disks", PRODUCTION),
-                    AppRecord("Songs", PRODUCTION),
-                    AppRecord("Disks", FEATURE),
-                    AppRecord("Songs", FEATURE)
+            val items = mutableListOf(ApiRecord("Orders", PRODUCTION),
+                    ApiRecord("Orders", TEST),
+                    ApiRecord("Products", PRODUCTION),
+                    ApiRecord("Products", TEST),
+                    ApiRecord("People", PRODUCTION),
+                    ApiRecord("People", TEST),
+                    ApiRecord("Disks", PRODUCTION),
+                    ApiRecord("Songs", PRODUCTION),
+                    ApiRecord("Disks", FEATURE),
+                    ApiRecord("Songs", FEATURE)
                     )
 
             for (i in 1..5) {
                 val src  = items[i]
                 for (j in 1..3) {
-                    items.add(AppRecord(src.name, "feature/${i}_$j"))
+                    items.add(ApiRecord(src.name, "feature/${i}_$j"))
                 }
             }
 
@@ -82,7 +80,7 @@ class TestDataLoadingService {
 
             items.forEachIndexed { ind, it ->
                 it.version =  if (it.namespace!!.startsWith("feature")) "1.1-SNAPSHOT" else "1.0"
-                it.address = "http://localhost:808$ind/resource"
+                it.apiUrl = "http://localhost:808$ind/resource"
                 it.source = getRandomChangedSource(petStoreSource)
                 it.source = petStoreSource
 
@@ -103,7 +101,7 @@ class TestDataLoadingService {
     private fun createSubscriptions() {
         for (i in 0..10) {
             subscriptionHandler.saveOrUpdate(AlertSubscription().apply {
-                appName = "Products"
+                apiName = "Products"
                 email = "ricardo.test$i@testMail.com"
                 basePaths = mutableListOf("/pets", "/pets/id")
             })
@@ -111,16 +109,16 @@ class TestDataLoadingService {
         println("Subscriptions created")
     }
 
-    private fun createExampleMemory(items: MutableList<AppRecord>) {
+    private fun createExampleMemory(items: MutableList<ApiRecord>) {
         items.forEach {
             for (i in 0..3) {
                 try {
                     requestMemoryHandler.saveRequest(RequestMemoryViewTO(null, it.namespace, it.name,
-                            "/pets", if (i % 2 == 0) AppOperationType.GET else AppOperationType.POST).apply {
+                            "/pets", if (i % 2 == 0) MethodType.GET else MethodType.POST).apply {
                         title = if (i % 2 == 0) "Test resource for bla" else "Special request"
                         body = "{'val': 'Any silly sample'}"
-                        requestHeaders.addAll(arrayOf(ParameterMemoryTO(null, ParameterKind.HEADER, "type", "yaml")))
-                        parameters.addAll(arrayOf(ParameterMemoryTO(null, ParameterKind.QUERY, "city", "Sao Paulo")))
+                        requestHeaders.addAll(arrayOf(ParameterMemoryTO(null, ParameterType.HEADER, "type", "yaml")))
+                        parameters.addAll(arrayOf(ParameterMemoryTO(null, ParameterType.QUERY, "city", "Sao Paulo")))
                     })
                 } catch (e: Exception) {
                     println(e)

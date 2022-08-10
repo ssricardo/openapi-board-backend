@@ -31,7 +31,7 @@ class SubscriptionHandler {
     @Transactional
     fun removeIfVerified(@NotEmpty token: String) {
         TokenHelper.validateRetrieveMailInfo(token).apply {
-            repository.findByMailApp(this.email, this.appName)?.let {
+            repository.findByMailApi(this.email, this.appName)?.let {
                 repository.delete(it)
             }
         }

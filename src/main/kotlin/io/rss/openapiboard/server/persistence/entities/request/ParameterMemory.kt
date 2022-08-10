@@ -8,17 +8,17 @@ import javax.persistence.*
 data class ParameterMemory (
 
         @Id
-        @GeneratedValue()
+        @GeneratedValue
         var id: Long? = null): Serializable {
 
     @Column(length = 10)
     @Enumerated(EnumType.STRING)
-    var kind: ParameterKind? = null
+    var parameterType: ParameterType? = null
 
     @Column(length = 30)
     var name: String? = null
 
-    @Column(length = 100)
+    @Column(length = 256, name = "pvalue")
     var value: String? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -26,7 +26,7 @@ data class ParameterMemory (
     var request: RequestMemory? = null
 }
 
-enum class ParameterKind {
+enum class ParameterType {
     HEADER,
     QUERY,
     PATH,

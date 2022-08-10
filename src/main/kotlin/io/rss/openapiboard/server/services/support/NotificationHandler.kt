@@ -5,12 +5,11 @@ import io.rss.openapiboard.server.config.PATH_UNSUBSCRIBE
 import io.rss.openapiboard.server.helper.TokenHelper
 import io.rss.openapiboard.server.helper.assertRequired
 import io.rss.openapiboard.server.persistence.dao.AlertSubscriptionRepository
-import io.rss.openapiboard.server.persistence.dao.AppSnapshotRepository
+import io.rss.openapiboard.server.persistence.dao.ApiSnapshotRepository
 import io.rss.openapiboard.server.persistence.entities.AlertSubscription
-import io.rss.openapiboard.server.persistence.entities.AppRecord
+import io.rss.openapiboard.server.persistence.entities.ApiRecord
 import io.rss.openapiboard.server.security.Roles
 import io.rss.openapiboard.server.services.to.SubscriptionMailId
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.scheduling.annotation.Async
@@ -21,8 +20,6 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.ExecutorService
 import javax.annotation.PostConstruct
 import javax.inject.Inject
-import javax.mail.Message
-import javax.mail.internet.InternetAddress
 
 /** Responsible for notify the subscribers according to its needs */
 @Service
@@ -34,7 +31,7 @@ class NotificationHandler() {
     }
 
     @Inject
-    private lateinit var appSnapshotRepository: AppSnapshotRepository
+    private lateinit var apiSnapshotRepository: ApiSnapshotRepository
 
     @Inject
     private lateinit var subscriptionRepository: AlertSubscriptionRepository
@@ -53,29 +50,29 @@ class NotificationHandler() {
     }
 
     @Async
-    fun notifyUpdate(appRecord: AppRecord) {
+    fun notifyUpdate(apiRecord: ApiRecord) {
         if (! envConfig.mailNotificationEnabled) {
             return
         }
-        assertRequired(appRecord.name){"Invalid AppRecord given. Name is mandatory"}
+        assertRequired(apiRecord.name){"Invalid AppRecord given. Name is mandatory"}
 
-        getAppChangeSpec(appRecord)?.let { change ->
-            getListOfSubscribers(appRecord.name ?: throw IllegalStateException())
+        getAppChangeSpec(apiRecord)?.let { change ->
+            getListOfSubscribers(apiRecord.name ?: throw IllegalStateException())
                     .filter { subs -> isSubscriptionMatchDiff(change, subs) }
                     .forEach { subs -> submitNotification(change, subs) }
 
         }
     }
 
-    private fun getAppChangeSpec(appRecord: AppRecord): AppChange? {
-        val previous = appSnapshotRepository.findTopPreviousVersion(appRecord.name!!,
-                envConfig.mainNamespace, appRecord.version!!)
+    private fun getAppChangeSpec(apiRecord: ApiRecord): AppChange? {
+        val previous = apiSnapshotRepository.findTopPreviousVersion(apiRecord.name!!,
+                envConfig.mainNamespace, apiRecord.version!!)
 
         // simplified first version. Idea for later: parse the definitions, find specific paths changed
 
-        val areSame =  previous?.source?.equals(appRecord.source)
-                ?: return AppChange(appRecord, "NEW")
-        return if (areSame) null else AppChange(appRecord, "NOT_YET_DEFINED")
+        val areSame =  previous?.source?.equals(apiRecord.source)
+                ?: return AppChange(apiRecord, "NEW")
+        return if (areSame) null else AppChange(apiRecord, "NOT_YET_DEFINED")
     }
 
     /** Does the subscription filters match what was changed? */
@@ -114,12 +111,12 @@ class NotificationHandler() {
     }
 
     private fun getListOfSubscribers(appName: String) =
-            subscriptionRepository.findByApp(appName)
+            subscriptionRepository.findByApi(appName)
 
     private fun createToken(appId: String, email: String): String =
             TokenHelper.generateMailToken(SubscriptionMailId(appId, email))
 
     /** Holds the diff and kind of diff: path removed? changed?... */
-    data class AppChange(val app: AppRecord, val kind: String? = null)
+    data class AppChange(val app: ApiRecord, val kind: String? = null)
 
 }

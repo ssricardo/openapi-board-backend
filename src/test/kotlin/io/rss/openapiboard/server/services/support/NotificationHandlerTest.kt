@@ -6,10 +6,9 @@ import com.nhaarman.mockitokotlin2.whenever
 import io.rss.openapiboard.server.config.EnvironmentConfig
 import io.rss.openapiboard.server.helper.TokenHelper
 import io.rss.openapiboard.server.persistence.dao.AlertSubscriptionRepository
-import io.rss.openapiboard.server.persistence.dao.AppRecordRepository
-import io.rss.openapiboard.server.persistence.dao.AppSnapshotRepository
+import io.rss.openapiboard.server.persistence.dao.ApiSnapshotRepository
 import io.rss.openapiboard.server.persistence.entities.AlertSubscription
-import io.rss.openapiboard.server.persistence.entities.AppRecord
+import io.rss.openapiboard.server.persistence.entities.ApiRecord
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -28,7 +27,7 @@ import java.util.concurrent.ExecutorService
 class NotificationHandlerTest {
 
     @Mock
-    lateinit var appSnapshotRepository: AppSnapshotRepository
+    lateinit var apiSnapshotRepository: ApiSnapshotRepository
 
     @Mock
     lateinit var subscriptionRepository: AlertSubscriptionRepository
@@ -58,16 +57,16 @@ class NotificationHandlerTest {
 
     @Test
     fun `send changes OK`() {
-        whenever(subscriptionRepository.findByApp(anyString())).thenReturn(
+        whenever(subscriptionRepository.findByApi(anyString())).thenReturn(
                 listOf(AlertSubscription(1).apply {
-                    appName = "videos"
+                    apiName = "videos"
                     email = "ricardo@test.com"
                 }, AlertSubscription(2).apply {
-                    appName = "videos"
+                    apiName = "videos"
                     email = "anna@test.com"
                 })
         )
-        tested.notifyUpdate(AppRecord("videos","master")
+        tested.notifyUpdate(ApiRecord("videos","master")
                 .apply {
                     version = "1.5"
                     lastModified = LocalDateTime.now()

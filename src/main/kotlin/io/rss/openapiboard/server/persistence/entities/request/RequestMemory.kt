@@ -1,6 +1,6 @@
 package io.rss.openapiboard.server.persistence.entities.request
 
-import io.rss.openapiboard.server.persistence.entities.AppOperation
+import io.rss.openapiboard.server.persistence.entities.ApiOperation
 import org.hibernate.annotations.BatchSize
 import java.io.Serializable
 import javax.persistence.*
@@ -24,7 +24,7 @@ data class RequestMemory (
 
     @JoinColumn(nullable = false)
     @ManyToOne
-    var operation: AppOperation? = null
+    var operation: ApiOperation? = null
 
     @Column(length = 50, nullable = false)
     @NotEmpty

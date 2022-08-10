@@ -12,6 +12,9 @@ spring:
       hibernate:
         format_sql: false
 
+    hibernate:
+      ddl-auto: update
+
   mail:
     host: localhost
     port: 1025
@@ -41,5 +44,5 @@ jwt:
     key: DXnC^E8xFm6-ectU4rXv8T7jNnxW2rdXazwxQvWwshCiEzcLQvMbDYAKECFBtyWWzqQnv5tzpGoWRdbNxXPmaLKR/jSx_FSWoij88uHaLu6zVQPfvPRUwAmRimqcUTba
 
 
-#security:
-#  ignored: /**
+security:
+  ignored: /**

@@ -1,8 +1,8 @@
 package io.rss.openapiboard.server.persistence
 
 import io.rss.openapiboard.server.persistence.dao.RequestMemoryRepository
-import io.rss.openapiboard.server.persistence.entities.AppOperation
-import io.rss.openapiboard.server.persistence.entities.AppRecord
+import io.rss.openapiboard.server.persistence.entities.ApiOperation
+import io.rss.openapiboard.server.persistence.entities.ApiRecord
 import io.rss.openapiboard.server.persistence.entities.request.*
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -38,22 +38,22 @@ class RequestMemoryRepositoryTest {
 
     @BeforeEach
     internal fun setUp() {
-        val app = em.merge(AppRecord("ricardo", "testing").apply {
-            path = "/base-path"
+        val app = em.merge(ApiRecord("ricardo", "testing").apply {
+            basePath = "/base-path"
             version = "2.0"
             modifiedDate = LocalDateTime.now()
-            address = "http://server"
+            apiUrl = "http://server"
             source = fileContent
         })
-        val ope = AppOperation().apply {
-            appRecord = app
+        val ope = ApiOperation().apply {
+            apiRecord = app
             path = "/books"
-            this.methodType = AppOperationType.POST
+            this.methodType = MethodType.POST
         }
         em.persist(ope)
 
         val appMaster = em.merge(app.copy(namespace = "master"))
-        val opeMaster = em.merge(ope.copy(id = null).apply { appRecord = appMaster })
+        val opeMaster = em.merge(ope.copy(id = null).apply { apiRecord = appMaster })
         em.flush()
         operationId = ope.id
         operationIdMaster = opeMaster.id
@@ -71,19 +71,19 @@ class RequestMemoryRepositoryTest {
                 }
             """.trimIndent()
             title = pTitle
-            operation = em.getReference(AppOperation::class.java, operationId)
+            operation = em.getReference(ApiOperation::class.java, operationId)
             visibility = RequestVisibility.PUBLIC
             contentType = "application/json"
         }
         request.addParameterMemory(ParameterMemory().apply {
             name = "contentType"
             value = "application/json"
-            kind = ParameterKind.HEADER
+            parameterType = ParameterType.HEADER
         })
         request.addParameterMemory(ParameterMemory().apply {
             name = "cache"
             value = "false"
-            kind = ParameterKind.PATH
+            parameterType = ParameterType.PATH
         })
 
         tested.saveAndFlush(request)
@@ -91,7 +91,7 @@ class RequestMemoryRepositoryTest {
 
     @Test
     fun findByAppNamespace() {
-        tested.findByAppNamespace("TestApp", "Production")
+        tested.findByApiNamespace("TestApp", "Production")
     }
 
     @Test
@@ -107,7 +107,7 @@ class RequestMemoryRepositoryTest {
                 }
             """.trimIndent()
             title = "ricardo"
-            operation = em.getReference(AppOperation::class.java, operationIdMaster)
+            operation = em.getReference(ApiOperation::class.java, operationIdMaster)
             visibility = RequestVisibility.PUBLIC
             contentType = "application/json"
         }
@@ -116,11 +116,11 @@ class RequestMemoryRepositoryTest {
         em.flush()
         em.clear()
 
-        val result = tested.findByAppNamespace("ricardo", "testing")
+        val result = tested.findByApiNamespace("ricardo", "testing")
 
         assertAll(
                 { assertEquals(3, result.size) },
-                { assertEquals(1, result[0].parameters.filter { it.kind == ParameterKind.HEADER }.size)  }
+                { assertEquals(1, result[0].parameters.filter { it.parameterType == ParameterType.HEADER }.size)  }
         )
     }
 

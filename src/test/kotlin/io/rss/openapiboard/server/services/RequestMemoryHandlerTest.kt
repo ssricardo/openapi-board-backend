@@ -2,10 +2,10 @@ package io.rss.openapiboard.server.services
 
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.whenever
-import io.rss.openapiboard.server.persistence.AppOperationType
-import io.rss.openapiboard.server.persistence.dao.AppOperationRepository
+import io.rss.openapiboard.server.persistence.MethodType
+import io.rss.openapiboard.server.persistence.dao.ApiOperationRepository
 import io.rss.openapiboard.server.persistence.dao.RequestMemoryRepository
-import io.rss.openapiboard.server.persistence.entities.AppOperation
+import io.rss.openapiboard.server.persistence.entities.ApiOperation
 import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
 import io.rss.openapiboard.server.services.exceptions.BoardApplicationException
 import io.rss.openapiboard.server.services.to.RequestMemoryViewTO
@@ -29,7 +29,7 @@ class RequestMemoryHandlerTest {
     private lateinit var requestRepository: RequestMemoryRepository
 
     @Mock
-    private lateinit var operationRepository: AppOperationRepository
+    private lateinit var operationRepository: ApiOperationRepository
 
     @Mock
     private lateinit var validator: Validator
@@ -37,11 +37,11 @@ class RequestMemoryHandlerTest {
     @Test
     fun testSaveOK() {
         whenever(operationRepository.findSingleMatch(some(), some(), some(), some())) doReturn
-                AppOperation(1)
+                ApiOperation(1)
         whenever(requestRepository.save( any(RequestMemory::class.java) )) doReturn RequestMemory()
 
         tested.saveRequest(RequestMemoryViewTO(
-                namespace = "Prod", appName = "testing", path = "/test", methodType = AppOperationType.POST
+                namespace = "Prod", apiName = "testing", path = "/test", methodType = MethodType.POST
         ).apply { title = "Meu test app" })
     }
 
@@ -49,7 +49,7 @@ class RequestMemoryHandlerTest {
     fun testSaveMissingField() {
         assertThrows(BoardApplicationException::class.java) {
             tested.saveRequest(RequestMemoryViewTO(
-                    namespace = "Prod", appName = "testing", path = "/test"
+                    namespace = "Prod", apiName = "testing", path = "/test"
             ))
         }
     }

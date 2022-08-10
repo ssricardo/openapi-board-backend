@@ -2,7 +2,7 @@ package io.rss.openapiboard.server.security.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 
-/** Maps list of Users comming from configuration files */
+/** Maps list of Users coming from configuration files */
 @ConfigurationProperties(prefix = "users")
 class UserConfig {
     val entries = mutableListOf<UserEntry>()

@@ -4,7 +4,6 @@ import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
@@ -12,17 +11,17 @@ import org.springframework.stereotype.Repository
 @Repository
 interface RequestMemoryRepository: JpaRepository<RequestMemory, Long> {
 
-    /** Retrieves memories related to given app+namespace PLUS the same app name on 'master' namespace */
+    /** Retrieves memories related to given api+namespace PLUS the same api name on 'master' namespace */
     @Query("""
         SELECT r 
         FROM RequestMemory r
             JOIN FETCH r.operation oe 
-            JOIN FETCH oe.appRecord ap 
+            JOIN FETCH oe.apiRecord ap 
         WHERE
-            (ap.name = :appName AND ap.namespace = :ns) OR (ap.name = :appName AND ap.namespace = 'master')
+            (ap.name = :apiName AND ap.namespace = :ns) OR (ap.name = :apiName AND ap.namespace = 'master')
     """)
     @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, value = "request.parameters")
-    fun findByAppNamespace(@Param("appName") app: String, @Param("ns") namespace: String): List<RequestMemory>
+    fun findByApiNamespace(@Param("apiName") api: String, @Param("ns") namespace: String): List<RequestMemory>
 
     @Query("""
         SELECT rm

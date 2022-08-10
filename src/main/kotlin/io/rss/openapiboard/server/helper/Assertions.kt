@@ -1,7 +1,7 @@
 package io.rss.openapiboard.server.helper
 
 import io.rss.openapiboard.server.services.exceptions.BoardApplicationException
-import java.lang.IllegalStateException
+import java.util.*
 
 /**
  * Helper functions with Assertions throwing own business exception
@@ -22,14 +22,24 @@ inline fun assertState(expression: Boolean, lazyMessage: () -> String) {
     }
 }
 
-fun assertRequired(expression: Any?, lazyMessage: () -> String) {
+inline fun <T : Any?> assertRequired(expression: T?, lazyMessage: () -> String): T {
     if (expression == null) {
         throw BoardApplicationException(lazyMessage(), null)
     }
+    return expression
 }
 
 fun assertStringRequired(expression: String?, lazyMessage: () -> String) {
     if (expression.isNullOrEmpty()) {
         throw BoardApplicationException(lazyMessage(), null)
     }
+}
+
+fun assertGetStringsRequired(lazyMessage: () -> String, vararg expressions: String?): List<String> {
+    repeat(expressions.count()) {
+        if (expressions[it].isNullOrEmpty()) {
+            throw BoardApplicationException(lazyMessage(), null)
+        }
+    }
+    return expressions.asList().filterNotNull()
 }

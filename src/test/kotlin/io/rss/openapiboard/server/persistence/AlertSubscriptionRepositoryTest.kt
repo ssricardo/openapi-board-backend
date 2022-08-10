@@ -19,7 +19,7 @@ class AlertSubscriptionRepositoryTest {
 
     @Test
     fun testFindByApp() {
-        val res = tested.findByApp("books")
+        val res = tested.findByApi("books")
         assertNotNull(res)
     }
 }

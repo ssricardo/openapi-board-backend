@@ -19,7 +19,7 @@ data class AlertSubscription (
     var email: String? = null
 
     @NotNull
-    var appName: String? = null
+    var apiName: String? = null
 
     @Column
     lateinit var modifiedTime: LocalDateTime

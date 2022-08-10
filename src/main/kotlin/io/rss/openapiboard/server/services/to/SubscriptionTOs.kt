@@ -27,9 +27,9 @@ data class SubscriptionTO(private val wrapped: AlertSubscription = AlertSubscrip
         }
 
     var appName
-        get() = wrapped.appName
+        get() = wrapped.apiName
         set(value) {
-            wrapped.appName = value
+            wrapped.apiName = value
         }
 
     var modifiedTime: LocalDateTime?

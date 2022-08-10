@@ -1,3 +1,4 @@
+import org.springframework.boot.gradle.tasks.run.BootRun
 
 buildscript {
 	dependencies {
@@ -6,15 +7,15 @@ buildscript {
 }
 
 plugins {
-	id("org.springframework.boot") version "2.2.5.RELEASE"
-	id("io.spring.dependency-management") version "1.0.8.RELEASE"
+	id("org.springframework.boot") version "2.7.0"
+	id("io.spring.dependency-management") version "1.0.12.RELEASE"
 
-	id "org.jetbrains.kotlin.jvm" version "1.3.50"
-	id "org.jetbrains.kotlin.plugin.spring" version "1.3.50"
-	id "org.jetbrains.kotlin.plugin.jpa" version "1.3.50"
+	id "org.jetbrains.kotlin.jvm" version "1.6.21"
+	id "org.jetbrains.kotlin.plugin.spring" version "1.6.21"
+	id "org.jetbrains.kotlin.plugin.jpa" version "1.6.21"
 
 	id 'com.bmuschko.docker-spring-boot-application' version '6.1.1'
-	id "io.swagger.core.v3.swagger-gradle-plugin" version "2.1.2"
+	id "io.swagger.core.v3.swagger-gradle-plugin" version "2.2.2"
 }
 
 repositories {
@@ -40,6 +41,7 @@ dependencies {
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation ("com.auth0:java-jwt:3.10.3")
 
+//	implementation("org.jetbrains.kotlin:kotlin-stdlib")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
@@ -53,12 +55,12 @@ dependencies {
 
 	/* Testing */
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
-		exclude(module: "junit")
-		exclude(module: "junit-vintage-engine")
+//		exclude(module: "junit")
+//		exclude(module: "junit-vintage-engine")
 	}
 	testImplementation("org.springframework.security:spring-security-test")
-	testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.2")
-	testImplementation("org.junit.jupiter:junit-jupiter-engine:5.3.2")
+//	testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.2")
+//	testImplementation("org.junit.jupiter:junit-jupiter-engine:5.3.2")
 	testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: '3.1.0'
 	testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0"
 	testImplementation("com.h2database:h2")
@@ -67,7 +69,7 @@ dependencies {
 compileKotlin {
 	kotlinOptions {
 		freeCompilerArgs = ["-Xjsr305=strict"]
-		jvmTarget = "1.8"
+		jvmTarget = "11"
 	}
 }
 
@@ -201,8 +203,9 @@ task buildH2(group: 'docker') {
 
 // ------------------------------------ Local run tasks ----------------------------------
 
-task bootRunH2(type: org.springframework.boot.gradle.tasks.run.BootRun) {
+task bootRunH2(type: BootRun) {
 	group = 'Application'
+	mainClass = 'io.rss.openapiboard.server.OpenapiBoardServerApplicationKt'
 	dependsOn('build')
 
 	sourceResources sourceSets.test
@@ -214,17 +217,18 @@ task bootRunH2(type: org.springframework.boot.gradle.tasks.run.BootRun) {
 			systemProperty e.key, e.value
 		}
 
-		main = bootJar.mainClassName
+//		main = bootJar.mainClass.get()
 		sourceSets.main.runtimeClasspath += configurations.devClasspath
 		classpath = sourceSets.main.runtimeClasspath
 	}
 }
 
-task bootRunMySQL(type: org.springframework.boot.gradle.tasks.run.BootRun, dependsOn: 'build') {
+task bootRunMySQL(type: BootRun, dependsOn: 'build') {
 	group = 'Application'
+	mainClass = 'io.rss.openapiboard.server.OpenapiBoardServerApplicationKt'
 
 	doFirst() {
-		main = bootJar.mainClassName
+//		main = bootJar.mainClassName
 		sourceSets.main.runtimeClasspath += configurations.prodClasspath
 		classpath = sourceSets.main.runtimeClasspath
 
