@@ -1,1 +1,7 @@
 rootProject.name = "openapi-board-server"
+
+include 'core'
+include 'simple-security'
+include 'e2e'
+include 'web'
+
