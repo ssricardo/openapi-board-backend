@@ -34,10 +34,8 @@ class TestResource {
     fun roles(): String? {
         val user: Authentication? = SecurityContextHolder.getContext().authentication
         return user?.let {
-            println(user.authorities)
-            println(user.credentials)
-            var springUser = user.principal as User
+            val springUser = user.principal as User
             springUser.toString()
-        } ?: null
+        }
     }
 }

@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.web.bind.annotation.RestController
 import javax.annotation.Resource
 import javax.validation.Valid
 import javax.validation.constraints.NotNull
@@ -20,6 +21,7 @@ import javax.ws.rs.core.MediaType
 @Path("auth")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@RestController
 class AuthResource {
 
     @Resource
@@ -43,7 +45,7 @@ class AuthResource {
     private inline fun tryWithLog(request: AuthenticationTO, f: () -> Any) {
         LOG.debug("Login trial: ", request.user)
         f()
-        LOG.info("Login failed for user ", request.user)
+        LOG.info("Login executed for user ", request.user)
     }
 
     companion object {

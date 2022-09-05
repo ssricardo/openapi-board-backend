@@ -11,7 +11,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 @Configuration
-class GeneralConfig {
+class ApplicationInfraConfig {
 
     @Bean("threadPoolTaskExecutor")
     fun getAsyncExecutor(): TaskExecutor {

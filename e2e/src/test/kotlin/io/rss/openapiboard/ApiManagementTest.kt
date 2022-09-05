@@ -67,6 +67,5 @@ class ApiManagementTest {
         ))
 
         `PUT multipart-form`("namespaces/$namespace/apis/$apiName", body)
-//        `assert response is OK`()
     }
 }

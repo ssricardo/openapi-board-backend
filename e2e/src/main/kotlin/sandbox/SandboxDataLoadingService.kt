@@ -42,19 +42,15 @@ class SandboxDataLoadingService {
 
     private val serverBase = "http://localhost:8080"
     private val restTemplate: RestTemplate = RestTemplateBuilder()
-//            .rootUri(serverBase)
             .basicAuthentication("admin", "test")
             .build()
-
-//    private val restClient = ClientBuilder
-//            .newClient()
 
     val randomizer = Random(30)
 
     private companion object {
         const val PRODUCTION = "Production"
         const val TEST = "Test"
-        const val FEATURE = "feature/1_1"
+        const val FEATURE = "feature-1_1"
     }
 
     @PostConstruct
@@ -75,7 +71,6 @@ class SandboxDataLoadingService {
 
             val apiRecordList = createApiRecords(petStoreSource)
 
-//            Thread.sleep()
             createExampleMemory(apiRecordList)
             createSubscriptions()
 
@@ -105,7 +100,7 @@ class SandboxDataLoadingService {
         for (i in 1..5) {
             val src = items[i]
             for (j in 1..3) {
-                items.add(ApiRecordDto(src.name, "feature/${i}_$j"))
+                items.add(ApiRecordDto(src.name, "${i}_$j"))
             }
         }
 
@@ -122,7 +117,7 @@ class SandboxDataLoadingService {
             }
 
             restTemplate
-                    .put("$serverBase/apis/${api.name}/namespaces/${api.namespace}",
+                    .put("$serverBase/namespaces/${api.namespace}/apis/${api.name}",
                             HttpEntity(map, HttpHeaders().apply {
                                 contentType = MediaType.MULTIPART_FORM_DATA
                             }))
