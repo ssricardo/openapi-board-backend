@@ -7,7 +7,7 @@ users:
 
 spring:
   jpa:
-    show-sql: true
+#    show-sql: true
     properties:
       hibernate:
         format_sql: false
@@ -20,7 +20,7 @@ spring:
     port: 1025
     username: oab_server
     password: superSecret
-    protcol: smtp
+    protocol: smtp
     properties:
 #      - name: mail.smtp.auth
 #        value: true

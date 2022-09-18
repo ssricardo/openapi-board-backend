@@ -89,7 +89,7 @@ class ApiSourceProcessor {
                     methodType = oppType
                 }
 
-        LOGGER.info("Saving operation [${operation.id}] for app [$apiName, $namespace] , path $pathStr [$oppType]")
+        LOGGER.info("Saving operation [${operation.id ?: "NEW"}] for app [$apiName, $namespace] , path $pathStr [$oppType]")
         operationRepository.save(operation)
     }
 

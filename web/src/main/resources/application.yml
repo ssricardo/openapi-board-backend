@@ -1,14 +1,15 @@
 spring:
   profiles:
     active:
-#      - test
+      - production
 
   datasource:
-#    url: jdbc:h2:~/openapi-board
-    driver-class-name: ${db_classname}
-    url: jdbc:${db_url}
-    username: ${db_username}
-    password: ${db_password}
+    driver-class-name: ${DB_CLASSNAME}
+
+# Only for reference - values are provided by k8s
+#    url: ${SPRING_DATASOURCE_URL}
+#    username: ${SPRING_DATASOURCE_USERNAME}
+#    password: ${SPRING_DATASOURCE_PASSWORD}
 
   jpa:
     hibernate:
@@ -16,13 +17,23 @@ spring:
 
     properties:
       hibernate:
-        dialect: ${hibernate_dialect}
+        dialect: ${HIBERNATE_DIALECT}
 
 logging:
   level:
     root: INFO
-    org.springframework.web: WARN
-    org.glassfish.jersey.logging: INFO
+    org.springframework.web: INFO
+    org.glassfish.jersey.logging: DEBUG
 
 
 # Specific App configs:
+# Only for reference, actual values are injected by k8s
+
+#env:
+#  server-address: http://localhost:8080
+#  mail-notification-enabled: true
+#  main-namespace: Production
+#
+#jwt:
+#  private:
+#    key: DXnC^E8xFm6-ectU4rXv8T7jNnxW2rdXazwxQvWwshCiEzcLQvMbDYAKECFBtyWWzqQnv5tzpGoWRdbNxXPmaLKR/jSx_FSWoij88uHaLu6zVQPfvPRUwAmRimqcUTba

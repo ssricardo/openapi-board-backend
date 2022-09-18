@@ -33,20 +33,7 @@ dependencies {
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation ('com.auth0:java-jwt:4.0.0')
 
-//	implementation("org.jetbrains.kotlin:kotlin-reflect")
-//	implementation("org.jetbrains.kotlin:kotlin-stdlib")
 	api('io.swagger.parser.v3:swagger-parser:2.1.1')
-
-	/* Testing */
-//	testImplementation("org.springframework.boot:spring-boot-starter-test") {
-//		exclude(module: "junit")
-//		exclude(module: "junit-vintage-engine")
-//	}
-//	testImplementation("org.springframework.security:spring-security-test")
-//	testImplementation("org.junit.jupiter:junit-jupiter-api")
-//	testImplementation("org.junit.jupiter:junit-jupiter-engine")
-//	testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter'
-//	testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin"
 	testImplementation("com.h2database:h2")
 }
 

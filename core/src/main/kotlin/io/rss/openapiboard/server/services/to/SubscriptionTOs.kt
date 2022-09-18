@@ -59,11 +59,11 @@ class SubscriptionDeserializer: JsonDeserializer<SubscriptionRequestResponse>() 
 
     private val mapper = ObjectMapper()
 
-    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): SubscriptionRequestResponse? {
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): SubscriptionRequestResponse {
         val node: JsonNode = p.codec.readTree(p)
 
         return SubscriptionRequestResponse().apply {
-            id = if (node.has("id")) node.get("id").asLong() else null
+            id = if (node.has("id") && node.get("id").isLong) node.get("id").asLong() else null
             email = if (node.has("email")) node.get("email").asText() else null
             apiName = if (node.has("apiName")) node.get("apiName").asText() else null
             basePathList =

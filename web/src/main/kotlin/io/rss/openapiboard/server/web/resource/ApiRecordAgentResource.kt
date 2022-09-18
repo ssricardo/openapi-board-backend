@@ -1,14 +1,16 @@
 package io.rss.openapiboard.server.web.resource
 
-import io.rss.openapiboard.server.services.ApiRecordHandler
 import io.rss.openapiboard.server.persistence.entities.ApiRecord
+import io.rss.openapiboard.server.services.ApiRecordHandler
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.glassfish.jersey.media.multipart.FormDataParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
-import javax.annotation.Resource
-import javax.ws.rs.*
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
@@ -17,11 +19,10 @@ import javax.ws.rs.core.Response
 @Tag(name = "Agent APIs",
         description = """Resource that receives API definitions to be registered.
             |Usually should be called from plugins or other tools.""")
-@RestController
 @Path("")
 class ApiRecordAgentResource {
 
-    @Resource
+    @Autowired
     private lateinit var appHandlerService: ApiRecordHandler
 
     @Operation(description = "Feeds this application base. Accepts a multipart with data for an ApiRegistry.")

@@ -25,12 +25,8 @@ subprojects {
 		implementation("org.jetbrains.kotlin:kotlin-stdlib")
 
 		testImplementation("org.springframework.boot:spring-boot-starter-test") {
-//			exclude(module: "junit")
-//			exclude(module: "junit-vintage-engine")
 		}
 
-//		testImplementation ("org.junit.jupiter:junit-jupiter-api:5.7.0")
-//		testImplementation ("org.junit.jupiter:junit-jupiter-engine:5.7.0")
 		testImplementation  group: 'org.mockito', name: 'mockito-junit-jupiter', version: '3.12.4'
 		testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0"
 	}

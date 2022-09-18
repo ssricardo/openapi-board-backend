@@ -3,6 +3,7 @@ package io.rss.openapiboard
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.jayway.jsonpath.JsonPath
+import io.rss.openapiboard.TestRequestHelpers.`from last response equals`
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.springframework.boot.web.client.RestTemplateBuilder
@@ -27,14 +28,22 @@ object TestRequestHelpers {
             restTemplate.getForEntity("$SERVER/$endpoint", String::class.java)
         }
         println(current?.response?.body)
-//        current = null
-//        val res = restTemplate.getForEntity(endpoint, String::class.java)
-//        current = CurrentResponse(res, objectMapper.readTree(res.body as String))
     }
 
-    fun putJson(endpoint: String, json: String) {
+    fun `POST json`(endpoint: String, json: String) {
         runForResponse {
-            restTemplate.getForEntity(endpoint, HashMap::class.java)
+            restTemplate.postForEntity("$SERVER/$endpoint", HttpEntity(json, HttpHeaders().apply {
+                contentType = MediaType.APPLICATION_JSON
+            }), String::class.java)
+        }
+        println(current?.response?.body)
+    }
+
+    fun `PUT json`(endpoint: String, json: String) {
+        runForResponse {
+            restTemplate.exchange("$SERVER/$endpoint", HttpMethod.PUT, HttpEntity(json, HttpHeaders().apply {
+                contentType = MediaType.APPLICATION_JSON
+            }), String::class.java)
         }
     }
 
@@ -56,6 +65,14 @@ object TestRequestHelpers {
         `assert response is`(HttpStatus.OK)
     }
 
+    fun <T> getFromResponse(path: String): T? {
+        return if (path[0] == '$') {
+            JsonPath.read(current?.response?.body, path) as? T
+        } else {
+            current?.jsonNode?.at(path) as? T
+        }
+    }
+
     infix fun String.`from last response equals`(value: Any) {
         if (this[0] == '$') {
             assertEquals(value, JsonPath.read(current?.response?.body as? String, this))
@@ -75,5 +92,11 @@ object TestRequestHelpers {
         val body: String = (res.body as? String) ?: "{}"
         current = CurrentResponse(res, objectMapper.readTree(body))
     }
+
+    fun Any?.toJson(): String {
+        return this?.let { objectMapper.writeValueAsString(it) }
+                ?: ""
+    }
+
 
 }

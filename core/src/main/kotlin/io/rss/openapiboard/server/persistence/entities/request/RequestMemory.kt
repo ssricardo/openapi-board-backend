@@ -5,7 +5,6 @@ import org.hibernate.annotations.BatchSize
 import java.io.Serializable
 import javax.persistence.*
 import javax.validation.constraints.NotEmpty
-import javax.validation.constraints.NotNull
 
 /**
  * Represents a sample of a request to a given endpoint.
@@ -24,7 +23,7 @@ data class RequestMemory (
 
     @JoinColumn(nullable = false)
     @ManyToOne
-    var operation: ApiOperation? = null
+    var operation: ApiOperation = DEFAULT_OPERATION
 
     @Column(length = 50, nullable = false)
     @NotEmpty
@@ -35,12 +34,11 @@ data class RequestMemory (
     var body: String? = null
 
     @Column(name = "ns_attached", nullable = false)
-    var nsAttached: Boolean = false
+    var namespaceAttached: Boolean = false
 
     @Column(nullable = false)
     @Enumerated
-    @NotNull
-    var visibility: RequestVisibility? = null
+    var visibility: RequestVisibility = RequestVisibility.PUBLIC
 
     /* ex: application/json. Needed to match an entry on the OpenAPI definition */
     @Column(nullable =  false, length = 30)
@@ -53,5 +51,10 @@ data class RequestMemory (
     fun addParameterMemory(pm: ParameterMemory) {
         pm.request = this
         parameters.add(pm)
+    }
+
+    private companion object {
+        @JvmStatic
+        val DEFAULT_OPERATION = ApiOperation(-1)
     }
 }

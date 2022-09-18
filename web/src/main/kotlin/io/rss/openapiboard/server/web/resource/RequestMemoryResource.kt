@@ -23,8 +23,7 @@ class RequestMemoryResource {
     @GET
     @ApiOperation("Listing/Searching request-memories ", notes = "Requires a minimum query (q) according to specified in service")
     fun listAllMemory(@QueryParam("q") query: String?,
-                      @QueryParam("pg") @DefaultValue("0") pageIndex: Int)
-        = handler.search(query, pageIndex)
+                      @QueryParam("pg") @DefaultValue("0") pageIndex: Int) = handler.search(query, pageIndex)
 
     @POST
     @ApiOperation("Let creating RequestMemory. ", notes = "Id must not be present")

@@ -15,16 +15,14 @@ import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.scheduling.annotation.Async
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
-import java.lang.IllegalStateException
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.ExecutorService
-import javax.annotation.PostConstruct
 import javax.annotation.Resource
 
 /** Responsible for notify the subscribers according to its needs */
 @Service
 @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
-class NotificationHandler() {
+class NotificationHandler {
 
     companion object {
         const val NOTIFICATION_MAIL_SUBJECT: String = "[OaBoard Notification] An application that you follow was updated"
@@ -44,10 +42,6 @@ class NotificationHandler() {
 
     @Resource
     private lateinit var emailSender: JavaMailSender
-
-    @PostConstruct
-    internal fun init() {
-    }
 
     @Async
     fun notifyUpdate(apiRecord: ApiRecord) {
@@ -82,7 +76,7 @@ class NotificationHandler() {
 
     private fun submitNotification(change: AppChange, subs: AlertSubscription) {
         val unsubscribeLink = createUnsubsLink(change.app.name!!, subs.email!!)
-        val mailContent = NotificationTemplate(change.app.lastModified,
+        val mailContent = NotificationTemplate(date = change.app.lastModified,
                 appName = change.app.name!!, newVersion = change.app.version!!,
                 unsubscribeLink = unsubscribeLink)
 
@@ -98,7 +92,7 @@ class NotificationHandler() {
 
     private fun sendMail(emailAddress: String, mailContent: String) {
         val message = emailSender.createMimeMessage().apply {
-            setSubject(NOTIFICATION_MAIL_SUBJECT)
+            subject = NOTIFICATION_MAIL_SUBJECT
         }
 
         val h = MimeMessageHelper(message, true, StandardCharsets.UTF_8.name()).apply {

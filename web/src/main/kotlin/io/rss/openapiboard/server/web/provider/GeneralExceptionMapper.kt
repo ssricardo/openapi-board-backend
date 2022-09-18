@@ -4,6 +4,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import javax.ws.rs.ClientErrorException
 import javax.ws.rs.core.Context
+import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
 import javax.ws.rs.ext.Provider
@@ -35,7 +36,9 @@ class GeneralExceptionMapper: ExceptionMapper<Exception> {
         LOG.error("Error captured on General Handler", e)
         return Response.serverError().entity(
                 "The server had an unexpected error. Repeat the operation after some time. " +
-                        "If the error persists, check the logs.").build()
+                        "If the error persists, check the logs.")
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .build()
     }
 
     /** Tries to find a more specific provider, in case of wrapped Exception */

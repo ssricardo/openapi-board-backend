@@ -10,8 +10,7 @@ import io.rss.openapiboard.server.services.to.ApiRecordResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.web.bind.annotation.RestController
-import javax.annotation.Resource
+import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 
@@ -22,13 +21,12 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Path("")
-@RestController
 class NamespaceApiResource {
 
-    @Resource
+    @Autowired
     private lateinit var bService: ApiRecordHandler
 
-    @Resource
+    @Autowired
     private lateinit var snapshotService: ApiSnapshotHandler
 
     @Operation(description = "Retrieves the list of existing Namespaces")

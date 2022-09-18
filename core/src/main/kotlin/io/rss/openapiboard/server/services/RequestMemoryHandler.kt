@@ -19,6 +19,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
+import java.lang.IllegalStateException
 import javax.annotation.Resource
 import javax.transaction.Transactional
 import javax.validation.Validator
@@ -46,19 +47,19 @@ class RequestMemoryHandler {
 
     @Transactional()
     @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
-    fun createRequest(request: RequestMemoryRequestResponse): RequestMemory {
+    fun createRequest(request: RequestMemoryRequestResponse): RequestMemoryRequestResponse {
         require(request.requestId == null) { "Request must not have an id, when creating a new one" }
         return saveRequest(request)
     }
 
     @Transactional()
     @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
-    fun saveRequest(request: RequestMemoryRequestResponse): RequestMemory {
+    fun saveRequest(request: RequestMemoryRequestResponse): RequestMemoryRequestResponse {
         val requestMemory =  resolveRequestOperation(request)
 
         validator.validate(request)
         processParameters(request, requestMemory)
-        return requestRepository.save(requestMemory)
+        return requestRepository.save(requestMemory).let(this::mapMemoryToView)
     }
 
     private fun resolveRequestOperation(request: RequestMemoryRequestResponse): RequestMemory {
@@ -135,13 +136,16 @@ class RequestMemoryHandler {
             "This query requires at least $MIN_SIZE_SEARCHING characteres. Found: ${query?.length}" }
 
         val data = requestRepository.findRequestsByFilter(query ?: "", PageRequest.of(offset, QUERY_PAGE_SIZE))
-                .map(::convertMemoryToView)
+                .map(::mapMemoryToView)
         return QueryResult(data, (data.size < QUERY_PAGE_SIZE && offset == 0))
     }
 
-    private fun convertMemoryToView(source: RequestMemory): RequestMemoryRequestResponse {
-        return RequestMemoryRequestResponse(source.id, source.operation?.apiRecord?.namespace, source.operation?.apiRecord?.name,
-                source.operation?.path, source.operation?.methodType).apply {
+    private fun mapMemoryToView(source: RequestMemory): RequestMemoryRequestResponse {
+        return RequestMemoryRequestResponse(source.id,
+                source.operation?.apiRecord?.namespace,
+                source.operation?.apiRecord?.name,
+                source.operation?.path,
+                source.operation?.methodType).apply {
             this.title = source.title
             this.body = source.body
 

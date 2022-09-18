@@ -14,7 +14,7 @@ plugins {
     id "org.jetbrains.kotlin.plugin.spring" version "1.6.21"
     id "org.jetbrains.kotlin.plugin.jpa" version "1.6.21"
 
-    id 'com.bmuschko.docker-spring-boot-application' version '6.1.1'
+    id 'com.bmuschko.docker-spring-boot-application' version '6.7.0'
     id "io.swagger.core.v3.swagger-gradle-plugin" version "2.2.2"
 }
 
@@ -52,10 +52,6 @@ dependencies {
         exclude(module: "junit-vintage-engine")
     }
     testImplementation("org.springframework.security:spring-security-test")
-//    testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.2")
-//    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.3.2")
-//    testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: '3.1.0'
-//    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0"
     testImplementation("com.h2database:h2")
 }
 
@@ -75,8 +71,8 @@ test {
 }
 
 resolve {
-    // careful: coupled with 'describe' endpoint
-    outputFileName = 'oaboard-api'
+    // careful: this is coupled with 'describe' endpoint
+    outputFileName = 'openapi-center-backend'
 
     outputFormat = 'yaml'
     prettyPrint = true
@@ -92,9 +88,9 @@ bootJar.dependsOn('resolve')
 docker {
 
     springBootApplication {
-        baseImage = 'openjdk:8-alpine'
+        baseImage = 'amazoncorretto:11-alpine3.15'
         ports = [8080]
-        images = ['oaboard-server:oab', 'oaboard-server:latest']
+        images = ['oac-server:latest']
         jvmArgs = []
     }
 }
@@ -102,20 +98,20 @@ docker {
 // ------------------------------------ Env settings ----------------------------------
 
 def h2DB = [
-        db_classname: 'org.h2.Driver',
-        db_url: 'h2:mem:openapi-board',
+        DB_CLASSNAME: 'org.h2.Driver',
+        SPRING_DATASOURCE_URL: 'h2:mem:openapi-center',
 //		db_url: 'h2:~/openapi-board',
-        hibernate_dialect: 'org.hibernate.dialect.H2Dialect',
-        db_username: 'sa',
-        db_password: "''"
+        HIBERNATE_DIALECT: 'org.hibernate.dialect.H2Dialect',
+        SPRING_DATASOURCE_USERNAME: 'sa',
+        SPRING_DATASOURCE_PASSWORD: "''"
 ];
 
 def mySqlDB = [
-        db_classname: 'com.mysql.jdbc.Driver',
-        hibernate_dialect: 'org.hibernate.dialect.MySQL5InnoDBDialect',
-        db_url: 'mysql://localhost:3306/oab',
-        db_username: 'oab',
-        db_password: '123456'
+        DB_CLASSNAME: 'com.mysql.jdbc.Driver',
+        HIBERNATE_DIALECT: 'org.hibernate.dialect.MySQL5InnoDBDialect',
+        SPRING_DATASOURCE_URL: 'mysql://localhost:3306/oab',
+        SPRING_DATASOURCE_USERNAME: 'oab',
+        SPRING_DATASOURCE_PASSWORD: '123456'
 ];
 
 // ------------------------------------ Env-dependent tasks ----------------------------------
@@ -144,53 +140,22 @@ task buildProduction(group: 'docker') {
         }
 
         dockerCreateDockerfile {
-            mySqlDB.each {e ->
-                environmentVariable e.key, e.value
-            }
+            environmentVariable 'DB_CLASSNAME', 'com.mysql.jdbc.Driver'
+            environmentVariable 'HIBERNATE_DIALECT', 'org.hibernate.dialect.MySQL5InnoDBDialect'
+
+            label(['maintainer': 'Ricardo ricardo.rss.dev@gmail.com'])
         }
 
         dockerBuildImage {
             if (project.version.toString().contains('SNAPSHOT')) {
-                images = ['oaboard-server:latest']
+                images = ['oac-server:latest']
             } else {
-                images = ['oaboard-server:latest', 'oaboard-server:' + project.version()]
+                images = ['oac-server:latest', 'oac-server:' + project.version]
             }
         }
     }
     dependsOn('clean')
-    finalizedBy('build', 'dockerCreateDockerfile')
-}
-
-// With H2
-task buildH2(group: 'docker') {
-    doFirst {
-        sourceSets {
-            main { runtimeClasspath += configurations.devClasspath }
-        }
-
-        dockerSyncBuildContext {
-            into ('libs') {
-                from configurations.devClasspath
-            }
-        }
-
-        dockerCreateDockerfile {
-			environmentVariable 'spring.profiles.active', 'preLoad'
-            h2DB.each {e ->
-                environmentVariable e.key, e.value
-            }
-        }
-
-        dockerBuildImage {
-            if (project.version.toString().contains('SNAPSHOT')) {
-                images = ['oaboard-server-h2:latest']
-            } else {
-                images = ['oaboard-server-h2:latest', 'oaboard-server-h2:' + project.version()]
-            }
-        }
-    }
-    dependsOn('clean')
-    finalizedBy('build', 'dockerBuildImage')
+    finalizedBy('build', 'dockerCreateDockerfile', 'dockerBuildImage')
 }
 
 // ------------------------------------ Local run tasks ----------------------------------

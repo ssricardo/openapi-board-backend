@@ -1,6 +1,7 @@
 package io.rss.openapiboard.server.web.resource
 
 import io.rss.openapiboard.server.services.support.SubscriptionHandler
+import org.springframework.beans.factory.annotation.Autowired
 import java.lang.IllegalArgumentException
 import javax.annotation.Resource
 import javax.ws.rs.GET
@@ -13,7 +14,7 @@ import javax.ws.rs.QueryParam
 @Path("m")
 class MailInputResource {
 
-    @Resource
+    @Autowired
     lateinit var subscriptionHandler: SubscriptionHandler
 
 

@@ -27,18 +27,8 @@ import kotlin.random.Random
 
 
 /** Populates the DB with sample data (for testing, demonstration). */
-//@Profile("preLoad")
 @Service
 class SandboxDataLoadingService {
-
-//    @Resource
-//    lateinit var appService: ApiRecordHandler
-//
-//    @Resource
-//    lateinit var requestMemoryHandler: RequestMemoryHandler
-//
-//    @Resource
-//    private lateinit var subscriptionHandler: SubscriptionHandler
 
     private val serverBase = "http://localhost:8080"
     private val restTemplate: RestTemplate = RestTemplateBuilder()
@@ -127,10 +117,10 @@ class SandboxDataLoadingService {
     }
 
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-    data class ApiRecordDto(val name: String, val namespace: String, var body: ApiRecordBody = ApiRecordBody())
+    private data class ApiRecordDto(val name: String, val namespace: String, var body: ApiRecordBody = ApiRecordBody())
 
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-    data class ApiRecordBody(var version: String? = null, var url: String? = null, var file: InputStream? = null)
+    private data class ApiRecordBody(var version: String? = null, var url: String? = null, var file: InputStream? = null)
 
     private fun createSubscriptions() {
         for (i in 0..10) {
@@ -140,10 +130,10 @@ class SandboxDataLoadingService {
             }
 
             restTemplate
-                    .postForEntity("$serverBase/subscriptions",
-                            HttpEntity(subs, HttpHeaders().apply {
-                                contentType = MediaType.APPLICATION_JSON
-                            }), Response::class.java)
+                .postForEntity("$serverBase/subscriptions",
+                        HttpEntity(subs, HttpHeaders().apply {
+                            contentType = MediaType.APPLICATION_JSON
+                        }), Response::class.java)
 
         }
         println("Subscriptions created")

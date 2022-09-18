@@ -26,7 +26,7 @@ class SubscriptionHandler {
     @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
     @Transactional
     fun addSubscription(subscription: AlertSubscription) {
-        require(subscription.id != null) { "New subscriptions must not have an id" }
+        require(subscription.id == null) { "New subscriptions must not have an id" }
         return saveOrUpdate(subscription)
     }
 
@@ -49,7 +49,7 @@ class SubscriptionHandler {
     fun removeById(id: Long) {
         repository.findByIdOrNull(id)?.let {
             repository.delete(it)
-        } ?: IllegalStateException("No subscription available with given id: $id")
+        } ?: throw IllegalArgumentException("No subscription available with given id: $id")
     }
 
 }
