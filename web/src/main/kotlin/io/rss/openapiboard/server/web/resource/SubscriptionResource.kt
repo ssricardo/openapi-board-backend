@@ -4,6 +4,7 @@ import io.rss.openapiboard.server.services.support.SubscriptionHandler
 import io.rss.openapiboard.server.services.to.SubscriptionRequestResponse
 import org.springframework.beans.factory.annotation.Autowired
 import java.lang.IllegalArgumentException
+import javax.inject.Inject
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
@@ -13,7 +14,7 @@ import javax.ws.rs.core.Response
 @Consumes(MediaType.APPLICATION_JSON)
 class SubscriptionResource {
 
-    @Autowired
+    @Inject
     private lateinit var handler: SubscriptionHandler
 
     @GET

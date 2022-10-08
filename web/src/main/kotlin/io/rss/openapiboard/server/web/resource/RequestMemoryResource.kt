@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
+import javax.inject.Inject
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
@@ -17,7 +18,7 @@ import javax.ws.rs.core.Response
 @Consumes(MediaType.APPLICATION_JSON)
 class RequestMemoryResource {
 
-    @Autowired
+    @Inject
     private lateinit var handler: RequestMemoryHandler
 
     @GET

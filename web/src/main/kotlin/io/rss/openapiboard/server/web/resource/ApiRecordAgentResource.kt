@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.glassfish.jersey.media.multipart.FormDataParam
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
+import javax.inject.Inject
 import javax.ws.rs.Consumes
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
@@ -22,7 +23,7 @@ import javax.ws.rs.core.Response
 @Path("")
 class ApiRecordAgentResource {
 
-    @Autowired
+    @Inject
     private lateinit var appHandlerService: ApiRecordHandler
 
     @Operation(description = "Feeds this application base. Accepts a multipart with data for an ApiRegistry.")
@@ -35,8 +36,7 @@ class ApiRecordAgentResource {
                     @FormDataParam("version") versionParam: String,
                     @FormDataParam("url") url: String): Response {
 
-        appHandlerService.createOrUpdate(ApiRecord(name, nm).apply {
-            version = versionParam
+        appHandlerService.createOrUpdate(ApiRecord(name, nm, versionParam).apply {
             apiUrl = url
             source = String(apiSpec.readBytes())
         })

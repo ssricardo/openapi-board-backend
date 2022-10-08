@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
+import javax.inject.Inject
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 
@@ -23,10 +24,10 @@ import javax.ws.rs.core.MediaType
 @Path("")
 class NamespaceApiResource {
 
-    @Autowired
+    @Inject
     private lateinit var bService: ApiRecordHandler
 
-    @Autowired
+    @Inject
     private lateinit var snapshotService: ApiSnapshotHandler
 
     @Operation(description = "Retrieves the list of existing Namespaces")
