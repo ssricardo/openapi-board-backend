@@ -44,5 +44,5 @@ jwt:
     key: DXnC^E8xFm6-ectU4rXv8T7jNnxW2rdXazwxQvWwshCiEzcLQvMbDYAKECFBtyWWzqQnv5tzpGoWRdbNxXPmaLKR/jSx_FSWoij88uHaLu6zVQPfvPRUwAmRimqcUTba
 
 
-security:
-  ignored: /**
+#security:
+#  ignored: /**

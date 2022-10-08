@@ -30,6 +30,7 @@ sourceSets {
 
 dependencies {
     implementation project(":core")
+    implementation project(":default-security")
 
     implementation("org.springframework.boot:spring-boot-starter-jersey")
     implementation("org.springframework.boot:spring-boot-starter-security")

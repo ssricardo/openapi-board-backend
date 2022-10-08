@@ -23,11 +23,6 @@ import javax.servlet.http.HttpServletResponse
  * */
 class AuthTokenFilter(private val authManager: AuthenticationManager) : OncePerRequestFilter() {
 
-    companion object {
-        private val LOGGER: Logger = LoggerFactory.getLogger(AuthTokenFilter::class.java)
-        private const val BEARER_PREFIX = "Bearer "
-    }
-
     @Throws(ServletException::class, IOException::class)
     override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain) {
         try {
@@ -63,6 +58,11 @@ class AuthTokenFilter(private val authManager: AuthenticationManager) : OncePerR
             TokenHelper.validateConvertToUser(token)
         } else
             null
+    }
+
+    private companion object {
+        val LOGGER: Logger = LoggerFactory.getLogger(AuthTokenFilter::class.java)
+        const val BEARER_PREFIX = "Bearer "
     }
 
 

@@ -16,6 +16,7 @@ object TestRequestHelpers {
 
     private val restTemplate = RestTemplateBuilder()
             .basicAuthentication("admin", "test")
+            .defaultHeader("accepts", MediaType.APPLICATION_JSON_VALUE)
             .build()
 
     private val objectMapper = ObjectMapper()
