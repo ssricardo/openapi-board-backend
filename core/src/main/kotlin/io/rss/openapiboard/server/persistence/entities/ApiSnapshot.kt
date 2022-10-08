@@ -14,14 +14,14 @@ import javax.persistence.IdClass
 data class ApiSnapshot (
 
         @Id
-        var name: String? = null,
+        var name: String,
 
         @Id
-        var namespace: String? = null,
+        var namespace: String,
 
         @Id
         @Column(name="version_number", length = 26)
-        var version: String? = null
+        var version: String
 
         ): BaseApiData()
 

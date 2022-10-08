@@ -3,6 +3,8 @@ package io.rss.openapiboard.server.persistence.dao
 import io.rss.openapiboard.server.persistence.entities.ApiRecordId
 import io.rss.openapiboard.server.persistence.entities.ApiSnapshot
 import io.rss.openapiboard.server.persistence.entities.ApiSnapshotId
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.PagingAndSortingRepository
 import org.springframework.data.repository.query.Param
@@ -22,10 +24,10 @@ interface ApiSnapshotRepository: PagingAndSortingRepository<ApiSnapshot, ApiSnap
         SELECT a 
         FROM ApiSnapshot a 
         WHERE a.name = :name AND a.namespace = :nm AND a.version <> :version
-            AND ROWNUM = 1 
         ORDER BY a.modifiedDate DESC 
     """)
     fun findTopPreviousVersion(@Param("name") apiName: String, @Param("nm") namespace: String,
-                               @Param("version") version: String): ApiSnapshot?
+                               @Param("version") version: String,
+                               pgConfig: Pageable): Page<ApiSnapshot>
 
 }

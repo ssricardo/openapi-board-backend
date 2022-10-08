@@ -1,5 +1,6 @@
 package io.rss.openapiboard.server.services.support
 
+import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
@@ -13,14 +14,13 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Spy
 import org.mockito.junit.jupiter.MockitoExtension
+import org.springframework.data.domain.Page
 import org.springframework.mail.javamail.JavaMailSender
-import java.time.LocalDateTime
 import java.util.concurrent.ExecutorService
 
 @ExtendWith(MockitoExtension::class)
@@ -42,11 +42,13 @@ class NotificationHandlerTest {
     private lateinit var emailSender: JavaMailSender
 
     @InjectMocks
-    val tested = NotificationHandler()
+    lateinit var underTest: NotificationHandler
 
     @BeforeEach
     fun setUp() {
         TokenHelper.setupAlgorithm("test")
+        whenever(apiSnapshotRepository.findTopPreviousVersion(anyString(), anyString(), anyString(), any()))
+                .thenReturn(Page.empty())
     }
 
     @Test
@@ -66,10 +68,9 @@ class NotificationHandlerTest {
                     email = "anna@test.com"
                 })
         )
-        tested.notifyUpdate(ApiRecord("videos","master")
+        underTest.notifyUpdate(ApiRecord("videos","master", "1.5")
                 .apply {
-                    version = "1.5"
-                    lastModified = LocalDateTime.now()
+                    updateModifiedDate()
                 })
         verify(executorService, times(2)).submit(any())
     }

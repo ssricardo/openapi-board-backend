@@ -14,16 +14,16 @@ import javax.validation.constraints.NotEmpty
 @NamedEntityGraph(name = "request.parameters", attributeNodes = [
     NamedAttributeNode("parameters")
 ])
-data class RequestMemory (
-
-        @Id
-        @GeneratedValue
-        var id: Long? = null
-): Serializable {
+class RequestMemory (
 
     @JoinColumn(nullable = false)
     @ManyToOne
-    var operation: ApiOperation = DEFAULT_OPERATION
+    val operation: ApiOperation,
+
+    @Id
+    @GeneratedValue
+    var id: Long? = null
+): Serializable {
 
     @Column(length = 50, nullable = false)
     @NotEmpty
@@ -45,16 +45,11 @@ data class RequestMemory (
     var contentType: String? = null
 
     @OneToMany(mappedBy = "request", cascade = [CascadeType.ALL], orphanRemoval = true)
-    @BatchSize(size = 30)    // WARN: provider specific :(
+    @BatchSize(size = 15)    // WARN: provider specific
     val parameters = mutableListOf<ParameterMemory>()
 
     fun addParameterMemory(pm: ParameterMemory) {
         pm.request = this
         parameters.add(pm)
-    }
-
-    private companion object {
-        @JvmStatic
-        val DEFAULT_OPERATION = ApiOperation(-1)
     }
 }

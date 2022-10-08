@@ -9,11 +9,14 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.assertAll
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.MockitoAnnotations
+import org.mockito.junit.jupiter.MockitoExtension
 
+@ExtendWith(MockitoExtension::class)
 internal class ApiRecordHandlerTest {
 
     @Mock
@@ -29,30 +32,22 @@ internal class ApiRecordHandlerTest {
     lateinit var notificationHandler: NotificationHandler
 
     @InjectMocks
-    var tested = ApiRecordHandler()
-
-    @BeforeEach
-    internal fun setUp() {
-        MockitoAnnotations.initMocks(this)
-    }
+    lateinit var tested: ApiRecordHandler
 
     @Test
     @DisplayName("must not save when missing fields")
     fun saveOrUpdateMissingData() {
         assertAll (
             {
-                assertThrows(BoardApplicationException::class.java) { tested.createOrUpdate(ApiRecord()) }
-            },
-            {
                 assertThrows(BoardApplicationException::class.java) {
-                    tested.createOrUpdate(ApiRecord("SomeName", "SomeNS")) }
+                    tested.createOrUpdate(ApiRecord("SomeName", "", "")) }
             }
         )
     }
 
     @Test
     fun saveOK() {
-        val app = ApiRecord("test", "local").apply {
+        val app = ApiRecord("test", "local", "2.0").apply {
             version = "1.0"
             source = "{}"
             apiUrl = "http://google.com"

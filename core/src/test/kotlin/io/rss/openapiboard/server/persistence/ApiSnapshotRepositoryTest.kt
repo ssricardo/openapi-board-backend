@@ -10,12 +10,15 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.data.domain.PageRequest
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import javax.annotation.Resource
 import javax.persistence.EntityManager
 
 @ExtendWith(SpringExtension::class)
 @DataJpaTest()
+//@SpringBootTest()
 @Tag("db")
 class ApiSnapshotRepositoryTest {
 
@@ -44,9 +47,10 @@ class ApiSnapshotRepositoryTest {
 
     @Test
     fun `find previous version`() {
-        val res = tested.findTopPreviousVersion("RicardoApp", "test", "3.0")
+        val res = tested.findTopPreviousVersion("RicardoApp", "test", "3.0",
+            PageRequest.of(0, 1)).first()
         assertNotNull(res)
-        assertFalse(res!!.version == "3.0")
+        assertFalse(res.version == "3.0")
     }
 
     @Test

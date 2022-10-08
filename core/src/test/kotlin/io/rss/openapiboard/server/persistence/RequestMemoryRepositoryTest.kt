@@ -38,22 +38,25 @@ class RequestMemoryRepositoryTest {
 
     @BeforeEach
     internal fun setUp() {
-        val app = em.merge(ApiRecord("ricardo", "testing").apply {
+        val api = em.merge(ApiRecord("ricardo", "testing", "2.0").apply {
             basePath = "/base-path"
-            version = "2.0"
             modifiedDate = LocalDateTime.now()
             apiUrl = "http://server"
             source = fileContent
         })
-        val ope = ApiOperation().apply {
-            apiRecord = app
+        val ope = ApiOperation(api).apply {
             path = "/books"
             this.methodType = MethodType.POST
         }
         em.persist(ope)
 
-        val appMaster = em.merge(app.copy(namespace = "master"))
-        val opeMaster = em.merge(ope.copy(id = null).apply { apiRecord = appMaster })
+        val appMaster = em.merge(ApiRecord(api.name, "master", api.version).apply {
+            source = fileContent
+        })
+        val opeMaster = em.merge(ApiOperation(appMaster).apply {
+            path = "/books"
+            this.methodType = MethodType.POST
+        })
         em.flush()
         operationId = ope.id
         operationIdMaster = opeMaster.id
@@ -62,7 +65,7 @@ class RequestMemoryRepositoryTest {
     @ParameterizedTest
     @CsvSource("'My test Request', 'testValue'")
     fun persistRequest(pTitle: String, someValue: String) {
-        val request = RequestMemory().apply {
+        val request = RequestMemory(em.getReference(ApiOperation::class.java, operationId)).apply {
             body ="""
                 {
                     "openAPI": "v3",
@@ -71,7 +74,6 @@ class RequestMemoryRepositoryTest {
                 }
             """.trimIndent()
             title = pTitle
-            operation = em.getReference(ApiOperation::class.java, operationId)
             visibility = RequestVisibility.PUBLIC
             contentType = "application/json"
         }
@@ -99,7 +101,7 @@ class RequestMemoryRepositoryTest {
         persistRequest("First request", "Munich")
         persistRequest("Second request", "Tokyo")
 
-        val request = RequestMemory().apply {
+        val request = RequestMemory(em.getReference(ApiOperation::class.java, operationIdMaster)).apply {
             body ="""
                 {
                     "openAPI": "v2",
@@ -107,7 +109,6 @@ class RequestMemoryRepositoryTest {
                 }
             """.trimIndent()
             title = "ricardo"
-            operation = em.getReference(ApiOperation::class.java, operationIdMaster)
             visibility = RequestVisibility.PUBLIC
             contentType = "application/json"
         }

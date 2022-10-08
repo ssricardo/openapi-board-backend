@@ -1,15 +1,14 @@
 package io.rss.openapiboard.server.services
 
-import io.rss.openapiboard.server.security.Roles
 import io.rss.openapiboard.server.helper.assertStringRequired
 import io.rss.openapiboard.server.persistence.dao.ApiRecordRepository
 import io.rss.openapiboard.server.persistence.entities.ApiRecord
 import io.rss.openapiboard.server.persistence.entities.ApiRecordId
+import io.rss.openapiboard.server.security.Roles
 import io.rss.openapiboard.server.services.support.NotificationHandler
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import javax.annotation.Resource
 
 /**
  * Offers general CRUD operations for ApiRecord
@@ -19,25 +18,16 @@ import javax.annotation.Resource
 @Service
 @PreAuthorize("hasAnyAuthority('${Roles.AGENT}', '${Roles.READER}')")
 @Transactional(readOnly = true)
-class ApiRecordHandler {
-
-    @Resource
-    lateinit var repository: ApiRecordRepository
-
-    @Resource
-    lateinit var snapshotService: ApiSnapshotHandler
-
-    @Resource
-    lateinit var apiSourceProcessor: ApiSourceProcessor
-
-    @Resource
-    lateinit var notificationHandler: NotificationHandler
+class ApiRecordHandler (
+    private val repository: ApiRecordRepository,
+    private val snapshotService: ApiSnapshotHandler,
+    private val apiSourceProcessor: ApiSourceProcessor,
+    private val notificationHandler: NotificationHandler
+) {
 
     @Transactional
     @PreAuthorize("hasAnyAuthority('${Roles.AGENT}', '${Roles.MANAGER}')")
     fun createOrUpdate(apiRecord: ApiRecord): ApiRecord {
-        assertStringRequired(apiRecord.name) {"Name must not be null"}
-        assertStringRequired(apiRecord.namespace) {"Namespace must not be null"}
         assertStringRequired(apiRecord.source) {"Api specification must have some value"}
         assertStringRequired(apiRecord.apiUrl) {"App address must have some value"}
 

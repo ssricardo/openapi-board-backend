@@ -23,7 +23,7 @@ data class SubscriptionRequestResponse(private val wrapped: AlertSubscription = 
     var email: String?
         get() = wrapped.email
         set(value) {
-            wrapped.email = value
+            wrapped.email = requireNotNull(value)
         }
 
     var apiName
@@ -65,7 +65,9 @@ class SubscriptionDeserializer: JsonDeserializer<SubscriptionRequestResponse>() 
         return SubscriptionRequestResponse().apply {
             id = if (node.has("id") && node.get("id").isLong) node.get("id").asLong() else null
             email = if (node.has("email")) node.get("email").asText() else null
-            apiName = if (node.has("apiName")) node.get("apiName").asText() else null
+            if (node.has("apiName")) {
+                apiName = node.get("apiName").asText()
+            }
             basePathList =
                     mapper.reader().forType(MutableList::class.java).readValue(
                             node.get("basePathList").toString())

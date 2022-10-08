@@ -27,9 +27,9 @@ class ApiRecordRepositoryTest {
 
     @BeforeEach
     internal fun setUp() {
-        tested.save(ApiRecord("RicardoApp", "test"))
-        tested.save(ApiRecord("DiffNS", "other"))
-        tested.save(ApiRecord("Yes", "test"))
+        tested.save(ApiRecord("RicardoApp", "test", "v1"))
+        tested.save(ApiRecord("DiffNS", "other", "v1"))
+        tested.save(ApiRecord("Yes", "test", "v1"))
     }
 
     @Test
@@ -53,13 +53,12 @@ class ApiRecordRepositoryTest {
         val fileContent = javaClass
                 .getResource("/test-data/petstore-expanded.yaml")
                 .readText()
-        tested.save(ApiRecord("NewOne", "test").apply {
-            version = "3"
+        tested.save(ApiRecord("NewOne", "test", "v3").apply {
             apiUrl = "http://someadress.on.internet:8080/someContext/onSubContext"
             source = fileContent
         })  // 4
-        tested.save(ApiRecord("Yes", "test"))   // same
-        tested.save(ApiRecord("Yes", "more"))   // different
+        tested.save(ApiRecord("Yes", "test", "v3"))   // same
+        tested.save(ApiRecord("Yes", "more", "v3"))   // different
 
         val res2 = tested.count()
         assert(res2 == 5L)
@@ -71,8 +70,7 @@ class ApiRecordRepositoryTest {
                 .getResource("/test-data/petstore-expanded.yaml")
                 .readText()
 
-        tested.save(ApiRecord("NewOne", "test").apply {
-            version = "3"
+        tested.save(ApiRecord("NewOne", "test", "v3").apply {
             apiUrl = "http://someadress.on.internet:8080/someContext/onSubContext"
             source = fileContent
         })
@@ -86,7 +84,7 @@ class ApiRecordRepositoryTest {
 
     @Test
     internal fun `insert roles`() {
-        val res = tested.save(ApiRecord("Super", "secret").apply {
+        val res = tested.save(ApiRecord("Super", "secret", "v2").apply {
             allowedAuthorities.add("ADMIN")
             allowedAuthorities.add("MASTER")
         })

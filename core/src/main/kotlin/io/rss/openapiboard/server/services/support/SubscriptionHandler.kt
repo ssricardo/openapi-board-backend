@@ -14,10 +14,7 @@ import javax.validation.constraints.NotEmpty
 
 /** Handles CRUD operations for AlertSubscription */
 @Service
-class SubscriptionHandler {
-
-    @Resource
-    private lateinit var repository: AlertSubscriptionRepository
+class SubscriptionHandler (private val repository: AlertSubscriptionRepository) {
 
     fun find(): List<AlertSubscription> {
         return repository.findAll()
@@ -25,23 +22,22 @@ class SubscriptionHandler {
 
     @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
     @Transactional
-    fun addSubscription(subscription: AlertSubscription) {
+    fun addSubscription(subscription: AlertSubscription): AlertSubscription {
         require(subscription.id == null) { "New subscriptions must not have an id" }
         return saveOrUpdate(subscription)
     }
 
     @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
     @Transactional
-    fun saveOrUpdate(@Valid input: AlertSubscription) {
+    fun saveOrUpdate(@Valid input: AlertSubscription): AlertSubscription =
         repository.save(input)
-    }
 
     @Transactional
     fun removeIfVerified(@NotEmpty token: String) {
-        TokenHelper.validateRetrieveMailInfo(token).apply {
-            repository.findByMailApi(this.email, this.appName)?.let {
-                repository.delete(it)
-            }
+        val subscriptionId = TokenHelper.validateRetrieveMailInfo(token)
+
+        repository.findByMailApi(subscriptionId.email, subscriptionId.appName)?.let {
+            repository.delete(it)
         }
     }
 

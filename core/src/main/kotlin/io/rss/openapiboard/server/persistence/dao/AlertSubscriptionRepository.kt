@@ -12,8 +12,7 @@ interface AlertSubscriptionRepository: JpaRepository<AlertSubscription, Long> {
     @Query("""
         SELECT a  
         FROM AlertSubscription a  
-        WHERE a.email = :mail AND a.apiName = :apiName 
-            AND ROWNUM = 1
+        WHERE a.email = :mail AND a.apiName = :apiName
     """)
     fun findByMailApi(@Param("mail") mail: String,
                       @Param("apiName") apiName: String): AlertSubscription?

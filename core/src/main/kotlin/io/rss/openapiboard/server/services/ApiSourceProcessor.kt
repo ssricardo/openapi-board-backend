@@ -17,9 +17,9 @@ import io.swagger.v3.oas.models.examples.Example
 import io.swagger.v3.oas.models.media.MediaType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import javax.annotation.PostConstruct
-import javax.annotation.Resource
 import javax.transaction.Transactional
 
 /**
@@ -32,17 +32,15 @@ import javax.transaction.Transactional
  * @author ricardo saturnino
  */
 @Service
-class ApiSourceProcessor {
-
-    @Resource
-    private lateinit var operationRepository: ApiOperationRepository
-
-    @Resource
-    private lateinit var requestRepository: RequestMemoryRepository
+class ApiSourceProcessor(
+    private val operationRepository: ApiOperationRepository,
+    private val requestRepository: RequestMemoryRepository
+) {
 
     private lateinit var parser:OpenAPIParser
 
     private lateinit var openWriter:ObjectWriter
+
     @PostConstruct
     fun init() {
         parser = OpenAPIParser()
@@ -52,11 +50,10 @@ class ApiSourceProcessor {
 //        openWriter = mapper.writerWithDefaultPrettyPrinter()
     }
 
-//    @Async
+    @Async
     @Transactional()
-    fun processApiRecord(api: ApiRecord) {
+    fun processApiRecord(api: ApiRecord) =
         processApiOperations(api)
-    }
 
     private fun processApiOperations(inputApi: ApiRecord) {
         inputApi.source ?: return logNoExecution("Source is null for ApiRecord ${inputApi.namespace}/${inputApi.name}")
@@ -83,8 +80,7 @@ class ApiSourceProcessor {
         val namespace = checkNotNull(inputApi.namespace)
 
         val operation = operationRepository.findSingleMatch(apiName, namespace, pathStr, oppType)
-                ?: ApiOperation().apply {
-                    apiRecord = inputApi
+                ?: ApiOperation(inputApi).apply {
                     path = pathStr
                     methodType = oppType
                 }
@@ -109,20 +105,18 @@ class ApiSourceProcessor {
         val openApi = parser.readContents(inputApi.source, null, null)?.openAPI
         val paths = openApi?.paths ?: return inputApi
 
-        requestRepository.findByApiNamespace(
-                inputApi.name ?: throw IllegalStateException(),
-                inputApi.namespace ?: throw IllegalStateException())
-            .filter { it.operation != null }
+        requestRepository.findByApiNamespace(inputApi.name, inputApi.namespace)
+            .filter { it.operation.path != null }
             .forEachIndexed { index, reqMemory -> processMatchingPath(paths, reqMemory, index) }
 
         return inputApi.apply { source = openWriter.writeValueAsString(openApi) }
     }
 
     private fun processMatchingPath(paths: Paths, rm: RequestMemory, index: Int) =
-        paths[rm.operation!!.path]?.let { pi -> processMatchingContent(rm, pi, index) }
+        paths[rm.operation.path]?.let { pi -> processMatchingContent(rm, pi, index) }
 
     private fun processMatchingContent(rm: RequestMemory, pi: PathItem, index: Int) {
-        val methodOperation = getHttpMethodForOperation(rm.operation!!, pi)
+        val methodOperation = getHttpMethodForOperation(rm.operation, pi)
         rm.parameters.forEach { memParam ->
             methodOperation?.parameters?.forEachIndexed { index, specParam ->
                 if (specParam.name == memParam.name && specParam.`in` == memParam.parameterType.toString().lowercase()) {

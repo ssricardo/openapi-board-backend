@@ -6,8 +6,8 @@ import io.rss.openapiboard.server.helper.assertValid
 import io.rss.openapiboard.server.persistence.dao.ApiOperationRepository
 import io.rss.openapiboard.server.persistence.dao.RequestMemoryRepository
 import io.rss.openapiboard.server.persistence.entities.ApiOperation
-import io.rss.openapiboard.server.persistence.entities.request.ParameterType
 import io.rss.openapiboard.server.persistence.entities.request.ParameterMemory
+import io.rss.openapiboard.server.persistence.entities.request.ParameterType
 import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
 import io.rss.openapiboard.server.persistence.entities.request.RequestVisibility
 import io.rss.openapiboard.server.security.Roles
@@ -19,8 +19,6 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
-import java.lang.IllegalStateException
-import javax.annotation.Resource
 import javax.transaction.Transactional
 import javax.validation.Validator
 import javax.ws.rs.core.MediaType
@@ -29,23 +27,13 @@ import javax.ws.rs.core.MediaType
 
 @Service
 @PreAuthorize("hasAuthority('${Roles.READER}')")
-class RequestMemoryHandler {
+class RequestMemoryHandler (
+    private val requestRepository: RequestMemoryRepository,
+    private val operationRepository: ApiOperationRepository,
+    private val validator: Validator
+) {
 
-    @Resource
-    private lateinit var requestRepository: RequestMemoryRepository
-
-    @Resource
-    private lateinit var operationRepository: ApiOperationRepository
-
-    @Resource
-    private lateinit var validator: Validator
-
-    companion object {
-        const val QUERY_PAGE_SIZE = 300
-        const val MIN_SIZE_SEARCHING = 2
-    }
-
-    @Transactional()
+    @Transactional
     @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
     fun createRequest(request: RequestMemoryRequestResponse): RequestMemoryRequestResponse {
         require(request.requestId == null) { "Request must not have an id, when creating a new one" }
@@ -76,7 +64,8 @@ class RequestMemoryHandler {
         }
 
         val operation = operationRepository.findSingleMatch(apiName, ns, path, methodType)
-                ?: throw BoardApplicationException("""No operation was found matching the request: 
+                ?: throw BoardApplicationException(
+                    """No operation was found matching the request: 
                     |[Api: ${request.apiName}, Namespace: ${request.namespace}, 
                     |Path: ${request.path}, method: ${request.methodType}]""".trimMargin())
 
@@ -93,9 +82,8 @@ class RequestMemoryHandler {
     }
 
     private fun createRequestMemory(operation: ApiOperation, request: RequestMemoryRequestResponse): RequestMemory {
-        return RequestMemory().apply {
-            this.operation = operation
-            visibility = RequestVisibility.PUBLIC
+        return RequestMemory(operation).apply {
+            visibility = RequestVisibility.PUBLIC       // FUTURE: control where the request is available
             this.title = request.title!!
             this.body = request.body
             contentType = MediaType.APPLICATION_JSON       // FUTURE: receive from request. For now, supports only JSON
@@ -116,7 +104,7 @@ class RequestMemoryHandler {
             target.addParameterMemory(ParameterMemory(h.id).apply {
                 this.name = h.name
                 this.value = h.value
-                this.parameterType = ParameterType.HEADER;
+                this.parameterType = ParameterType.HEADER
             })
         }
     }
@@ -142,10 +130,10 @@ class RequestMemoryHandler {
 
     private fun mapMemoryToView(source: RequestMemory): RequestMemoryRequestResponse {
         return RequestMemoryRequestResponse(source.id,
-                source.operation?.apiRecord?.namespace,
-                source.operation?.apiRecord?.name,
-                source.operation?.path,
-                source.operation?.methodType).apply {
+                source.operation.apiRecord.namespace,
+                source.operation.apiRecord.name,
+                source.operation.path,
+                source.operation.methodType).apply {
             this.title = source.title
             this.body = source.body
 
@@ -157,4 +145,10 @@ class RequestMemoryHandler {
                     .mapTo(this.requestHeaders){ParameterMemoryTO(it.id, it.parameterType, it.name, it.value)}
         }
     }
+
+    private companion object {
+        const val QUERY_PAGE_SIZE = 300
+        const val MIN_SIZE_SEARCHING = 2
+    }
+
 }

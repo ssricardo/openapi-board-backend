@@ -6,6 +6,7 @@ import io.rss.openapiboard.server.persistence.MethodType
 import io.rss.openapiboard.server.persistence.dao.ApiOperationRepository
 import io.rss.openapiboard.server.persistence.dao.RequestMemoryRepository
 import io.rss.openapiboard.server.persistence.entities.ApiOperation
+import io.rss.openapiboard.server.persistence.entities.ApiRecord
 import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
 import io.rss.openapiboard.server.services.exceptions.BoardApplicationException
 import io.rss.openapiboard.server.services.to.RequestMemoryRequestResponse
@@ -23,7 +24,7 @@ import com.nhaarman.mockitokotlin2.any as some
 class RequestMemoryHandlerTest {
 
     @InjectMocks
-    var tested = RequestMemoryHandler()
+    lateinit var tested: RequestMemoryHandler
 
     @Mock
     private lateinit var requestRepository: RequestMemoryRepository
@@ -36,9 +37,9 @@ class RequestMemoryHandlerTest {
 
     @Test
     fun testSaveOK() {
-        whenever(operationRepository.findSingleMatch(some(), some(), some(), some())) doReturn
-                ApiOperation(1)
-        whenever(requestRepository.save( any(RequestMemory::class.java) )) doReturn RequestMemory()
+        val operation = ApiOperation(ApiRecord("name", "ns", "v1"), 1)
+        whenever(operationRepository.findSingleMatch(some(), some(), some(), some())) doReturn operation
+        whenever(requestRepository.save( any(RequestMemory::class.java) )) doReturn RequestMemory(operation)
 
         tested.saveRequest(RequestMemoryRequestResponse(
                 namespace = "Prod", apiName = "testing", path = "/test", methodType = MethodType.POST

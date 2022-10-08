@@ -6,20 +6,22 @@ import javax.validation.constraints.NotEmpty
 import javax.validation.constraints.NotNull
 
 @Entity
-@Table(name="alert_subs")
+@Table(name="alert_subs", uniqueConstraints = [
+    UniqueConstraint(name = "same_mail_api", columnNames = ["apiName", "email"])
+])
 data class AlertSubscription (
 
     @Id
-    @GeneratedValue()
+    @GeneratedValue
     var id: Long? = null
 ) {
 
     @Column(length = 64, nullable = false)
     @NotEmpty
-    var email: String? = null
+    var email: String = ""
 
-    @NotNull
-    var apiName: String? = null
+    @NotEmpty
+    var apiName: String = ""
 
     @Column
     lateinit var modifiedTime: LocalDateTime

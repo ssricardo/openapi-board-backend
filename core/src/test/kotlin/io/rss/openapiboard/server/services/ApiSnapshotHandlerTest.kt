@@ -7,12 +7,14 @@ import io.rss.openapiboard.server.persistence.entities.ApiSnapshot
 import io.rss.openapiboard.server.persistence.entities.ApiSnapshotId
 import io.rss.openapiboard.server.services.exceptions.BoardApplicationException
 import org.junit.jupiter.api.*
-import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.*
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 import java.util.*
+import javax.validation.Validation
+import javax.validation.Validator
 
 internal class ApiSnapshotHandlerTest {
 
@@ -20,35 +22,27 @@ internal class ApiSnapshotHandlerTest {
     lateinit var repository: ApiSnapshotRepository
 
     @InjectMocks
-    var tested = ApiSnapshotHandler()
+    lateinit var tested: ApiSnapshotHandler
+
+    lateinit var validator: Validator
 
     @BeforeEach
     internal fun setUp() {
-        MockitoAnnotations.initMocks(this)
+        MockitoAnnotations.openMocks(this)
+        val factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.validator;
     }
 
     @Test
     @DisplayName("Feed: app should have a name and namespace and version")
-    internal fun feedNullPart() {
-        assertAll(
-                {
-                    assertThrows(AssertionError::class.java) {
-                        tested.create(ApiRecord())
-                    }
-                },
-                {
-                    assertThrows(AssertionError::class.java) {
-                        tested.create(ApiRecord("Test", "MyNm"))
-                    }
-                }
-        )
-
+    internal fun feedEmptyPart() {
+        val validationErrors = validator.validate(ApiRecord("", "", ""))
+        assertEquals(3, validationErrors.size)
     }
 
     @Test
     internal fun feedOk() {
-        tested.create(ApiRecord("MyApp", "SomeNmp").apply {
-            version = "1.0-SNAPSHOT"
+        tested.create(ApiRecord("MyApp", "SomeNmp", "1.0-SNAPSHOT").apply {
             source = "NOTHING"
             apiUrl = "http://google.com"
         })
@@ -69,7 +63,7 @@ internal class ApiSnapshotHandlerTest {
         Mockito.`when`(repository.findById(ApiSnapshotId("name", "namespace", "7.0")))
                 .thenReturn(Optional.empty())
         Mockito.`when`(repository.findById(ApiSnapshotId("name", "namespace", "1.0")))
-                .thenReturn(Optional.of(ApiSnapshot("name", "namespace")))
+                .thenReturn(Optional.of(ApiSnapshot("name", "namespace", "2.0")))
 
         assertAll(
             {
@@ -93,9 +87,9 @@ internal class ApiSnapshotHandlerTest {
     @Test
     fun createComparison() {
         Mockito.`when`(repository.findById(ApiSnapshotId("name", "namespace", "1.0")))
-                .thenReturn(Optional.of(ApiSnapshot("name", "namespace")))
+                .thenReturn(Optional.of(ApiSnapshot("name", "namespace", "1.1")))
         Mockito.`when`(repository.findById(ApiSnapshotId("name", "other", "2.0")))
-                .thenReturn(Optional.of(ApiSnapshot("name", "other")))
+                .thenReturn(Optional.of(ApiSnapshot("name", "other", "1.1")))
 
         tested.buildComparison(ApiSnapshotId("name", "namespace", "1.0"),
                 ApiSnapshotId("name", "other", "2.0"))

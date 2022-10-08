@@ -14,26 +14,22 @@ import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
+import org.springframework.validation.annotation.Validated
 import javax.annotation.Resource
+import javax.validation.Valid
 
 /** Provides CRUD operations for ApiSnapshot, making use of Async in some cases */
 
 @Service
 @PreAuthorize("hasAnyAuthority('${Roles.AGENT}', '${Roles.MANAGER}')")
-class ApiSnapshotHandler {
-
-    @Resource
-    lateinit var repository: ApiSnapshotRepository
+@Validated
+class ApiSnapshotHandler (private val repository: ApiSnapshotRepository) {
 
     /**
      * Stores a new Snapshot, <b>Async</b>
      */
     @Async
-    fun create(api: ApiRecord) {
-        assert(api.name != null && api.namespace != null)
-        assert(api.version != null) {
-            "Version is required when registering an Api. It's not possible to save it's history for ${api.name}"}
-
+    fun create(@Valid api: ApiRecord) {
         val snap = ApiSnapshot(api.name, api.namespace, api.version).apply {
             this.source = api.source
             this.apiUrl = api.apiUrl
@@ -58,7 +54,7 @@ class ApiSnapshotHandler {
         val comparedResult = repository.findById(targetApi)
 
         if (!sourceResult.isPresent || !comparedResult.isPresent) {
-            throw BoardApplicationException("Comparision not possible. One or both of specified Api was not found")
+            throw BoardApplicationException("Comparison not possible. One or both of specified Api was not found")
         }
 
         return ApiComparisonResponse(sourceResult.get(), comparedResult.get())

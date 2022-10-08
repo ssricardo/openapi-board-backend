@@ -68,13 +68,14 @@ object TokenHelper {
      * */
     fun validateRetrieveMailInfo(token: String): SubscriptionMailId {
         val verifier = JWT.require(algorithmHS).withIssuer(OAB_ISSUER).build()
-        val jwtValue: DecodedJWT?
-        jwtValue = verifier.verify(token);
+        val jwtValue: DecodedJWT = verifier.verify(token);
 
-        return SubscriptionMailId(jwtValue.getClaim(SubscriptionMailId::appName.name)?.asString()
-                    ?: throw IllegalArgumentException("Invalid token"),
-                jwtValue.getClaim(SubscriptionMailId::email.name)?.asString()
-                        ?: throw IllegalArgumentException("Invalid token"))
+        val apiName = (jwtValue.getClaim(SubscriptionMailId::appName.name)?.asString()
+                ?: throw IllegalArgumentException("Invalid token"))
+        val email = (jwtValue.getClaim(SubscriptionMailId::email.name)?.asString()
+                ?: throw IllegalArgumentException("Invalid token"))
+
+        return SubscriptionMailId(apiName, email)
     }
 
 }

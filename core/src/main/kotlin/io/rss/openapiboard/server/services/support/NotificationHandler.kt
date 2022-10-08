@@ -10,6 +10,9 @@ import io.rss.openapiboard.server.persistence.entities.AlertSubscription
 import io.rss.openapiboard.server.persistence.entities.ApiRecord
 import io.rss.openapiboard.server.security.Roles
 import io.rss.openapiboard.server.services.to.SubscriptionMailId
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.data.domain.PageRequest
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.scheduling.annotation.Async
@@ -17,31 +20,17 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.ExecutorService
-import javax.annotation.Resource
 
 /** Responsible for notify the subscribers according to its needs */
 @Service
 @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
-class NotificationHandler {
-
-    companion object {
-        const val NOTIFICATION_MAIL_SUBJECT: String = "[OaBoard Notification] An application that you follow was updated"
-    }
-
-    @Resource
-    private lateinit var apiSnapshotRepository: ApiSnapshotRepository
-
-    @Resource
-    private lateinit var subscriptionRepository: AlertSubscriptionRepository
-
-    @Resource
-    private lateinit var executorService: ExecutorService
-
-    @Resource
-    private lateinit var envConfig: EnvironmentConfig
-
-    @Resource
-    private lateinit var emailSender: JavaMailSender
+class NotificationHandler (
+        private val apiSnapshotRepository: ApiSnapshotRepository,
+        private val subscriptionRepository: AlertSubscriptionRepository,
+        private val executorService: ExecutorService,
+        private val envConfig: EnvironmentConfig,
+        private val emailSender: JavaMailSender
+) {
 
     @Async
     fun notifyUpdate(apiRecord: ApiRecord) {
@@ -50,8 +39,9 @@ class NotificationHandler {
         }
         assertRequired(apiRecord.name){"Invalid AppRecord given. Name is mandatory"}
 
+        LOGGER.info("Notify API change for ${apiRecord.namespace}/${apiRecord.name}")
         getAppChangeSpec(apiRecord)?.let { change ->
-            getListOfSubscribers(apiRecord.name ?: throw IllegalStateException())
+            getListOfSubscribers(apiRecord.name)
                     .filter { subs -> isSubscriptionMatchDiff(change, subs) }
                     .forEach { subs -> submitNotification(change, subs) }
 
@@ -59,8 +49,9 @@ class NotificationHandler {
     }
 
     private fun getAppChangeSpec(apiRecord: ApiRecord): AppChange? {
-        val previous = apiSnapshotRepository.findTopPreviousVersion(apiRecord.name!!,
-                envConfig.mainNamespace, apiRecord.version!!)
+        val previous = apiSnapshotRepository.findTopPreviousVersion(apiRecord.name,
+                envConfig.mainNamespace, apiRecord.version, PageRequest.of(0, 1))
+                .firstOrNull()
 
         // simplified first version. Idea for later: parse the definitions, find specific paths changed
 
@@ -75,13 +66,13 @@ class NotificationHandler {
     }
 
     private fun submitNotification(change: AppChange, subs: AlertSubscription) {
-        val unsubscribeLink = createUnsubsLink(change.app.name!!, subs.email!!)
+        val unsubscribeLink = createUnsubsLink(change.app.name, subs.email)
         val mailContent = NotificationTemplate(date = change.app.lastModified,
-                appName = change.app.name!!, newVersion = change.app.version!!,
+                appName = change.app.name, newVersion = change.app.version,
                 unsubscribeLink = unsubscribeLink)
 
         executorService.submit {
-            sendMail(subs.email!!, mailContent)
+            sendMail(subs.email, mailContent)
         }
     }
 
@@ -113,4 +104,8 @@ class NotificationHandler {
     /** Holds the diff and kind of diff: path removed? changed?... */
     data class AppChange(val app: ApiRecord, val kind: String? = null)
 
+    private companion object {
+        const val NOTIFICATION_MAIL_SUBJECT: String = "[OpenApiCenter Notification] An API that you follow was updated"
+        val LOGGER: Logger = LoggerFactory.getLogger(NotificationHandler::class.java)
+    }
 }
