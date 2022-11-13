@@ -8,21 +8,22 @@ import javax.validation.constraints.NotEmpty
 import javax.validation.constraints.Pattern
 
 /** Main Entity in the app. Represents the current state of an API, for a given namespace */
-@Table(name = "api_record")
+@Table(name = "api_records")
 @Entity
 @IdClass(ApiRecordId::class)
 class ApiRecord(
 
         @Id
-        @get:Pattern(regexp = "\\w(\\w|-|\\.)*\\w", message = "Invalid api name")
+        @field:Pattern(regexp = "\\w(\\w|-|\\.)*\\w", message = "Invalid api name")
         val name: String,
 
         @Id
-        @get:Pattern(regexp = "\\w(\\w|-|\\.)*\\w", message = "Invalid namespace name")
+        @Column(name = "ns_id"/*, columnDefinition = "VARCHAR(50) FOREIGN KEY REFERENCES namespaces(name)"*/)
+        @field:Pattern(regexp = "\\w(\\w|-|\\.)*\\w", message = "Invalid namespace name")
         val namespace: String,
 
         @Column(name = "api_version", length = 30)
-        @get:NotEmpty
+        @field:NotEmpty
         var version: String
 ) : BaseApiData() {
 
@@ -32,10 +33,6 @@ class ApiRecord(
         @Column(name = "date_modified")
         lateinit var lastModified: LocalDateTime
                 protected set
-
-        @ElementCollection(fetch = FetchType.LAZY)
-        @CollectionTable(name = "api_authorities")
-        var allowedAuthorities = mutableListOf<String>()
 
         @PreUpdate
         @PrePersist
@@ -67,6 +64,7 @@ data class ApiRecordId (
 
     var name: String? = null,
 
+//    @Column(name = "ns_id", columnDefinition = "FOREIGN KEY REFERENCES namespaces(name)")
     var namespace: String? = null
 
 ): Serializable

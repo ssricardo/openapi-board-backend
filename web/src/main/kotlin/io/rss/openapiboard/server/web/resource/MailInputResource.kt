@@ -11,7 +11,7 @@ import javax.ws.rs.QueryParam
 /** Resource for operations with comes from email, therefore they don't follow same
  * security config
  * */
-@Path("m")
+//@Path("m")
 class MailInputResource {
 
     @Autowired

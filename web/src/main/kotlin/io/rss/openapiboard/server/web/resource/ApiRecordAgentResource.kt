@@ -5,13 +5,9 @@ import io.rss.openapiboard.server.services.ApiRecordHandler
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.glassfish.jersey.media.multipart.FormDataParam
-import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 import javax.inject.Inject
-import javax.ws.rs.Consumes
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
+import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
@@ -21,6 +17,7 @@ import javax.ws.rs.core.Response
         description = """Resource that receives API definitions to be registered.
             |Usually should be called from plugins or other tools.""")
 @Path("")
+@Produces(MediaType.APPLICATION_JSON)
 class ApiRecordAgentResource {
 
     @Inject
@@ -43,4 +40,5 @@ class ApiRecordAgentResource {
 
         return Response.ok().build()
     }
+
 }

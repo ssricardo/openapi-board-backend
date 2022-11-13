@@ -31,7 +31,7 @@ class ApiRecordHandler (
         assertStringRequired(apiRecord.source) {"Api specification must have some value"}
         assertStringRequired(apiRecord.apiUrl) {"App address must have some value"}
 
-        if (apiRecord.version.isNullOrBlank()) {
+        if (apiRecord.version.isBlank()) {
             apiRecord.version = DEFAULT_VERSION
         }
 

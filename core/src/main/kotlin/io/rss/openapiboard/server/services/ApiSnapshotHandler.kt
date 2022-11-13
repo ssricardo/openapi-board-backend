@@ -4,7 +4,6 @@ import io.rss.openapiboard.server.security.Roles
 import io.rss.openapiboard.server.helper.assertStringRequired
 import io.rss.openapiboard.server.persistence.dao.ApiSnapshotRepository
 import io.rss.openapiboard.server.persistence.entities.ApiRecord
-import io.rss.openapiboard.server.persistence.entities.ApiRecordId
 import io.rss.openapiboard.server.persistence.entities.ApiSnapshot
 import io.rss.openapiboard.server.persistence.entities.ApiSnapshotId
 import io.rss.openapiboard.server.services.exceptions.BoardApplicationException
@@ -15,7 +14,6 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import org.springframework.validation.annotation.Validated
-import javax.annotation.Resource
 import javax.validation.Valid
 
 /** Provides CRUD operations for ApiSnapshot, making use of Async in some cases */
@@ -23,7 +21,9 @@ import javax.validation.Valid
 @Service
 @PreAuthorize("hasAnyAuthority('${Roles.AGENT}', '${Roles.MANAGER}')")
 @Validated
-class ApiSnapshotHandler (private val repository: ApiSnapshotRepository) {
+class ApiSnapshotHandler (
+    private val repository: ApiSnapshotRepository
+) {
 
     /**
      * Stores a new Snapshot, <b>Async</b>
@@ -43,7 +43,7 @@ class ApiSnapshotHandler (private val repository: ApiSnapshotRepository) {
     fun listVersionsByApiNamespace(api: String, namespace: String): List<String> {
         assertStringRequired(api) {"Api name is required for this query"}
         assertStringRequired(namespace) {"Namespace is required for this query"}
-        return repository.findApiVersionList(ApiRecordId(api, namespace))
+        return repository.findApiVersionList(api, namespace)
     }
 
     /** Search given snapshots and creates a comparison with them.

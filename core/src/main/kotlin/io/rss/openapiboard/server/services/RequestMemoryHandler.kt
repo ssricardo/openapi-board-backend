@@ -30,6 +30,7 @@ import javax.ws.rs.core.MediaType
 class RequestMemoryHandler (
     private val requestRepository: RequestMemoryRepository,
     private val operationRepository: ApiOperationRepository,
+    private val namespaceHandler: NamespaceHandler,
     private val validator: Validator
 ) {
 
@@ -43,6 +44,8 @@ class RequestMemoryHandler (
     @Transactional()
     @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
     fun saveRequest(request: RequestMemoryRequestResponse): RequestMemoryRequestResponse {
+        request.namespace?.let(namespaceHandler::assertUserHasAccess)
+
         val requestMemory =  resolveRequestOperation(request)
 
         validator.validate(request)
@@ -124,8 +127,19 @@ class RequestMemoryHandler (
             "This query requires at least $MIN_SIZE_SEARCHING characteres. Found: ${query?.length}" }
 
         val data = requestRepository.findRequestsByFilter(query ?: "", PageRequest.of(offset, QUERY_PAGE_SIZE))
+                .asSequence()
+                .filter (this::filterNamespaceIfNeeded)
                 .map(::mapMemoryToView)
+                .toList()
         return QueryResult(data, (data.size < QUERY_PAGE_SIZE && offset == 0))
+    }
+
+    private fun filterNamespaceIfNeeded(requestMemory: RequestMemory): Boolean {
+        if (!requestMemory.namespaceAttached) {
+            return true
+        }
+
+        return namespaceHandler.hasUserAccessToNamespace(requestMemory.operation.apiRecord.namespace)
     }
 
     private fun mapMemoryToView(source: RequestMemory): RequestMemoryRequestResponse {

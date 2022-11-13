@@ -1,10 +1,7 @@
 package io.rss.openapiboard.server.services
 
 import io.rss.openapiboard.server.persistence.dao.ApiSnapshotRepository
-import io.rss.openapiboard.server.persistence.entities.ApiRecord
-import io.rss.openapiboard.server.persistence.entities.ApiRecordId
-import io.rss.openapiboard.server.persistence.entities.ApiSnapshot
-import io.rss.openapiboard.server.persistence.entities.ApiSnapshotId
+import io.rss.openapiboard.server.persistence.entities.*
 import io.rss.openapiboard.server.services.exceptions.BoardApplicationException
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
@@ -51,7 +48,7 @@ internal class ApiSnapshotHandlerTest {
     @Test
     @Disabled("TO FIX")
     internal fun listVersionsByApp() {
-        Mockito.`when`(repository.findApiVersionList(ApiRecordId("GoApp", "Winterfell")))
+        Mockito.`when`(repository.findApiVersionList("GoApp", "Winterfell"))
                 .thenReturn(listOf("1.0", "1.2", "2.0"))
         val result: List<String> = tested.listVersionsByApiNamespace("GoAp", "Winterfell")
         assert(result.size == 3)

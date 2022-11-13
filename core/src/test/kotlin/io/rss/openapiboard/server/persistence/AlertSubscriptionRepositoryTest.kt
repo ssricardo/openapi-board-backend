@@ -2,6 +2,7 @@ package io.rss.openapiboard.server.persistence
 
 import io.rss.openapiboard.server.persistence.dao.AlertSubscriptionRepository
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -21,5 +22,11 @@ class AlertSubscriptionRepositoryTest {
     fun testFindByApp() {
         val res = tested.findByApi("books")
         assertNotNull(res)
+    }
+
+    @Test
+    internal fun testFindByApiMail() {
+        val res = tested.findByMailApi("ricardo@test.com", "books")
+        assertNull(res)
     }
 }

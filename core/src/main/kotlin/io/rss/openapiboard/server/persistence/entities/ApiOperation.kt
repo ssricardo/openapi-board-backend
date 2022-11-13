@@ -12,7 +12,7 @@ class ApiOperation(
 
         @JoinColumns(
                 JoinColumn(name = "api_name", referencedColumnName = "name", nullable = false),
-                JoinColumn(name = "api_nspace", referencedColumnName = "namespace", nullable = false)
+                JoinColumn(name = "api_nspace", referencedColumnName = "ns_id", nullable = false)
         )
         @ManyToOne(fetch = FetchType.LAZY)
         val apiRecord: ApiRecord,
@@ -60,7 +60,5 @@ class ApiOperation(
     }
 
     private companion object {
-        @JvmStatic
-        val DEFAULT_API = ApiRecord("", "", "0.0")
     }
 }

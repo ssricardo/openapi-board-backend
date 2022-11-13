@@ -39,7 +39,7 @@ class ApiSnapshotRepositoryTest {
 
     @Test
     internal fun `find namespaces`() {
-        val res = tested.findApiVersionList(ApiRecordId("RicardoApp", "test"))
+        val res = tested.findApiVersionList("RicardoApp", "test")
         assert(res.size == 3)
         assert("2.0" in res)
         assert("5.0" !in res)

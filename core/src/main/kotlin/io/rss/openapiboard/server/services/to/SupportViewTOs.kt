@@ -5,3 +5,4 @@ package io.rss.openapiboard.server.services.to
 /** Used for logging in */
 data class AuthenticationTO(val user: String, val password: String)
 
+data class NamespaceViewTO(val name: String, var authorities: List<String> = listOf())

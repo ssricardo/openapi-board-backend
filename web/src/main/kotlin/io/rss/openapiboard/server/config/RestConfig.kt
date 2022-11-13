@@ -19,8 +19,8 @@ class RestConfig : ResourceConfig() {
     init {
         packages(PackageMarker::class.java.packageName)
         register(MultiPartFeature::class.java)
-//        register(JacksonJaxbJsonProvider::class.java)
         register(JacksonFeature::class.java)
+//        register(LoggingFeature::class.java)
     }
 
 }

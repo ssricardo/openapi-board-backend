@@ -1,14 +1,11 @@
 package io.rss.openapiboard
 
 import io.rss.openapiboard.TestRequestHelpers.`GET json`
+import io.rss.openapiboard.TestRequestHelpers.`POST json`
 import io.rss.openapiboard.TestRequestHelpers.`PUT multipart-form`
 import io.rss.openapiboard.TestRequestHelpers.`as list from last response contains`
 import io.rss.openapiboard.TestRequestHelpers.`from last response equals`
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.*
 import org.springframework.util.LinkedMultiValueMap
 
 @DisplayName("Manager app can search APIs, namespaces")
@@ -28,7 +25,15 @@ class ApiManagementTest {
 
     @BeforeAll
     fun beforeAll() {
+
         println("Loading sample data")
+        givenNamespace("brasil", listOf())
+        givenNamespace("america", listOf())
+        givenNamespace("europe", listOf())
+        givenNamespace("asia", listOf())
+
+//        println(`GET json`("ns/test"))
+
         testData.forEach { (name, ns, version) ->
             givenApi(name, ns, version)
         }
@@ -53,6 +58,16 @@ class ApiManagementTest {
     }
 
     @Test
+    fun `it should not view a namespace from distinct authority`() {
+        TODO()
+    }
+
+    @Test
+    fun `it should not view an API from distinct authority`() {
+        TODO()
+    }
+
+    @Test
     @Disabled
     fun `it should get the openApi definition a given api`() {
         `GET json`("namespaces/brasil/apis/skyApp/source")
@@ -67,5 +82,13 @@ class ApiManagementTest {
         ))
 
         `PUT multipart-form`("namespaces/$namespace/apis/$apiName", body)
+    }
+
+    private fun givenNamespace(name: String, requiredAuths: List<String>) {
+        `POST json`("namespaces", """
+            {
+                "name": "$name"
+            }
+        """)
     }
 }

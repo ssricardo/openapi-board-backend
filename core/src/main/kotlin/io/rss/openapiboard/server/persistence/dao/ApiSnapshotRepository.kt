@@ -1,6 +1,5 @@
 package io.rss.openapiboard.server.persistence.dao
 
-import io.rss.openapiboard.server.persistence.entities.ApiRecordId
 import io.rss.openapiboard.server.persistence.entities.ApiSnapshot
 import io.rss.openapiboard.server.persistence.entities.ApiSnapshotId
 import org.springframework.data.domain.Page
@@ -16,9 +15,9 @@ interface ApiSnapshotRepository: PagingAndSortingRepository<ApiSnapshot, ApiSnap
     @Query("""
        SELECT DISTINCT a.version
        FROM ApiSnapshot a
-       WHERE a.name = :#{#api.name} AND a.namespace = :#{#api.namespace}
+       WHERE a.name = :apiName AND a.namespace = :nsName 
     """)
-    fun findApiVersionList(@Param("api") appId: ApiRecordId): List<String>
+    fun findApiVersionList(@Param("apiName") apiName: String, @Param("nsName") nsName: String): List<String>
 
     @Query("""
         SELECT a 

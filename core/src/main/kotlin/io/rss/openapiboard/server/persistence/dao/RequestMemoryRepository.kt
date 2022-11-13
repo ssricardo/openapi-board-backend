@@ -27,6 +27,7 @@ interface RequestMemoryRepository: JpaRepository<RequestMemory, Long> {
         SELECT rm
         FROM RequestMemory rm 
             JOIN FETCH rm.operation op 
+            JOIN FETCH op.apiRecord ar 
         WHERE (LOWER(rm.title) LIKE CONCAT(LOWER(:query), '%') ) OR (op.path LIKE CONCAT(LOWER(:query), '%') )
     """)
     @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, value = "request.parameters")
