@@ -10,10 +10,7 @@ import javax.persistence.*
         uniqueConstraints = [UniqueConstraint(name = "operation_on_api", columnNames = ["unique_hash"])])
 class ApiOperation(
 
-        @JoinColumns(
-                JoinColumn(name = "api_name", referencedColumnName = "name", nullable = false),
-                JoinColumn(name = "api_nspace", referencedColumnName = "ns_id", nullable = false)
-        )
+        @JoinColumn(name = "api_id", nullable = false)
         @ManyToOne(fetch = FetchType.LAZY)
         val apiRecord: ApiRecord,
 
@@ -59,6 +56,4 @@ class ApiOperation(
         return id ?: 0
     }
 
-    private companion object {
-    }
 }

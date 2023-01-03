@@ -78,4 +78,4 @@ class SubscriptionDeserializer: JsonDeserializer<SubscriptionRequestResponse>() 
 }
 
 /** Carry result of retrieved data from Mail token */
-data class SubscriptionMailId(val appName: String, val email: String)
+data class SubscriptionMailId(val apiName: String, val email: String)

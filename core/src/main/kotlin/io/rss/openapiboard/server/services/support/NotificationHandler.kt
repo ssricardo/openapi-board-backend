@@ -3,6 +3,7 @@ package io.rss.openapiboard.server.services.support
 import io.rss.openapiboard.server.config.EnvironmentConfig
 import io.rss.openapiboard.server.config.PATH_UNSUBSCRIBE
 import io.rss.openapiboard.server.helper.TokenHelper
+import io.rss.openapiboard.server.helper.assertGetStringsRequired
 import io.rss.openapiboard.server.helper.assertRequired
 import io.rss.openapiboard.server.persistence.dao.AlertSubscriptionRepository
 import io.rss.openapiboard.server.persistence.dao.ApiSnapshotRepository
@@ -66,13 +67,15 @@ class NotificationHandler (
     }
 
     private fun submitNotification(change: AppChange, subs: AlertSubscription) {
-        val unsubscribeLink = createUnsubsLink(change.app.name, subs.email)
+        val (email) = assertGetStringsRequired({ "Missing email" }, subs.email)
+
+        val unsubscribeLink = createUnsubsLink(change.app.name, email)
         val mailContent = NotificationTemplate(date = change.app.lastModified,
                 appName = change.app.name, newVersion = change.app.version,
                 unsubscribeLink = unsubscribeLink)
 
         executorService.submit {
-            sendMail(subs.email, mailContent)
+            sendMail(email, mailContent)
         }
     }
 

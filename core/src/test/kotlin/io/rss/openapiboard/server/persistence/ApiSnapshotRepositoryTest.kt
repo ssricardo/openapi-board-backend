@@ -1,7 +1,6 @@
 package io.rss.openapiboard.server.persistence
 
 import io.rss.openapiboard.server.persistence.dao.ApiSnapshotRepository
-import io.rss.openapiboard.server.persistence.entities.ApiRecordId
 import io.rss.openapiboard.server.persistence.entities.ApiSnapshot
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -10,7 +9,6 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import javax.annotation.Resource
@@ -18,7 +16,6 @@ import javax.persistence.EntityManager
 
 @ExtendWith(SpringExtension::class)
 @DataJpaTest()
-//@SpringBootTest()
 @Tag("db")
 class ApiSnapshotRepositoryTest {
 

@@ -1,11 +1,10 @@
 package io.rss.openapiboard.server.web.resource
 
 import io.rss.openapiboard.server.services.RequestMemoryHandler
-import io.rss.openapiboard.server.services.to.RequestMemoryRequestResponse
+import io.rss.openapiboard.server.services.to.MemoryRequestResponse
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.beans.factory.annotation.Autowired
 import javax.inject.Inject
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
@@ -28,7 +27,7 @@ class RequestMemoryResource {
 
     @POST
     @ApiOperation("Let creating RequestMemory. ", notes = "Id must not be present")
-    fun createRequest(@ApiParam request: RequestMemoryRequestResponse): Response {
+    fun createRequest(@ApiParam request: MemoryRequestResponse): Response {
         handler.createRequest(request)
         return Response.status(Response.Status.CREATED).build()
     }
@@ -36,7 +35,7 @@ class RequestMemoryResource {
     @PUT
     @Path("{id}")
     @ApiOperation("Updating RequestMemory. ", notes = "To update, the id is needed. Tries to create.")
-    fun saveRequest(@PathParam("id") id: Long, @ApiParam request: RequestMemoryRequestResponse) {
+    fun saveRequest(@PathParam("id") id: Long, @ApiParam request: MemoryRequestResponse) {
         request.requestId = id
         handler.saveRequest(request)
     }

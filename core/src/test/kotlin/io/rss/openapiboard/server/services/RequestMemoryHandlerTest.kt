@@ -9,7 +9,7 @@ import io.rss.openapiboard.server.persistence.entities.ApiOperation
 import io.rss.openapiboard.server.persistence.entities.ApiRecord
 import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
 import io.rss.openapiboard.server.services.exceptions.BoardApplicationException
-import io.rss.openapiboard.server.services.to.RequestMemoryRequestResponse
+import io.rss.openapiboard.server.services.to.MemoryRequestResponse
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -33,6 +33,9 @@ class RequestMemoryHandlerTest {
     private lateinit var operationRepository: ApiOperationRepository
 
     @Mock
+    lateinit var namespaceHandler: NamespaceHandler
+
+    @Mock
     private lateinit var validator: Validator
 
     @Test
@@ -41,7 +44,7 @@ class RequestMemoryHandlerTest {
         whenever(operationRepository.findSingleMatch(some(), some(), some(), some())) doReturn operation
         whenever(requestRepository.save( any(RequestMemory::class.java) )) doReturn RequestMemory(operation)
 
-        tested.saveRequest(RequestMemoryRequestResponse(
+        tested.saveRequest(MemoryRequestResponse(
                 namespace = "Prod", apiName = "testing", path = "/test", methodType = MethodType.POST
         ).apply { title = "Meu test app" })
     }
@@ -49,7 +52,7 @@ class RequestMemoryHandlerTest {
     @Test
     fun testSaveMissingField() {
         assertThrows(BoardApplicationException::class.java) {
-            tested.saveRequest(RequestMemoryRequestResponse(
+            tested.saveRequest(MemoryRequestResponse(
                     namespace = "Prod", apiName = "testing", path = "/test"
             ))
         }

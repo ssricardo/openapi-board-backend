@@ -35,6 +35,7 @@ dependencies {
 
 	api('io.swagger.parser.v3:swagger-parser:2.1.1')
 	testImplementation("com.h2database:h2")
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
 }
 
 java.sourceCompatibility = JavaVersion.VERSION_11
@@ -48,7 +49,7 @@ compileKotlin {
 
 test {
 	useJUnitPlatform {
-		excludeTags 'db'
+//		excludeTags 'db'
 	}
 }
 

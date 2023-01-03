@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.http.*
+import org.springframework.util.LinkedMultiValueMap
 import org.springframework.util.MultiValueMap
 
 object TestRequestHelpers {
@@ -26,7 +27,12 @@ object TestRequestHelpers {
 
     fun `GET json`(endpoint: String) {
         runForResponse {
-            restTemplate.getForEntity("$SERVER/$endpoint", String::class.java)
+            val headers = LinkedMultiValueMap<String, String>().apply {
+                add("contentType", "application/json")
+                add("accept", "application/json")
+            }
+            restTemplate.exchange("$SERVER/$endpoint", HttpMethod.GET, HttpEntity<Any>(headers), String::class.java)
+//            restTemplate.getForEntity("$SERVER/$endpoint", String::class.java)
         }
         println(current?.response?.body)
     }

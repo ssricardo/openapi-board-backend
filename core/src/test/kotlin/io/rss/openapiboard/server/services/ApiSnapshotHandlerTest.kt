@@ -1,6 +1,11 @@
 package io.rss.openapiboard.server.services
 
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.whenever
+import io.rss.openapiboard.server.persistence.ApiNamespace
+import io.rss.openapiboard.server.persistence.dao.ApiRecordRepository
 import io.rss.openapiboard.server.persistence.dao.ApiSnapshotRepository
+import io.rss.openapiboard.server.persistence.dao.NamespaceRepository
 import io.rss.openapiboard.server.persistence.entities.*
 import io.rss.openapiboard.server.services.exceptions.BoardApplicationException
 import org.junit.jupiter.api.*
@@ -17,6 +22,8 @@ internal class ApiSnapshotHandlerTest {
 
     @Mock
     lateinit var repository: ApiSnapshotRepository
+    @Mock
+    lateinit var apiRecordRepository: ApiRecordRepository
 
     @InjectMocks
     lateinit var tested: ApiSnapshotHandler
@@ -48,18 +55,20 @@ internal class ApiSnapshotHandlerTest {
     @Test
     @Disabled("TO FIX")
     internal fun listVersionsByApp() {
-        Mockito.`when`(repository.findApiVersionList("GoApp", "Winterfell"))
+        whenever(repository.findApiVersionList("GoApp", "Winterfell"))
                 .thenReturn(listOf("1.0", "1.2", "2.0"))
-        val result: List<String> = tested.listVersionsByApiNamespace("GoAp", "Winterfell")
+        whenever(apiRecordRepository.findApiNamespace(any())).thenReturn(ApiNamespace("GoAp", "Winterfell"))
+
+        val result: List<String> = tested.listVersionsByApi(UUID.randomUUID())
         assert(result.size == 3)
     }
 
     @Test
     @DisplayName("comparison requires valid AppSnapshots")
     internal fun createComparisonErrorNoApp() {
-        Mockito.`when`(repository.findById(ApiSnapshotId("name", "namespace", "7.0")))
+        whenever(repository.findById(ApiSnapshotId("name", "namespace", "7.0")))
                 .thenReturn(Optional.empty())
-        Mockito.`when`(repository.findById(ApiSnapshotId("name", "namespace", "1.0")))
+        whenever(repository.findById(ApiSnapshotId("name", "namespace", "1.0")))
                 .thenReturn(Optional.of(ApiSnapshot("name", "namespace", "2.0")))
 
         assertAll(
@@ -83,9 +92,9 @@ internal class ApiSnapshotHandlerTest {
 
     @Test
     fun createComparison() {
-        Mockito.`when`(repository.findById(ApiSnapshotId("name", "namespace", "1.0")))
+        whenever(repository.findById(ApiSnapshotId("name", "namespace", "1.0")))
                 .thenReturn(Optional.of(ApiSnapshot("name", "namespace", "1.1")))
-        Mockito.`when`(repository.findById(ApiSnapshotId("name", "other", "2.0")))
+        whenever(repository.findById(ApiSnapshotId("name", "other", "2.0")))
                 .thenReturn(Optional.of(ApiSnapshot("name", "other", "1.1")))
 
         tested.buildComparison(ApiSnapshotId("name", "namespace", "1.0"),

@@ -2,47 +2,35 @@ package io.rss.openapiboard.server.persistence
 
 import io.rss.openapiboard.server.persistence.dao.ApiRecordRepository
 import io.rss.openapiboard.server.persistence.entities.ApiRecord
-import io.rss.openapiboard.server.persistence.entities.ApiRecordId
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
-import org.springframework.test.context.junit.jupiter.SpringExtension
+import org.springframework.data.repository.findByIdOrNull
+import java.util.UUID
 import javax.annotation.Resource
-import javax.persistence.EntityManager
 
-@ExtendWith(SpringExtension::class)
 @DataJpaTest
 @Tag("db")
 class ApiRecordRepositoryTest {
 
     @Resource
-    lateinit var tested: ApiRecordRepository
+    private lateinit var tested: ApiRecordRepository
 
-    @Resource
-    lateinit var em: EntityManager
+    private val insertedRecords = mutableListOf<ApiRecord>()
 
     @BeforeEach
     internal fun setUp() {
-        tested.save(ApiRecord("RicardoApp", "test", "v1"))
-        tested.save(ApiRecord("DiffNS", "other", "v1"))
-        tested.save(ApiRecord("Yes", "test", "v1"))
-    }
-
-    @Test
-    internal fun `find namespaces`() {
-        val res = tested.findAllNamespace()
-        assert(res.size == 2)
-        assert("test" in res)
-        assert("task" !in res)
+        tested.save(ApiRecord("RicardoApp", "test", "v1")).also { insertedRecords.add(it) }
+        tested.save(ApiRecord("DiffNS", "other", "v1")).also { insertedRecords.add(it) }
+        tested.save(ApiRecord("Yes", "test", "v1")).also { insertedRecords.add(it) }
     }
 
     @Test
     internal fun `find all on namespace`() {
-        val res = tested.findApiListByNamespace("test")
+        val res = tested.findApiVersionByNamespace("test")
         assert(res.size == 2)
     }
 
@@ -57,11 +45,11 @@ class ApiRecordRepositoryTest {
             apiUrl = "http://someadress.on.internet:8080/someContext/onSubContext"
             source = fileContent
         })  // 4
-        tested.save(ApiRecord("Yes", "test", "v3"))   // same
-        tested.save(ApiRecord("Yes", "more", "v3"))   // different
+        val yesMore = tested.save(ApiRecord("Yes", "test", "v3"))
+        tested.save(yesMore.apply { version = "v3" })
 
         val res2 = tested.count()
-        assert(res2 == 5L)
+        assertEquals(5L, res2)
     }
 
     @Test
@@ -70,16 +58,15 @@ class ApiRecordRepositoryTest {
                 .getResource("/test-data/petstore-expanded.yaml")
                 .readText()
 
-        tested.save(ApiRecord("NewOne", "test", "v3").apply {
+        val entity = ApiRecord("NewOne", "test", "v3").apply {
             apiUrl = "http://someadress.on.internet:8080/someContext/onSubContext"
             source = fileContent
-        })
-        tested.flush()
-        em.clear()
+        }
+        val inserted = tested.saveAndFlush(entity)
 
-        val res = tested.getOne(ApiRecordId("NewOne", "test"))
+        val res = tested.findByIdOrNull(inserted.id)
         assertNotNull(res)
-        assertEquals(fileContent, res.source)
+        assertEquals(fileContent, res?.source)
     }
 
     @Test
@@ -90,5 +77,13 @@ class ApiRecordRepositoryTest {
 //            allowedAuthorities.add("MASTER")
 //        })
 //        assert(res.allowedAuthorities.size == 2)
+    }
+
+    @Test
+    fun `find ids without access`() {
+        tested.findDeniedApisForAuthorities(
+                insertedRecords.map { it.id!! },
+                listOf("ROLE_TEST")
+        )
     }
 }

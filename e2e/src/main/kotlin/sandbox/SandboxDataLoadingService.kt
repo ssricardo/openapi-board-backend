@@ -4,11 +4,12 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect
 import io.rss.openapiboard.server.persistence.MethodType
 import io.rss.openapiboard.server.persistence.entities.request.ParameterType
 import io.rss.openapiboard.server.services.to.ParameterMemoryTO
-import io.rss.openapiboard.server.services.to.RequestMemoryRequestResponse
+import io.rss.openapiboard.server.services.to.MemoryRequestResponse
 import io.rss.openapiboard.server.services.to.SubscriptionRequestResponse
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
@@ -21,6 +22,7 @@ import org.springframework.util.MultiValueMap
 import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.client.RestTemplate
 import java.io.InputStream
+import java.util.UUID
 import javax.annotation.PostConstruct
 import javax.ws.rs.core.Response
 import kotlin.random.Random
@@ -42,6 +44,8 @@ class SandboxDataLoadingService {
         const val TEST = "Test"
         const val FEATURE = "feature-1_1"
     }
+
+    // TODO: either create namespace before - or create parameter to allow creating namespace automatically if missing
 
     @PostConstruct
     fun init() {
@@ -106,11 +110,16 @@ class SandboxDataLoadingService {
                 add("file", api.body.file?.readBytes())
             }
 
-            restTemplate
-                    .put("$serverBase/namespaces/${api.namespace}/apis/${api.name}",
-                            HttpEntity(map, HttpHeaders().apply {
+            val response = restTemplate
+                    .exchange("$serverBase/namespaces/${api.namespace}/apis/${api.name}",
+                            HttpMethod.PUT, HttpEntity(map, HttpHeaders().apply {
                                 contentType = MediaType.MULTIPART_FORM_DATA
-                            }))
+                            }),
+                            UUID::class.java)
+
+            val newId = response.body
+            println("$newId was inserted")
+
         }
 
         return items
@@ -143,7 +152,7 @@ class SandboxDataLoadingService {
         items.forEach {
             for (i in 0..3) {
                 try {
-                    val memory = RequestMemoryRequestResponse(null, it.namespace, it.name,
+                    val memory = MemoryRequestResponse(null, it.namespace, it.name,
                             "/pets", if (i % 2 == 0) MethodType.GET else MethodType.POST).apply {
                         title = if (i % 2 == 0) "Test resource for bla" else "Special request"
                         body = "{'val': 'Any silly sample'}"

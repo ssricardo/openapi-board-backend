@@ -40,11 +40,11 @@ object TokenHelper {
     }
 
     /** From a token, tries to get an User object */
-    fun validateConvertToUser(token: String): User? {
-        val verifier = JWT.require(algorithmHS).withIssuer(OAB_ISSUER).build();
+    fun validateConvertToUser(token: String): User {
+        val verifier = JWT.require(algorithmHS).withIssuer(OAB_ISSUER).build()
         val jwtValue: DecodedJWT?
         try {
-            jwtValue = verifier.verify(token);
+            jwtValue = verifier.verify(token)
         } catch (e: JWTVerificationException) {
             throw BadCredentialsException("Invalid token", e)
         }
@@ -58,7 +58,7 @@ object TokenHelper {
         return JWT.create()
                 .withIssuer(OAB_ISSUER)
                 .withExpiresAt(Date.from(expire.atZone(ZoneId.systemDefault()).toInstant()))
-                .withClaim(info::appName.name, info.appName)
+                .withClaim(info::apiName.name, info.apiName)
                 .withClaim(info::email.name, info.email)
                 .sign(algorithmHS)
     }
@@ -68,9 +68,9 @@ object TokenHelper {
      * */
     fun validateRetrieveMailInfo(token: String): SubscriptionMailId {
         val verifier = JWT.require(algorithmHS).withIssuer(OAB_ISSUER).build()
-        val jwtValue: DecodedJWT = verifier.verify(token);
+        val jwtValue: DecodedJWT = verifier.verify(token)
 
-        val apiName = (jwtValue.getClaim(SubscriptionMailId::appName.name)?.asString()
+        val apiName = (jwtValue.getClaim(SubscriptionMailId::apiName.name)?.asString()
                 ?: throw IllegalArgumentException("Invalid token"))
         val email = (jwtValue.getClaim(SubscriptionMailId::email.name)?.asString()
                 ?: throw IllegalArgumentException("Invalid token"))

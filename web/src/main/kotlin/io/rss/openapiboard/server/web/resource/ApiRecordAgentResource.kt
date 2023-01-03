@@ -6,10 +6,10 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
+import java.util.*
 import javax.inject.Inject
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 /** Exposes endpoints to partner clients to feed the system */
 
@@ -21,7 +21,7 @@ import javax.ws.rs.core.Response
 class ApiRecordAgentResource {
 
     @Inject
-    private lateinit var appHandlerService: ApiRecordHandler
+    private lateinit var apiHandlerService: ApiRecordHandler
 
     @Operation(description = "Feeds this application base. Accepts a multipart with data for an ApiRegistry.")
     @PUT
@@ -31,14 +31,12 @@ class ApiRecordAgentResource {
                     @PathParam("namespace") nm: String,
                     @FormDataParam("file") apiSpec: InputStream,
                     @FormDataParam("version") versionParam: String,
-                    @FormDataParam("url") url: String): Response {
+                    @FormDataParam("url") url: String): UUID? {
 
-        appHandlerService.createOrUpdate(ApiRecord(name, nm, versionParam).apply {
+        return apiHandlerService.createOrUpdate(ApiRecord(name, nm, versionParam).apply {
             apiUrl = url
             source = String(apiSpec.readBytes())
-        })
-
-        return Response.ok().build()
+        }).id
     }
 
 }

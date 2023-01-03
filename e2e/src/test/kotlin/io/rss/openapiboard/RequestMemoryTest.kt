@@ -9,7 +9,7 @@ import io.rss.openapiboard.TestRequestHelpers.toJson
 import io.rss.openapiboard.server.persistence.MethodType
 import io.rss.openapiboard.server.persistence.entities.request.ParameterType
 import io.rss.openapiboard.server.services.to.ParameterMemoryTO
-import io.rss.openapiboard.server.services.to.RequestMemoryRequestResponse
+import io.rss.openapiboard.server.services.to.MemoryRequestResponse
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
@@ -30,7 +30,7 @@ class RequestMemoryTest {
     @Disabled("Needs to be fixed")
     fun `user can create and update RequestMemory`() {
         Thread.sleep(1000)  // time for async process of api
-        val payload = RequestMemoryRequestResponse(namespace = "testing", apiName = "memo", path = "  /pets", methodType = MethodType.POST).apply {
+        val payload = MemoryRequestResponse(namespace = "testing", apiName = "memo", path = "  /pets", methodType = MethodType.POST).apply {
             title = "Feature test request"
             body = "something=test"
             parameters.add(ParameterMemoryTO(kind = ParameterType.HEADER, name = "contentType", value = "text/plain"))

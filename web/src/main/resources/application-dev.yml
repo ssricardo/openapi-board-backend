@@ -43,6 +43,9 @@ jwt:
   private:
     key: DXnC^E8xFm6-ectU4rXv8T7jNnxW2rdXazwxQvWwshCiEzcLQvMbDYAKECFBtyWWzqQnv5tzpGoWRdbNxXPmaLKR/jSx_FSWoij88uHaLu6zVQPfvPRUwAmRimqcUTba
 
+namespace:
+  auto-create: true
+
 
 #security:
 #  ignored: /**

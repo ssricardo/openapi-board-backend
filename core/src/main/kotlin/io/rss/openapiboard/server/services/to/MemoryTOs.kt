@@ -7,9 +7,9 @@ import javax.validation.constraints.NotNull
 /**
  * Representation of RequestMemoryResource on View
  * @see RequestMemoryResource */
-data class RequestMemoryRequestResponse (var requestId: Long? = null,
-                                         @NotNull val namespace: String? = null, @NotNull val apiName: String? = null,
-                                         @NotNull val path: String? = null, @NotNull val methodType: MethodType? = null) {
+data class MemoryRequestResponse (var requestId: Long? = null,
+                                  @NotNull val namespace: String? = null, @NotNull val apiName: String? = null,
+                                  @NotNull val path: String? = null, @NotNull val methodType: MethodType? = null) {
 
     @NotNull
     var title: String? = null

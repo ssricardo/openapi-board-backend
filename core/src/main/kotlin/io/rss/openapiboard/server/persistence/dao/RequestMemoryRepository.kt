@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
+import java.util.UUID
 
 @Repository
 interface RequestMemoryRepository: JpaRepository<RequestMemory, Long> {
@@ -32,4 +33,21 @@ interface RequestMemoryRepository: JpaRepository<RequestMemory, Long> {
     """)
     @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, value = "request.parameters")
     fun findRequestsByFilter(query: String, page: Pageable): List<RequestMemory>
+
+
+    @Query("""
+        SELECT DISTINCT rm.id  
+        FROM RequestMemoryAuthority rma  
+            RIGHT JOIN rma.requestMemory rm 
+            JOIN rm.operation.apiRecord ar 
+            LEFT JOIN ApiAuthority apia ON apia.apiRecord.id = ar.id 
+        WHERE rm.id IN (:idList)
+            AND (
+                (rma.id IS NOT NULL AND rma.authority NOT IN (:userAuthorities)) 
+                OR 
+                (apia.id IS NOT NULL AND apia.authority NOT IN (:userAuthorities))
+            )  
+    """)
+    fun findDeniedMemoriesForAuthorities(@Param("idList") requestIdList: List<Long>,
+                                         @Param("userAuthorities") authoritiesString: List<String>): List<Long>
 }

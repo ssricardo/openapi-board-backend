@@ -18,10 +18,11 @@ data class AlertSubscription (
 
     @Column(length = 64, nullable = false)
     @NotEmpty
-    var email: String = ""
+    var email: String? = null
 
+    @Column(length = 32, nullable = false)
     @NotEmpty
-    var apiName: String = ""
+    var apiName: String? = null
 
     @Column
     lateinit var modifiedTime: LocalDateTime

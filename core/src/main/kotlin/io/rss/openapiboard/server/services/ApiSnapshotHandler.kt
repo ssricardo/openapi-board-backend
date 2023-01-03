@@ -1,11 +1,12 @@
 package io.rss.openapiboard.server.services
 
-import io.rss.openapiboard.server.security.Roles
-import io.rss.openapiboard.server.helper.assertStringRequired
+import io.rss.openapiboard.server.helper.assertRequired
+import io.rss.openapiboard.server.persistence.dao.ApiRecordRepository
 import io.rss.openapiboard.server.persistence.dao.ApiSnapshotRepository
 import io.rss.openapiboard.server.persistence.entities.ApiRecord
 import io.rss.openapiboard.server.persistence.entities.ApiSnapshot
 import io.rss.openapiboard.server.persistence.entities.ApiSnapshotId
+import io.rss.openapiboard.server.security.Roles
 import io.rss.openapiboard.server.services.exceptions.BoardApplicationException
 import io.rss.openapiboard.server.services.to.ApiComparisonResponse
 import org.slf4j.Logger
@@ -14,6 +15,7 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import org.springframework.validation.annotation.Validated
+import java.util.*
 import javax.validation.Valid
 
 /** Provides CRUD operations for ApiSnapshot, making use of Async in some cases */
@@ -22,7 +24,8 @@ import javax.validation.Valid
 @PreAuthorize("hasAnyAuthority('${Roles.AGENT}', '${Roles.MANAGER}')")
 @Validated
 class ApiSnapshotHandler (
-    private val repository: ApiSnapshotRepository
+    private val snapshotRepository: ApiSnapshotRepository,
+    private val apiRecordRepository: ApiRecordRepository
 ) {
 
     /**
@@ -34,24 +37,27 @@ class ApiSnapshotHandler (
             this.source = api.source
             this.apiUrl = api.apiUrl
         }
-        repository.save(snap)
+        snapshotRepository.save(snap)
 
         LOGGER.info("${api.name} registered")
     }
 
     /** Delegates searching of version list for given Api/namespace */
-    fun listVersionsByApiNamespace(api: String, namespace: String): List<String> {
-        assertStringRequired(api) {"Api name is required for this query"}
-        assertStringRequired(namespace) {"Namespace is required for this query"}
-        return repository.findApiVersionList(api, namespace)
+    fun listVersionsByApi(apiId: UUID): List<String> {
+        assertRequired(apiId) {"Api id is required for this query"}
+
+        val api = apiRecordRepository.findApiNamespace(apiId)
+                ?: return listOf()
+
+        return snapshotRepository.findApiVersionList(api.apiName, api.namespace)
     }
 
     /** Search given snapshots and creates a comparison with them.
      * @throws BoardApplicationException if some of given Apis is not found
      * */
     fun buildComparison(sourceApi: ApiSnapshotId, targetApi: ApiSnapshotId): ApiComparisonResponse {
-        val sourceResult = repository.findById(sourceApi)
-        val comparedResult = repository.findById(targetApi)
+        val sourceResult = snapshotRepository.findById(sourceApi)
+        val comparedResult = snapshotRepository.findById(targetApi)
 
         if (!sourceResult.isPresent || !comparedResult.isPresent) {
             throw BoardApplicationException("Comparison not possible. One or both of specified Api was not found")

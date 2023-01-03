@@ -1,7 +1,7 @@
 package io.rss.openapiboard.server.web.resource
 
-import io.rss.openapiboard.server.persistence.entities.ApiRecordId
 import io.rss.openapiboard.server.persistence.entities.ApiSnapshotId
+import io.rss.openapiboard.server.persistence.entities.Namespace
 import io.rss.openapiboard.server.services.ApiRecordHandler
 import io.rss.openapiboard.server.services.ApiSnapshotHandler
 import io.rss.openapiboard.server.services.NamespaceHandler
@@ -10,6 +10,7 @@ import io.rss.openapiboard.server.services.to.ApiRecordResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
+import java.util.UUID
 import javax.inject.Inject
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
@@ -20,7 +21,7 @@ import javax.ws.rs.core.MediaType
         description = "Resources for operations from Board's Presentation App")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Path("")
+@Path("apis")
 class ApiRecordResource {
 
     @Inject
@@ -34,35 +35,32 @@ class ApiRecordResource {
 
     @Operation(description = "List Apis on the given namespace")
     @GET
-    @Path("namespaces/{nm}")
-    fun getApiOnNamespace(@PathParam("nm") nm: String) =
-            apiHandler.listApiByNamespace(nm)
+    fun getApiOnNamespace(@QueryParam("nm") nm: String) =
+            apiHandler.listApiByNamespace(Namespace(nm))
 
     @Operation(description = "Loads the internal Api record [namespace + api] without it's source ")
     @GET
-    @Path("namespaces/{nm}/apis/{api}")
-    fun loadApiRecord(@PathParam("nm") nm: String, @PathParam("api") api: String): ApiRecordResponse? {
-        namespaceHandler.assertUserHasAccess(nm)
-        return apiHandler.loadApiRecord(ApiRecordId(api, nm))
+    @Path("{api}")
+    fun loadApiRecord(@PathParam("api") apiId: UUID): ApiRecordResponse? {
+//        namespaceHandler.assertUserHasAccess(nm)
+        return apiHandler.loadApiRecord(apiId)
                 ?.let { ApiRecordResponse(it) }
     }
 
     @Operation(description = "Loads the definition file of the given [namespace + api]")
     @GET
-    @Path("namespaces/{nm}/apis/{api}/source")
-    fun loadApiSource(@PathParam("nm") nm: String, @PathParam("api") api: String): String? {
-        namespaceHandler.assertUserHasAccess(nm)
-        return apiHandler.loadApiSource(ApiRecordId(
-                api, nm))
+    @Path("{api}/source")
+    fun loadApiSource(@PathParam("api") apiId: UUID): String? {
+//        namespaceHandler.assertUserHasAccess(nm)
+        return apiHandler.loadApiSource(apiId)
     }
 
     @Operation(description = "Retrieves existing versions of apps snapshots")
     @GET
-    @Path("namespaces/{nm}/apis/{api}/versions")
-    fun getApiVersionList(@PathParam("nm") nm: String,
-                          @PathParam("api") app: String): List<String> {
-        namespaceHandler.assertUserHasAccess(nm)
-        return snapshotHandler.listVersionsByApiNamespace(app, nm)
+    @Path("{api}/versions")
+    fun getApiVersionList(@PathParam("api") apiId: UUID): List<String> {
+//        namespaceHandler.assertUserHasAccess(nm)
+        return snapshotHandler.listVersionsByApi(apiId)
     }
 
     @Operation(description = "Shows oaBoard self open API definitions")
@@ -79,7 +77,7 @@ class ApiRecordResource {
 
     @Operation(description = "Tries to create a comparison from the 2 versions")
     @GET
-    @Path("apis/comparison")
+    @Path("comparison")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     fun createComparison(@Parameter(description = "Name of 1st app") @QueryParam("srcName") srcName: String?,
                          @Parameter(description = "Namespace of 1st app") @QueryParam("srcNs") srcNs: String?,

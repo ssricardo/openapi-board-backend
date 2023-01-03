@@ -27,6 +27,7 @@ logging:
 
 
 # Specific App configs:
+
 # Only for reference, actual values are injected by k8s
 
 #env:

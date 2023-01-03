@@ -9,8 +9,6 @@ import javax.inject.Inject
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 
-/** Exposes endpoints to the manager app */
-
 @Tag(name = "Manager App APIs",
         description = "Resources for operations from Board's Presentation App")
 @Produces(MediaType.APPLICATION_JSON)
@@ -24,7 +22,7 @@ class NamespaceResource {
     @Operation(description = "Retrieves the list of existing Namespaces")
     @GET
     fun getNamespaces(): List<String> =
-        namespaceHandler.listNamespaces()
+            namespaceHandler.listNamespaces()
 
     @POST
     fun createNs(input: NamespaceViewTO) =
@@ -35,7 +33,7 @@ class NamespaceResource {
             namespaceHandler.saveNamespace(Namespace(input.name), input.authorities)
 
     @DELETE
-    fun removeNs(nsId: String)
-        = namespaceHandler.removeNamespace(nsId)
+    fun removeNs(nsId: String) =
+            namespaceHandler.removeNamespace(nsId)
 
 }

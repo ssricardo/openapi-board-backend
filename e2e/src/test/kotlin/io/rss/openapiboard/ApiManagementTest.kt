@@ -4,7 +4,9 @@ import io.rss.openapiboard.TestRequestHelpers.`GET json`
 import io.rss.openapiboard.TestRequestHelpers.`POST json`
 import io.rss.openapiboard.TestRequestHelpers.`PUT multipart-form`
 import io.rss.openapiboard.TestRequestHelpers.`as list from last response contains`
+import io.rss.openapiboard.TestRequestHelpers.`assert response is OK`
 import io.rss.openapiboard.TestRequestHelpers.`from last response equals`
+import io.rss.openapiboard.TestRequestHelpers.getFromResponse
 import org.junit.jupiter.api.*
 import org.springframework.util.LinkedMultiValueMap
 
@@ -22,6 +24,7 @@ class ApiManagementTest {
             listOf("ocean", "brasil", "2.0"),
             listOf("bigData", "asia", "1"),
     )
+    private lateinit var testApiId: Map<String, String>
 
     @BeforeAll
     fun beforeAll() {
@@ -34,8 +37,9 @@ class ApiManagementTest {
 
 //        println(`GET json`("ns/test"))
 
-        testData.forEach { (name, ns, version) ->
-            givenApi(name, ns, version)
+        testApiId = testData.associate { (name, ns, version) ->
+            val id = givenApi(name, ns, version)
+            name to id!!
         }
     }
 
@@ -47,13 +51,14 @@ class ApiManagementTest {
 
     @Test
     fun `it should list apis in a given namespace`() {
-        `GET json`("namespaces/brasil")
+        `GET json`("apis?nm=brasil")
         "$.*.name" `as list from last response contains` "ocean"
     }
 
     @Test
     fun `it should get the current version of a given api`() {
-        `GET json`("namespaces/brasil/apis/skyApp")
+        `GET json`("apis/" + testApiId["skyApp"]!!)
+        `assert response is OK`()
         "$.version" `from last response equals` "1.2"
     }
 
@@ -74,7 +79,7 @@ class ApiManagementTest {
         "$" `from last response equals` anyJson
     }
 
-    private fun givenApi(apiName: String, namespace: String, version: String) {
+    private fun givenApi(apiName: String, namespace: String, version: String): String? {
         val body = LinkedMultiValueMap<String, Any>(mapOf(
                 "version" to listOf(version),
                 "url" to listOf("http://here.com"),
@@ -82,6 +87,7 @@ class ApiManagementTest {
         ))
 
         `PUT multipart-form`("namespaces/$namespace/apis/$apiName", body)
+        return getFromResponse<String>("$")?.removeSurrounding("\"")
     }
 
     private fun givenNamespace(name: String, requiredAuths: List<String>) {

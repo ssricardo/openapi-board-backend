@@ -1,24 +1,23 @@
 package io.rss.openapiboard.server.services.support
 
 import io.rss.openapiboard.server.helper.TokenHelper
+import io.rss.openapiboard.server.helper.assertGetStringsRequired
+import io.rss.openapiboard.server.helper.assertStringRequired
 import io.rss.openapiboard.server.persistence.dao.AlertSubscriptionRepository
 import io.rss.openapiboard.server.persistence.entities.AlertSubscription
 import io.rss.openapiboard.server.security.Roles
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
-import javax.annotation.Resource
 import javax.transaction.Transactional
 import javax.validation.Valid
 import javax.validation.constraints.NotEmpty
-
 /** Handles CRUD operations for AlertSubscription */
 @Service
 class SubscriptionHandler (private val repository: AlertSubscriptionRepository) {
 
-    fun find(): List<AlertSubscription> {
-        return repository.findAll()
-    }
+    fun find(): List<AlertSubscription> =
+        repository.findAll()
 
     @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
     @Transactional
@@ -29,14 +28,22 @@ class SubscriptionHandler (private val repository: AlertSubscriptionRepository) 
 
     @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
     @Transactional
-    fun saveOrUpdate(@Valid input: AlertSubscription): AlertSubscription =
-        repository.save(input)
+    fun saveOrUpdate(@Valid input: AlertSubscription): AlertSubscription {
+        assertStringRequired(input.email) { "Email is mandatory" }
+        assertStringRequired(input.apiName) { "API is mandatory" }
+        val (email, apiName) = assertGetStringsRequired({ "Email and API are mandatory" }, input.email, input.apiName)
+
+        return repository.findByMailApi(email, apiName)?.let {
+            it.basePaths = input.basePaths
+            it
+        } ?: repository.save(input)
+    }
 
     @Transactional
     fun removeIfVerified(@NotEmpty token: String) {
         val subscriptionId = TokenHelper.validateRetrieveMailInfo(token)
 
-        repository.findByMailApi(subscriptionId.email, subscriptionId.appName)?.let {
+        repository.findByMailApi(subscriptionId.email, subscriptionId.apiName)?.let {
             repository.delete(it)
         }
     }
@@ -49,3 +56,4 @@ class SubscriptionHandler (private val repository: AlertSubscriptionRepository) 
     }
 
 }
+

@@ -135,4 +135,9 @@ class RequestMemoryRepositoryTest {
         val result = tested.findRequestsByFilter("ge", PageRequest.of(0, 100))
         Assertions.assertEquals(2, result.size)
     }
+
+    @Test
+    fun `check authorities access`() {
+        val result = tested.findDeniedMemoriesForAuthorities(listOf(1), listOf("TEST_ROLE"))
+    }
 }
