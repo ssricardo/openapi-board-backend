@@ -6,6 +6,7 @@ import io.rss.openapiboard.server.services.to.NamespaceViewTO
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.inject.Inject
+import javax.validation.constraints.NotNull
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 
@@ -25,15 +26,20 @@ class NamespaceResource {
             namespaceHandler.listNamespaces()
 
     @POST
-    fun createNs(input: NamespaceViewTO) =
-            namespaceHandler.saveNamespace(Namespace(input.name), input.authorities)
+    fun createNs(@NotNull input: NamespaceViewTO) =
+            namespaceHandler.saveNamespace(
+                    Namespace(input.name ?: throw IllegalArgumentException("Name is mandatory")),
+                    input.authorities)
 
     @PUT
-    fun updateNs(input: NamespaceViewTO) =
-            namespaceHandler.saveNamespace(Namespace(input.name), input.authorities)
+    fun createOrUpdateNs(@NotNull input: NamespaceViewTO) =
+            namespaceHandler.saveNamespace(
+                    Namespace(input.name ?: throw IllegalArgumentException("Name is mandatory")),
+                    input.authorities)
 
     @DELETE
-    fun removeNs(nsId: String) =
+    @Path("{nsId}")
+    fun removeNs(@PathParam("nsId") nsId: String) =
             namespaceHandler.removeNamespace(nsId)
 
 }
