@@ -32,13 +32,13 @@ interface RequestMemoryRepository: JpaRepository<RequestMemory, Long> {
         WHERE (LOWER(rm.title) LIKE CONCAT(LOWER(:query), '%') ) OR (op.path LIKE CONCAT(LOWER(:query), '%') )
     """)
     @EntityGraph(type = EntityGraph.EntityGraphType.LOAD, value = "request.parameters")
-    fun findRequestsByFilter(query: String, page: Pageable): List<RequestMemory>
+    fun findRequestsByFilter(@Param("query") query: String, page: Pageable): List<RequestMemory>
 
 
     @Query("""
         SELECT DISTINCT rm.id  
-        FROM RequestMemoryAuthority rma  
-            RIGHT JOIN rma.requestMemory rm 
+        FROM RequestMemory rm 
+            LEFT JOIN rm.requiredAuthorities rma 
             JOIN rm.operation.apiRecord ar 
             LEFT JOIN ApiAuthority apia ON apia.apiRecord.id = ar.id 
         WHERE rm.id IN (:idList)

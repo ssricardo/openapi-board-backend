@@ -1,6 +1,8 @@
 package io.rss.openapiboard.server.services.accesscontrol
 
+import io.rss.experimental.cleanUpStack
 import io.rss.openapiboard.server.persistence.entities.RequiredAuthorities
+import io.rss.openapiboard.server.services.to.QueryResult
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
@@ -16,20 +18,21 @@ import kotlin.reflect.KClass
 @Aspect
 @Component
 internal class RequiredAuthoritiesValidator (
-        typeVerifierStrategies: List<TypeVerifierStrategy<Any>>
+        typeVerifierStrategies: List<TypeVerifierStrategy<*>>
 ) {
 
     private val verifierStrategies: Map<KClass<out Any>, TypeVerifierStrategy<Any>>
 
     init {
-        verifierStrategies = typeVerifierStrategies.associateBy({ it.getType() }, { it })
+        verifierStrategies =
+                typeVerifierStrategies.associateBy({ it.getType() }, { it }) as Map<KClass<out Any>, TypeVerifierStrategy<Any>>
     }
 
     @Around("@annotation(io.rss.openapiboard.server.services.accesscontrol.AssertRequiredAuthorities)")
     fun invoke(joi: ProceedingJoinPoint) = try {
         processInvocation(joi)
     } catch (e: Exception) {
-        logger.error("Error around AuthoritiesValidator proceeding function", e)
+        logger.warn("Error around AuthoritiesValidator proceeding function", e.cleanUpStack())
         throw e
     }
 
@@ -43,20 +46,31 @@ internal class RequiredAuthoritiesValidator (
             }
         }
 
-        val result = joi.proceed()
+        val callResult = joi.proceed()
 
-        if (result != null) {
-            if (result is List<*> && (result as List<Any>).isNotEmpty()) {
-                return filterCollectionResult(result)
+        if (callResult != null) {
+            val effectiveResult = if (callResult is QueryResult<*>) {
+                callResult.result
+            } else {
+                callResult
             }
 
-            if (!hasUserAccess(result::class, listOf(result))) {
+            if (effectiveResult is List<*> && (effectiveResult as List<Any>).isNotEmpty()) {
+                val filteredResult = filterCollectionResult(effectiveResult)
+                return if (callResult is QueryResult<*>) {
+                    QueryResult(filteredResult, false)
+                } else {
+                    filteredResult
+                }
+            }
+
+            if (!hasUserAccess(callResult::class, listOf(effectiveResult))) {
                 logger.warn("Access denied for the result in ${joi.signature.name}")
                 throw AccessDeniedException("One or more of given resources are restricted: ${joi.signature.name}")
             }
         }
 
-        return result
+        return callResult
     }
 
     private fun filterCollectionResult(result: List<Any>): List<Any> {

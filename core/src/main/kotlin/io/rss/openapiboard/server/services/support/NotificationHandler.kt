@@ -33,7 +33,7 @@ class NotificationHandler (
         private val emailSender: JavaMailSender
 ) {
 
-    @Async
+    @Async("threadPoolTaskExecutor")
     fun notifyUpdate(apiRecord: ApiRecord) {
         if (! envConfig.mailNotificationEnabled) {
             return
@@ -70,7 +70,7 @@ class NotificationHandler (
         val (email) = assertGetStringsRequired({ "Missing email" }, subs.email)
 
         val unsubscribeLink = createUnsubsLink(change.app.name, email)
-        val mailContent = NotificationTemplate(date = change.app.lastModified,
+        val mailContent = NotificationTemplate(date = change.app.modifiedDate,
                 appName = change.app.name, newVersion = change.app.version,
                 unsubscribeLink = unsubscribeLink)
 

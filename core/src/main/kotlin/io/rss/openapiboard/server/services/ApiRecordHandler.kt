@@ -15,11 +15,14 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.validation.annotation.Validated
 import java.util.*
+import javax.validation.Valid
 
 @Service
 @PreAuthorize("hasAnyAuthority('${Roles.AGENT}', '${Roles.READER}')")
 @Transactional(readOnly = true)
+@Validated
 class ApiRecordHandler (
         private val repository: ApiRecordRepository,
         private val namespaceHandler: NamespaceHandler,
@@ -34,20 +37,39 @@ class ApiRecordHandler (
     @Transactional(readOnly = false)
     @PreAuthorize("hasAnyAuthority('${Roles.AGENT}', '${Roles.MANAGER}')")
     @AssertRequiredAuthorities
-    fun createOrUpdate(apiRecord: ApiRecord): ApiRecord {
-        assertStringRequired(apiRecord.source) {"Api specification must have some value"}
-        assertStringRequired(apiRecord.apiUrl) {"Api address must have some value"}
-        assertNamespaceExists(apiRecord.namespace)
+    fun createOrUpdate(@Valid apiRecord: ApiRecord): ApiRecord {
+        validateRecordFromRequest(apiRecord)
 
         apiRecord.version = apiRecord.version.ifBlank { DEFAULT_VERSION }
 
+        val existingRecord = repository.findByNamespaceName(apiRecord.namespace, apiRecord.name)
+
         LOGGER.info("Storing API record: [${apiRecord.name}] in namespace [${apiRecord.namespace}]")
-        val result = repository.saveAndFlush(apiRecord)
+        val result = existingRecord
+                ?.let {updateExistingRecord(it, apiRecord) }
+                ?: repository.saveAndFlush(apiRecord)
+
         snapshotService.create(result)
         notificationHandler.notifyUpdate(result)
         doSourceProcessing(result)
 
         return result
+    }
+
+    private fun validateRecordFromRequest(apiRecord: ApiRecord) {
+        assertStringRequired(apiRecord.source) { "Api specification must have some value" }
+        assertStringRequired(apiRecord.apiUrl) { "Api address must have some value" }
+        assertNamespaceExists(apiRecord.namespace)
+    }
+
+    private fun updateExistingRecord(dbRecord: ApiRecord, requestRecord: ApiRecord): ApiRecord {
+        with(requestRecord) {
+            dbRecord.version = version
+            dbRecord.apiUrl = apiUrl
+            dbRecord.basePath = basePath
+            dbRecord.source = source
+            return repository.saveAndFlush(dbRecord)
+        }
     }
 
     private fun assertNamespaceExists(namespace: String) {
@@ -64,7 +86,7 @@ class ApiRecordHandler (
         throw BoardApplicationException("Fail when creating API record: Namespace '$namespace' does not exist")
     }
 
-    private fun doSourceProcessing(result: ApiRecord) = apiSourceProcessor.processApiRecord(result)
+    private fun doSourceProcessing(result: ApiRecord) = apiSourceProcessor.processApiRecordAsync(result)
 
     /** Retrieves list of "app with its version" matching given namespace */
     @AssertRequiredAuthorities

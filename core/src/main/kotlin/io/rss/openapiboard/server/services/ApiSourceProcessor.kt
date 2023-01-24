@@ -1,6 +1,7 @@
 package io.rss.openapiboard.server.services
 
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.ObjectWriter
 import io.rss.openapiboard.server.persistence.MethodType
@@ -9,16 +10,19 @@ import io.rss.openapiboard.server.persistence.dao.RequestMemoryRepository
 import io.rss.openapiboard.server.persistence.entities.ApiOperation
 import io.rss.openapiboard.server.persistence.entities.ApiRecord
 import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
+import io.rss.openapiboard.server.services.exceptions.BoardApplicationException
 import io.swagger.parser.OpenAPIParser
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.PathItem
 import io.swagger.v3.oas.models.Paths
 import io.swagger.v3.oas.models.examples.Example
 import io.swagger.v3.oas.models.media.MediaType
+import io.swagger.v3.parser.core.models.SwaggerParseResult
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
+import org.springframework.util.Assert
 import javax.annotation.PostConstruct
 import javax.transaction.Transactional
 
@@ -50,20 +54,20 @@ class ApiSourceProcessor(
 //        openWriter = mapper.writerWithDefaultPrettyPrinter()
     }
 
-    @Async
+    @Async("threadPoolTaskExecutor")
     @Transactional()
-    fun processApiRecord(api: ApiRecord) =
+    fun processApiRecordAsync(api: ApiRecord) =
         processApiOperations(api)
 
     private fun processApiOperations(inputApi: ApiRecord) {
         inputApi.source ?: return logNoExecution("Source is null for ApiRecord ${inputApi.namespace}/${inputApi.name}")
-        val parseResult = parser.readContents(inputApi.source, null, null)
+        val parseResult = parseApiResult(inputApi)
 
         if (parseResult.messages.isNotEmpty()) {
             LOGGER.warn("Processing OpenAPI for record ${inputApi.namespace}/${inputApi.name} result warnings: ${parseResult.messages}")
         }
 
-        parseResult?.openAPI?.paths ?: return logNoExecution("Either parsed OpenAPI or paths is null")
+        parseResult.openAPI?.paths ?: return logNoExecution("Either parsed OpenAPI or paths is null")
         parseResult.openAPI.paths.forEach { pStr, pathObj -> storePath(inputApi, pStr, pathObj) }
     }
 
@@ -76,6 +80,7 @@ class ApiSourceProcessor(
     }
 
     private fun storePath(inputApi: ApiRecord, pathStr: String, oppType: MethodType) {
+        Assert.state(inputApi.id != null) { "Api ID must be not null before storing an Operation" }
         val apiName = checkNotNull(inputApi.name)
         val namespace = checkNotNull(inputApi.namespace)
 
@@ -102,7 +107,7 @@ class ApiSourceProcessor(
     @Transactional(Transactional.TxType.NOT_SUPPORTED)
     fun enrichApiRecordSource(inputApi: ApiRecord): ApiRecord {
         inputApi.source ?: return inputApi
-        val openApi = parser.readContents(inputApi.source, null, null)?.openAPI
+        val openApi = parseApiResult(inputApi).openAPI
         val paths = openApi?.paths ?: return inputApi
 
         requestRepository.findByApiNamespace(inputApi.name, inputApi.namespace)
@@ -111,6 +116,13 @@ class ApiSourceProcessor(
 
         return inputApi.apply { source = openWriter.writeValueAsString(openApi) }
     }
+
+    private fun parseApiResult(inputApi: ApiRecord): SwaggerParseResult =
+            try {
+                parser.readContents(inputApi.source, null, null)
+            } catch (e: JsonParseException) {
+                throw BoardApplicationException("The API is invalid. It could not be parsed", e)
+            }
 
     private fun processMatchingPath(paths: Paths, rm: RequestMemory, index: Int) =
         paths[rm.operation.path]?.let { pi -> processMatchingContent(rm, pi, index) }

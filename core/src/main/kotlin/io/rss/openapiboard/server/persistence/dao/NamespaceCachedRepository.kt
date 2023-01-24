@@ -5,6 +5,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Repository
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
+import javax.annotation.PostConstruct
 
 /**
  * As there won't be too many namespaces, we hold all of them in memory.
@@ -17,7 +18,8 @@ class NamespaceCachedRepository (
 
     private val cache = ConcurrentHashMap<String, List<String>>()
 
-    @Scheduled(fixedDelay = 3, timeUnit = TimeUnit.MINUTES)
+    @Scheduled(fixedRate = 3, timeUnit = TimeUnit.MINUTES)
+    @PostConstruct
     protected fun initCache() = updateCache()
 
     private fun updateCache() {

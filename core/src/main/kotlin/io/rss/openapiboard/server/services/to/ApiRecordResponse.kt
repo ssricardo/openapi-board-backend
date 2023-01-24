@@ -7,5 +7,5 @@ class ApiRecordResponse (source: ApiRecord) {
     val namespace = source.namespace
     val version = source.version
     val basePath= source.basePath
-    val lastModified = source.lastModified
+    val lastModified = source.modifiedDate
 }

@@ -1,6 +1,8 @@
 package io.rss.openapiboard.server.persistence.entities.request
 
+import io.rss.openapiboard.server.persistence.entities.ApiAuthority
 import io.rss.openapiboard.server.persistence.entities.ApiOperation
+import io.rss.openapiboard.server.persistence.entities.RequestMemoryAuthority
 import org.hibernate.annotations.BatchSize
 import java.io.Serializable
 import javax.persistence.*
@@ -47,6 +49,9 @@ class RequestMemory (
     @OneToMany(mappedBy = "request", cascade = [CascadeType.ALL], orphanRemoval = true)
     @BatchSize(size = 15)    // WARN: provider specific
     val parameters = mutableListOf<ParameterMemory>()
+
+    @OneToMany(orphanRemoval = true, cascade = [CascadeType.ALL])
+    var requiredAuthorities: List<RequestMemoryAuthority>? = null
 
     fun addParameterMemory(pm: ParameterMemory) {
         pm.request = this

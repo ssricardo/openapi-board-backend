@@ -35,16 +35,18 @@ class ApiRecordResource {
 
     @Operation(description = "List Apis on the given namespace")
     @GET
-    fun getApiOnNamespace(@QueryParam("nm") nm: String) =
-            apiHandler.listApiByNamespace(Namespace(nm))
+    fun getApiOnNamespace(@QueryParam("nm") nm: String?) =
+            nm?.let { apiHandler.listApiByNamespace(Namespace(nm)) }
 
     @Operation(description = "Loads the internal Api record [namespace + api] without it's source ")
     @GET
     @Path("{api}")
-    fun loadApiRecord(@PathParam("api") apiId: UUID): ApiRecordResponse? {
+    fun loadApiRecord(@PathParam("api") apiId: UUID?): ApiRecordResponse? {
 //        namespaceHandler.assertUserHasAccess(nm)
-        return apiHandler.loadApiRecord(apiId)
-                ?.let { ApiRecordResponse(it) }
+        return apiId?.let {
+            apiHandler.loadApiRecord(apiId)?.let {
+                ApiRecordResponse(it) }
+        }
     }
 
     @Operation(description = "Loads the definition file of the given [namespace + api]")

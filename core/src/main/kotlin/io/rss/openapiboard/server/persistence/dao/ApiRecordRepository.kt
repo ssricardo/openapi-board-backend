@@ -13,6 +13,13 @@ import java.util.*
 interface ApiRecordRepository: JpaRepository<ApiRecord, UUID> {
 
     @Query("""
+        SELECT a 
+        FROM ApiRecord a 
+        WHERE a.namespace = :ns AND a.name = :name
+    """)
+    fun findByNamespaceName(@Param("ns") namespace: String, @Param("name") name: String): ApiRecord?
+
+    @Query("""
         SELECT new io.rss.openapiboard.server.persistence.ApiNamespace(a.name, a.namespace) 
         FROM ApiRecord a 
         WHERE a.id = :apiId 
@@ -28,10 +35,10 @@ interface ApiRecordRepository: JpaRepository<ApiRecord, UUID> {
 
     @Query("""
         SELECT DISTINCT ar.id 
-        FROM ApiAuthority au 
-            RIGHT JOIN au.apiRecord ar  
-        WHERE ar.id IN (:apiIdList)     
-            AND (au.id IS NOT NULL AND au.authority NOT IN (:userAuthorities) )        
+        FROM ApiRecord ar 
+            LEFT JOIN ar.requiredAuthorities au  
+        WHERE ar.id IN (:apiIdList) 
+            AND (au.id IS NOT NULL AND (au.authority NOT IN (:userAuthorities)) )        
     """)
     fun findDeniedApisForAuthorities(@Param("apiIdList") apiIdList: List<UUID>,
                                      @Param("userAuthorities") authList: List<String>): List<UUID>

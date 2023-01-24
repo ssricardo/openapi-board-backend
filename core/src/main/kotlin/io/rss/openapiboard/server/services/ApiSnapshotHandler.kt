@@ -31,7 +31,7 @@ class ApiSnapshotHandler (
     /**
      * Stores a new Snapshot, <b>Async</b>
      */
-    @Async
+    @Async("threadPoolTaskExecutor")
     fun create(@Valid api: ApiRecord) {
         val snap = ApiSnapshot(api.name, api.namespace, api.version).apply {
             this.source = api.source

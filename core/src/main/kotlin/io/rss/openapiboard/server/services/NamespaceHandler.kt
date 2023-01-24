@@ -3,6 +3,8 @@ package io.rss.openapiboard.server.services
 import io.rss.openapiboard.server.persistence.dao.NamespaceCachedRepository
 import io.rss.openapiboard.server.persistence.entities.ApiRecord
 import io.rss.openapiboard.server.persistence.entities.Namespace
+import io.rss.openapiboard.server.persistence.entities.NamespaceAuthority
+import io.rss.openapiboard.server.persistence.entities.RequiredAuthorities
 import io.rss.openapiboard.server.security.Roles
 import io.rss.openapiboard.server.services.accesscontrol.AssertRequiredAuthorities
 import org.slf4j.Logger
@@ -39,7 +41,7 @@ class NamespaceHandler (
 
     @AssertRequiredAuthorities
     fun saveNamespace(ns: Namespace, requiredAuthorities: List<String>): Namespace {
-        // TODO: something with requiredAuthorities
+        ns.requiredAuthorities = requiredAuthorities.map { auth -> NamespaceAuthority(ns, auth) }
         return namespaceRepository.saveOrUpdate(ns)
     }
 

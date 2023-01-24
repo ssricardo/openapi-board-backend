@@ -37,7 +37,7 @@ class NamespaceTypeVerifierStrategy(
             return true
         }
 
-        return userAuths.containsAll(requiredAuths)
+        return requiredAuths.any {  userAuths.contains(it) }
     }
 
 }

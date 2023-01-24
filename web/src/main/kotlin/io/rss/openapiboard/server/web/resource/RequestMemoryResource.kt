@@ -28,16 +28,19 @@ class RequestMemoryResource {
     @POST
     @ApiOperation("Let creating RequestMemory. ", notes = "Id must not be present")
     fun createRequest(@ApiParam request: MemoryRequestResponse): Response {
-        handler.createRequest(request)
-        return Response.status(Response.Status.CREATED).build()
+        return handler.createRequest(request)
+                .let { Response.status(Response.Status.CREATED)
+                        .entity(it)
+                        .build()
+                }
     }
 
     @PUT
     @Path("{id}")
     @ApiOperation("Updating RequestMemory. ", notes = "To update, the id is needed. Tries to create.")
-    fun saveRequest(@PathParam("id") id: Long, @ApiParam request: MemoryRequestResponse) {
+    fun saveRequest(@PathParam("id") id: Long, @ApiParam request: MemoryRequestResponse): MemoryRequestResponse {
         request.requestId = id
-        handler.saveRequest(request)
+        return handler.saveRequest(request)
     }
 
     @DELETE

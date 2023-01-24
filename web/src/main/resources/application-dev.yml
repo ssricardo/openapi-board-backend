@@ -1,9 +1,21 @@
+
+# Fixed users for testing
 users:
   entries:
-    -
-      name: admin
-      password: test
-      roles: ['READER', 'AGENT', 'MANAGER']
+    - name: admin
+      password: test00
+      roles: ['READER', 'MANAGER', 'BLUE_PERM', 'GREEN_PERM']
+    - name: agent
+      password: test00
+      roles: ['READER', 'AGENT']
+    - name: blue
+      password: accessBlueOnly
+      roles: ['READER', 'AGENT', 'BLUE_PERM']
+    - name: green
+      password: accessGreenOnly
+      roles: ['READER', 'AGENT', 'GREEN_PERM']
+
+#
 
 spring:
   jpa:
@@ -27,10 +39,9 @@ spring:
       - name: mail.smtp.starttls
         value: true
 
-server:
   h2:
-    console:
-      enabled: true
+    console.enabled: true
+
 
 # App config -  Must be provided externally:
 

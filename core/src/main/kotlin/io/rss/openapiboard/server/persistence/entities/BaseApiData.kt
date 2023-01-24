@@ -15,11 +15,11 @@ abstract class BaseApiData {
     var apiUrl: String? = null
 
     @Column
-    var modifiedDate: LocalDateTime? = null
+    lateinit var modifiedDate: LocalDateTime
 
     @PrePersist
     @PreUpdate
-    protected fun updateDate() {
+    fun updateDate() {
         modifiedDate = LocalDateTime.now()
     }
 }

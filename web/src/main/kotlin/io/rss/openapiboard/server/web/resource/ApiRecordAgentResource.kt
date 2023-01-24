@@ -1,5 +1,6 @@
 package io.rss.openapiboard.server.web.resource
 
+import io.rss.openapiboard.server.persistence.entities.ApiAuthority
 import io.rss.openapiboard.server.persistence.entities.ApiRecord
 import io.rss.openapiboard.server.services.ApiRecordHandler
 import io.swagger.v3.oas.annotations.Operation
@@ -16,7 +17,7 @@ import javax.ws.rs.core.MediaType
 @Tag(name = "Agent APIs",
         description = """Resource that receives API definitions to be registered.
             |Usually should be called from plugins or other tools.""")
-@Path("")
+@Path("namespaces")
 @Produces(MediaType.APPLICATION_JSON)
 class ApiRecordAgentResource {
 
@@ -25,17 +26,21 @@ class ApiRecordAgentResource {
 
     @Operation(description = "Feeds this application base. Accepts a multipart with data for an ApiRegistry.")
     @PUT
-    @Path("namespaces/{namespace}/apis/{name}")
+    @Path("{namespace}/apis/{name}")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun sendAppData(@PathParam("name") name: String,
                     @PathParam("namespace") nm: String,
                     @FormDataParam("file") apiSpec: InputStream,
                     @FormDataParam("version") versionParam: String,
-                    @FormDataParam("url") url: String): UUID? {
+                    @FormDataParam("url") url: String,
+                    @FormDataParam("requiredAuthority") authority: String?): UUID? {
 
         return apiHandlerService.createOrUpdate(ApiRecord(name, nm, versionParam).apply {
             apiUrl = url
             source = String(apiSpec.readBytes())
+            authority?.let { auth ->
+                requiredAuthorities = listOf(ApiAuthority(this, auth))
+            }
         }).id
     }
 

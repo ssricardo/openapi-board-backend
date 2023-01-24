@@ -10,7 +10,9 @@ import javax.validation.constraints.NotEmpty
 import javax.validation.constraints.Pattern
 
 /** Main Entity in the app. Represents the current state of an API, for a given namespace */
-@Table(name = "api_records")
+@Table(name = "api_records",
+        uniqueConstraints = [UniqueConstraint(name = "unique_apiname_per_ns", columnNames = ["ns_id", "name"])])
+
 @Entity
 class ApiRecord(
 
@@ -36,15 +38,8 @@ class ApiRecord(
         @Column(name = "base_path", length = 200)
         var basePath: String? = null
 
-        @Column(name = "date_modified")
-        lateinit var lastModified: LocalDateTime
-                protected set
-
-        @PreUpdate
-        @PrePersist
-        fun updateModifiedDate() {
-            lastModified = LocalDateTime.now()
-        }
+        @OneToMany(orphanRemoval = true, cascade = [CascadeType.ALL])
+        var requiredAuthorities: List<ApiAuthority> = emptyList()
 
         override fun toString(): String {
                 return "ApiRecord(name='$name', id=$id)"

@@ -3,9 +3,11 @@ package io.rss.openapiboard.server.services
 import io.rss.openapiboard.server.helper.assertGetStringsRequired
 import io.rss.openapiboard.server.helper.assertRequired
 import io.rss.openapiboard.server.helper.assertValid
+import io.rss.openapiboard.server.persistence.MethodType
 import io.rss.openapiboard.server.persistence.dao.ApiOperationRepository
 import io.rss.openapiboard.server.persistence.dao.RequestMemoryRepository
 import io.rss.openapiboard.server.persistence.entities.ApiOperation
+import io.rss.openapiboard.server.persistence.entities.RequestMemoryAuthority
 import io.rss.openapiboard.server.persistence.entities.request.ParameterMemory
 import io.rss.openapiboard.server.persistence.entities.request.ParameterType
 import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
@@ -13,9 +15,9 @@ import io.rss.openapiboard.server.persistence.entities.request.RequestVisibility
 import io.rss.openapiboard.server.security.Roles
 import io.rss.openapiboard.server.services.accesscontrol.AssertRequiredAuthorities
 import io.rss.openapiboard.server.services.exceptions.BoardApplicationException
+import io.rss.openapiboard.server.services.to.MemoryRequestResponse
 import io.rss.openapiboard.server.services.to.ParameterMemoryTO
 import io.rss.openapiboard.server.services.to.QueryResult
-import io.rss.openapiboard.server.services.to.MemoryRequestResponse
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.access.prepost.PreAuthorize
@@ -31,12 +33,12 @@ import javax.ws.rs.core.MediaType
 class RequestMemoryHandler (
     private val requestRepository: RequestMemoryRepository,
     private val operationRepository: ApiOperationRepository,
-    private val namespaceHandler: NamespaceHandler,
     private val validator: Validator
 ) {
 
     @Transactional
     @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
+    @AssertRequiredAuthorities
     fun createRequest(request: MemoryRequestResponse): MemoryRequestResponse {
         require(request.requestId == null) { "Request must not have an id, when creating a new one" }
         return saveRequest(request)
@@ -46,9 +48,7 @@ class RequestMemoryHandler (
     @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
     @AssertRequiredAuthorities
     fun saveRequest(request: MemoryRequestResponse): MemoryRequestResponse {
-//        request.namespace?.let(namespaceHandler::assertUserHasAccess)     FIXME control access
-
-        val requestMemory =  resolveRequestOperation(request)
+        val requestMemory = resolveRequestOperation(request)
 
         validator.validate(request)
         processParameters(request, requestMemory)
@@ -68,11 +68,7 @@ class RequestMemoryHandler (
             return updateRequest(it, request) // existing request
         }
 
-        val operation = operationRepository.findSingleMatch(apiName, ns, path, methodType)
-                ?: throw BoardApplicationException(
-                    """No operation was found matching the request: 
-                    |[Api: ${request.apiName}, Namespace: ${request.namespace}, 
-                    |Path: ${request.path}, method: ${request.methodType}]""".trimMargin())
+        val operation = loadApiOperation(apiName, ns, path, methodType, request)
 
         return createRequestMemory(operation, request)
     }
@@ -82,9 +78,17 @@ class RequestMemoryHandler (
             // fields already validated on #resolveRequestOperation
             title = inputRequest.title!!
             body = inputRequest.body
+            requiredAuthorities = inputRequest.requiredAuthorities?.map { RequestMemoryAuthority(this, it) }
         }
         return existingMemory
     }
+
+    private fun loadApiOperation(apiName: String, ns: String, path: String, methodType: MethodType, request: MemoryRequestResponse) =
+            (operationRepository.findSingleMatch(apiName, ns, path, methodType)
+                    ?: throw BoardApplicationException(
+                            """No operation was found matching the request: 
+                        |[Api: ${request.apiName}, Namespace: ${request.namespace}, 
+                        |Path: ${request.path}, method: ${request.methodType}]""".trimMargin()))
 
     private fun createRequestMemory(operation: ApiOperation, request: MemoryRequestResponse): RequestMemory {
         return RequestMemory(operation).apply {
@@ -92,6 +96,7 @@ class RequestMemoryHandler (
             this.title = request.title!!
             this.body = request.body
             contentType = MediaType.APPLICATION_JSON       // FUTURE: receive from request. For now, supports only JSON
+            requiredAuthorities = request.requiredAuthorities?.map { RequestMemoryAuthority(this, it) }
         }
     }
 
@@ -124,24 +129,14 @@ class RequestMemoryHandler (
      * @see QueryResult
      * */
     @Transactional(readOnly = true)
+    @AssertRequiredAuthorities
     fun search(query: String?, offset: Int): QueryResult<MemoryRequestResponse> {
         assertValid((query?.length ?: 0) >= MIN_SIZE_SEARCHING) {
             "This query requires at least $MIN_SIZE_SEARCHING characters. Found: ${query?.length}" }
 
         val data = requestRepository.findRequestsByFilter(query ?: "", PageRequest.of(offset, QUERY_PAGE_SIZE))
-                .asSequence()
-                .filter (this::filterNamespaceIfNeeded)
                 .map(::mapMemoryToView)
-                .toList()
         return QueryResult(data, (data.size < QUERY_PAGE_SIZE && offset == 0))
-    }
-
-    private fun filterNamespaceIfNeeded(requestMemory: RequestMemory): Boolean {
-        if (!requestMemory.namespaceAttached) {
-            return true
-        }
-
-        return namespaceHandler.hasUserAccessToNamespace(requestMemory.operation.apiRecord.namespace)
     }
 
     private fun mapMemoryToView(source: RequestMemory): MemoryRequestResponse {

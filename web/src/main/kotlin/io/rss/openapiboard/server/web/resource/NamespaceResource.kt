@@ -3,6 +3,7 @@ package io.rss.openapiboard.server.web.resource
 import io.rss.openapiboard.server.persistence.entities.Namespace
 import io.rss.openapiboard.server.services.NamespaceHandler
 import io.rss.openapiboard.server.services.to.NamespaceViewTO
+import io.rss.openapiboard.server.services.to.toViewTO
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.inject.Inject
@@ -30,12 +31,14 @@ class NamespaceResource {
             namespaceHandler.saveNamespace(
                     Namespace(input.name ?: throw IllegalArgumentException("Name is mandatory")),
                     input.authorities)
+                .toViewTO()
 
     @PUT
     fun createOrUpdateNs(@NotNull input: NamespaceViewTO) =
             namespaceHandler.saveNamespace(
                     Namespace(input.name ?: throw IllegalArgumentException("Name is mandatory")),
                     input.authorities)
+                .toViewTO()
 
     @DELETE
     @Path("{nsId}")

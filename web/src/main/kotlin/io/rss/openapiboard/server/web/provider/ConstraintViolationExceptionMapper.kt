@@ -3,6 +3,7 @@ package io.rss.openapiboard.server.web.provider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import javax.validation.ConstraintViolationException
+import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
 import javax.ws.rs.ext.Provider
@@ -22,6 +23,7 @@ class ConstraintViolationExceptionMapper: ExceptionMapper<ConstraintViolationExc
 
         return Response.status(Response.Status.CONFLICT)
                 .entity(AppValidationError(causeDescription,ErrorCodeType.CONSTRAINT_VIOLATION))
+                .type(MediaType.APPLICATION_JSON_TYPE)
                 .build()
     }
 }

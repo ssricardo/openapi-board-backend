@@ -1,5 +1,6 @@
 package io.rss.openapiboard.server.web.provider
 
+import io.rss.experimental.cleanUpStack
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import javax.ws.rs.ClientErrorException
@@ -33,7 +34,7 @@ class GeneralExceptionMapper: ExceptionMapper<Exception> {
             return it.response
         }
 
-        LOG.error("Error captured on General Handler", e)
+        LOG.error("Error captured on General Handler", e.cleanUpStack())
         return Response.serverError().entity(
                 "The server had an unexpected error. Repeat the operation after some time. " +
                         "If the error persists, check the logs.")
