@@ -10,7 +10,6 @@ plugins {
 dependencies {
 	implementation project(":core")
 
-//	implementation("org.springframework.boot:spring-boot-starter-jersey")
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
@@ -20,15 +19,10 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-stdlib")
 
 	/* Testing */
-//	testImplementation("org.springframework.boot:spring-boot-starter-test") {
-//		exclude(module: "junit")
-//		exclude(module: "junit-vintage-engine")
-//	}
 	testImplementation("org.springframework.security:spring-security-test")
-//	testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.2")
-//	testImplementation("org.junit.jupiter:junit-jupiter-engine:5.3.2")
-//	testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: '3.1.0'
-//	testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0"
+
+	testImplementation group: 'org.spekframework.spek2', name: 'spek-dsl-jvm', version: '2.0.19'
+	testImplementation group: 'org.spekframework.spek2', name: 'spek-runner-junit5', version: '2.0.19'
 }
 
 java.sourceCompatibility = JavaVersion.VERSION_11

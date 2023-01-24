@@ -49,8 +49,6 @@ dependencies {
 
     /* Testing */
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
-//        exclude(module: "junit")
-//        exclude(module: "junit-vintage-engine")
     }
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("com.h2database:h2")
@@ -100,7 +98,7 @@ docker {
 
 def h2DB = [
         DB_CLASSNAME: 'org.h2.Driver',
-        SPRING_DATASOURCE_URL: 'h2:mem:openapi-center',
+        SPRING_DATASOURCE_URL: 'jdbc:h2:mem:openapi-center',
 //		db_url: 'h2:~/openapi-board',
         HIBERNATE_DIALECT: 'org.hibernate.dialect.H2Dialect',
         SPRING_DATASOURCE_USERNAME: 'sa',
@@ -110,9 +108,9 @@ def h2DB = [
 def mySqlDB = [
         DB_CLASSNAME: 'com.mysql.jdbc.Driver',
         HIBERNATE_DIALECT: 'org.hibernate.dialect.MySQL5InnoDBDialect',
-        SPRING_DATASOURCE_URL: 'mysql://localhost:3306/oab',
-        SPRING_DATASOURCE_USERNAME: 'oab',
-        SPRING_DATASOURCE_PASSWORD: '123456'
+        SPRING_DATASOURCE_URL: 'jdbc:mysql://localhost:3306/oac',
+        SPRING_DATASOURCE_USERNAME: 'root',
+        SPRING_DATASOURCE_PASSWORD: 'super-secret'
 ];
 
 // ------------------------------------ Env-dependent tasks ----------------------------------
@@ -175,7 +173,6 @@ task bootRunH2(type: BootRun) {
             systemProperty e.key, e.value
         }
 
-//        main = bootJar.mainClassName
         sourceSets.main.runtimeClasspath += configurations.devClasspath
         classpath = sourceSets.main.runtimeClasspath
     }
@@ -186,14 +183,15 @@ task bootRunMySQL(type: BootRun, dependsOn: 'build') {
     mainClass = bootJar.mainClass
 
     doFirst() {
-//        main = bootJar.mainClassName
-        sourceSets.main.runtimeClasspath += configurations.prodClasspath
-        classpath = sourceSets.main.runtimeClasspath
-
         systemProperty 'spring.profiles.active', 'dev, preLoad'
+
         mySqlDB.each {e ->
+            logger.printf("Adding systemProp: %s = %s\n", e.key, e.value)
             systemProperty e.key, e.value
         }
+
+        sourceSets.main.runtimeClasspath += configurations.prodClasspath
+        classpath = sourceSets.main.runtimeClasspath
     }
 }
 
