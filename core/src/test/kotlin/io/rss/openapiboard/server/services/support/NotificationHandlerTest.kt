@@ -70,7 +70,7 @@ class NotificationHandlerTest {
         )
         underTest.notifyUpdate(ApiRecord("videos","master", "1.5")
                 .apply {
-                    updateModifiedDate()
+                    updateDate()
                 })
         verify(executorService, times(2)).submit(any())
     }

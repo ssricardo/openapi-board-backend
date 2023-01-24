@@ -17,7 +17,6 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.ArgumentMatchers.any
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito
 import org.mockito.Mockito.*
 import org.mockito.MockitoAnnotations
 import javax.ws.rs.core.MediaType
@@ -46,7 +45,7 @@ internal class ApiSourceProcessorTest {
 
     @Test
     fun processSourceOk() {
-        tested.processApiRecord(ApiRecord("name", "ns", "v1").apply {
+        tested.processApiRecordAsync(ApiRecord("name", "ns", "v1").apply {
             source = sourceTest
         })
 
@@ -55,7 +54,7 @@ internal class ApiSourceProcessorTest {
 
     @Test
     fun processBadSource() {
-        tested.processApiRecord(ApiRecord("name", "ns", "v1").apply {
+        tested.processApiRecordAsync(ApiRecord("name", "ns", "v1").apply {
             source = """
                 openapi: "3.0.0"
                 info:
@@ -71,7 +70,7 @@ internal class ApiSourceProcessorTest {
 
     @Test
     fun processEmptySource() {
-        tested.processApiRecord(ApiRecord("name", "ns", "v2"))
+        tested.processApiRecordAsync(ApiRecord("name", "ns", "v2"))
         verify(operationRepository, times(0)).save(any())
     }
 
@@ -80,7 +79,7 @@ internal class ApiSourceProcessorTest {
         val version2Source = javaClass
                 .getResource("/test-data/api2-with-examples.json")
                 .readText()
-        tested.processApiRecord(ApiRecord("name", "ns", "v2").apply {
+        tested.processApiRecordAsync(ApiRecord("name", "ns", "v2").apply {
             source = version2Source
         })
         verify(operationRepository, atLeastOnce()).save(any())

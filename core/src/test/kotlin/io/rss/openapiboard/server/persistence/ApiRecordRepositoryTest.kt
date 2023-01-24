@@ -1,6 +1,7 @@
 package io.rss.openapiboard.server.persistence
 
 import io.rss.openapiboard.server.persistence.dao.ApiRecordRepository
+import io.rss.openapiboard.server.persistence.entities.ApiAuthority
 import io.rss.openapiboard.server.persistence.entities.ApiRecord
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -9,7 +10,6 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.data.repository.findByIdOrNull
-import java.util.UUID
 import javax.annotation.Resource
 
 @DataJpaTest
@@ -81,9 +81,22 @@ class ApiRecordRepositoryTest {
 
     @Test
     fun `find ids without access`() {
-        tested.findDeniedApisForAuthorities(
-                insertedRecords.map { it.id!! },
+        val noRestriction = tested.saveAndFlush(ApiRecord("FreeWilly", "test", "v1"))
+        val restrictedToUser = tested.saveAndFlush(ApiRecord("ApiIdk", "test", "v1").apply {
+            this.requiredAuthorities = listOf("ROLE_IDK").map { ApiAuthority(this, it) }
+        })
+        val allowedToUser = tested.saveAndFlush(ApiRecord("ComeIn", "test", "v1").apply {
+            this.requiredAuthorities = listOf("ROLE_TEST").map { ApiAuthority(this, it) }
+        })
+
+        val idList = listOf(noRestriction, restrictedToUser, allowedToUser).map { it.id!! }
+        val result = tested.findDeniedApisForAuthorities(
+                idList,
                 listOf("ROLE_TEST")
         )
+
+        assert(result.any { it == restrictedToUser.id })
+        assert(result.none { it == noRestriction.id })
+        assert(result.none { it == allowedToUser.id })
     }
 }
