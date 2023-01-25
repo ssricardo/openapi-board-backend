@@ -35,7 +35,7 @@ class ApiRecordRepositoryTest {
     }
 
     @Test
-    internal fun `insert and update`() {
+    fun `insert and update`() {
         val res = tested.count()
         assert(res == 3L)
         val fileContent = javaClass
@@ -45,11 +45,14 @@ class ApiRecordRepositoryTest {
             apiUrl = "http://someadress.on.internet:8080/someContext/onSubContext"
             source = fileContent
         })  // 4
-        val yesMore = tested.save(ApiRecord("Yes", "test", "v3"))
-        tested.save(yesMore.apply { version = "v3" })
+        val yesMore = tested.findByNamespaceName("test", "Yes")
+        yesMore?.let {
+            it.version = "v3"
+            tested.save(it)
+        }
 
         val res2 = tested.count()
-        assertEquals(5L, res2)
+        assertEquals(4L, res2)
     }
 
     @Test

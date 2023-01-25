@@ -19,6 +19,7 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.MockitoAnnotations
+import java.util.*
 import javax.ws.rs.core.MediaType
 
 internal class ApiSourceProcessorTest {
@@ -45,7 +46,7 @@ internal class ApiSourceProcessorTest {
 
     @Test
     fun processSourceOk() {
-        tested.processApiRecordAsync(ApiRecord("name", "ns", "v1").apply {
+        tested.processApiRecordAsync(ApiRecord("name", "ns", "v1", UUID.randomUUID()).apply {
             source = sourceTest
         })
 
@@ -79,7 +80,7 @@ internal class ApiSourceProcessorTest {
         val version2Source = javaClass
                 .getResource("/test-data/api2-with-examples.json")
                 .readText()
-        tested.processApiRecordAsync(ApiRecord("name", "ns", "v2").apply {
+        tested.processApiRecordAsync(ApiRecord("name", "ns", "v2", UUID.randomUUID()).apply {
             source = version2Source
         })
         verify(operationRepository, atLeastOnce()).save(any())
