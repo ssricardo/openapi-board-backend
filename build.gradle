@@ -6,7 +6,7 @@ plugins {
 }
 
 allprojects {
-	group = "io.rss.oab"
+	group = "io.rss.oac"
 	version = "0.9"
 
 	repositories {

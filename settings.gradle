@@ -1,4 +1,4 @@
-rootProject.name = "openapi-board-server"
+rootProject.name = "openapi-center-server"
 
 include 'core'
 include 'default-security'
