@@ -51,7 +51,7 @@ class RequestMemory (
     val parameters = mutableListOf<ParameterMemory>()
 
     @OneToMany(orphanRemoval = true, cascade = [CascadeType.ALL])
-    var requiredAuthorities: List<RequestMemoryAuthority>? = null
+    val requiredAuthorities: MutableList<RequestMemoryAuthority> = mutableListOf()
 
     fun addParameterMemory(pm: ParameterMemory) {
         pm.request = this

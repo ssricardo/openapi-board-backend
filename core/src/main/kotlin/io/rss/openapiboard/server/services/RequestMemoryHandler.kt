@@ -78,7 +78,10 @@ class RequestMemoryHandler (
             // fields already validated on #resolveRequestOperation
             title = inputRequest.title!!
             body = inputRequest.body
-            requiredAuthorities = inputRequest.requiredAuthorities?.map { RequestMemoryAuthority(this, it) }
+            requiredAuthorities.clear()
+            inputRequest.requiredAuthorities?.let {requestAuths ->
+                requiredAuthorities.addAll(requestAuths.map { auth -> RequestMemoryAuthority(this, auth) })
+            }
         }
         return existingMemory
     }
@@ -96,7 +99,9 @@ class RequestMemoryHandler (
             this.title = request.title!!
             this.body = request.body
             contentType = MediaType.APPLICATION_JSON       // FUTURE: receive from request. For now, supports only JSON
-            requiredAuthorities = request.requiredAuthorities?.map { RequestMemoryAuthority(this, it) }
+            request.requiredAuthorities?.let { authsList ->
+                requiredAuthorities.addAll(authsList.map { RequestMemoryAuthority(this, it) })
+            }
         }
     }
 

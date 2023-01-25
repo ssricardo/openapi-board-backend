@@ -14,7 +14,7 @@ class NamespaceManagementSpec: Spek({
 
     Feature("As an application manager, I can view, create, removed Namespaces") {
 
-        beforeFeature {
+        beforeEachScenario {
             givenBasicAuth(RestRequestHelper.USER_ADMIN)
         }
 
@@ -39,7 +39,7 @@ class NamespaceManagementSpec: Spek({
                 postJsonObject("namespaces",
                     mapOf(
                             "name" to "ns_restricted",
-                            "authorities" to listOf("ROLE_TMT", "ROLE_PEN_TEST")
+                            "authorities" to listOf("GREEN_PERM", "BLUE_PERM")
                     ))
             }
 
