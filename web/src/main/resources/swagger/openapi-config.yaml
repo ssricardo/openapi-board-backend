@@ -1,7 +1,7 @@
 openAPI:
   info:
     version: '1.0'
-    title: 'OpenAPI Board Server'
+    title: 'OpenAPI Center Server'
     description: |
       This service provides storage and retrieving of OpenAPI documents.
       Supporting multi versions and grouping by namespace'.

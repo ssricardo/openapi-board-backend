@@ -76,7 +76,7 @@ resolve {
     outputFormat = 'yaml'
     prettyPrint = true
     classpath = sourceSets.main.runtimeClasspath
-    resourcePackages = ['io.rss.openapiboard.server.presentation.resource']
+    resourcePackages = ['io.rss.apicenter.server.presentation.resource']
     outputDir = file(project.buildDir.toPath().resolve('resources/main'))
 
     // unfortunately not working with yaml
@@ -99,7 +99,6 @@ docker {
 def h2DB = [
         DB_CLASSNAME: 'org.h2.Driver',
         SPRING_DATASOURCE_URL: 'jdbc:h2:mem:openapi-center',
-//		db_url: 'h2:~/openapi-board',
         HIBERNATE_DIALECT: 'org.hibernate.dialect.H2Dialect',
         SPRING_DATASOURCE_USERNAME: 'sa',
         SPRING_DATASOURCE_PASSWORD: "''"

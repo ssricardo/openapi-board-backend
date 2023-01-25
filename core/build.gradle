@@ -59,7 +59,7 @@ resolve {
 	outputFormat = 'yaml'
 	prettyPrint = true
 	classpath = sourceSets.main.runtimeClasspath
-	resourcePackages = ['io.rss.openapiboard.server.presentation.resource']
+	resourcePackages = ['io.rss.apicenter.server.presentation.resource']
 	outputDir = file(project.buildDir.toPath().resolve('resources/main'))
 
 	// unfortunately not working with yaml

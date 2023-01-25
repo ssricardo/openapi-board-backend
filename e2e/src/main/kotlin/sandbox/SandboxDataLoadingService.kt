@@ -1,11 +1,11 @@
 package sandbox
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect
-import io.rss.openapiboard.server.persistence.MethodType
-import io.rss.openapiboard.server.persistence.entities.request.ParameterType
-import io.rss.openapiboard.server.services.to.ParameterSampleTO
-import io.rss.openapiboard.server.services.to.SampleRequestResponse
-import io.rss.openapiboard.server.services.to.SubscriptionRequestResponse
+import io.rss.apicenter.server.persistence.MethodType
+import io.rss.apicenter.server.persistence.entities.request.ParameterType
+import io.rss.apicenter.server.services.to.ParameterSampleTO
+import io.rss.apicenter.server.services.to.RequestSampleTO
+import io.rss.apicenter.server.services.to.SubscriptionRequestResponse
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
@@ -152,7 +152,7 @@ class SandboxDataLoadingService {
         items.forEach {
             for (i in 0..3) {
                 try {
-                    val sample = SampleRequestResponse(null, it.namespace, it.name,
+                    val sample = RequestSampleTO(null, it.namespace, it.name,
                             "/pets", if (i % 2 == 0) MethodType.GET else MethodType.POST).apply {
                         title = if (i % 2 == 0) "Test resource for bla" else "Special request"
                         body = "{'val': 'Any silly sample'}"
