@@ -12,7 +12,7 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.gherkin.Feature
 import org.springframework.http.HttpStatus
 
-class RequestMemorizedSpec: Spek({
+class RequestSampleSpec: Spek({
 
     Feature("User can store and retrieve samples of requests, with headers and content") {
 

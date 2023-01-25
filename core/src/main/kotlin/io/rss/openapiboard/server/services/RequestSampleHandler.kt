@@ -5,18 +5,18 @@ import io.rss.openapiboard.server.helper.assertRequired
 import io.rss.openapiboard.server.helper.assertValid
 import io.rss.openapiboard.server.persistence.MethodType
 import io.rss.openapiboard.server.persistence.dao.ApiOperationRepository
-import io.rss.openapiboard.server.persistence.dao.RequestMemoryRepository
+import io.rss.openapiboard.server.persistence.dao.RequestSampleRepository
 import io.rss.openapiboard.server.persistence.entities.ApiOperation
-import io.rss.openapiboard.server.persistence.entities.RequestMemoryAuthority
-import io.rss.openapiboard.server.persistence.entities.request.ParameterMemory
+import io.rss.openapiboard.server.persistence.entities.RequestSampleAuthority
+import io.rss.openapiboard.server.persistence.entities.request.ParameterSample
 import io.rss.openapiboard.server.persistence.entities.request.ParameterType
-import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
+import io.rss.openapiboard.server.persistence.entities.request.RequestSample
 import io.rss.openapiboard.server.persistence.entities.request.RequestVisibility
 import io.rss.openapiboard.server.security.Roles
 import io.rss.openapiboard.server.services.accesscontrol.AssertRequiredAuthorities
 import io.rss.openapiboard.server.services.exceptions.BoardApplicationException
-import io.rss.openapiboard.server.services.to.MemoryRequestResponse
-import io.rss.openapiboard.server.services.to.ParameterMemoryTO
+import io.rss.openapiboard.server.services.to.SampleRequestResponse
+import io.rss.openapiboard.server.services.to.ParameterSampleTO
 import io.rss.openapiboard.server.services.to.QueryResult
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
@@ -26,20 +26,20 @@ import org.springframework.transaction.annotation.Transactional
 import javax.validation.Validator
 import javax.ws.rs.core.MediaType
 
-/** Handles CRUD operations related to RequestMemory and conversions to related TOs */
+/** Handles CRUD operations related to RequestSample and conversions to related TOs */
 
 @Service
 @PreAuthorize("hasAuthority('${Roles.READER}')")
-class RequestMemoryHandler (
-    private val requestRepository: RequestMemoryRepository,
-    private val operationRepository: ApiOperationRepository,
-    private val validator: Validator
+class RequestSampleHandler (
+        private val requestRepository: RequestSampleRepository,
+        private val operationRepository: ApiOperationRepository,
+        private val validator: Validator
 ) {
 
     @Transactional
     @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
     @AssertRequiredAuthorities
-    fun createRequest(request: MemoryRequestResponse): MemoryRequestResponse {
+    fun createRequest(request: SampleRequestResponse): SampleRequestResponse {
         require(request.requestId == null) { "Request must not have an id, when creating a new one" }
         return saveRequest(request)
     }
@@ -47,15 +47,15 @@ class RequestMemoryHandler (
     @Transactional()
     @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
     @AssertRequiredAuthorities
-    fun saveRequest(request: MemoryRequestResponse): MemoryRequestResponse {
-        val requestMemory = resolveRequestOperation(request)
+    fun saveRequest(request: SampleRequestResponse): SampleRequestResponse {
+        val requestSample = resolveRequestOperation(request)
 
         validator.validate(request)
-        processParameters(request, requestMemory)
-        return requestRepository.save(requestMemory).let(this::mapMemoryToView)
+        processParameters(request, requestSample)
+        return requestRepository.save(requestSample).let(this::mapSampleToView)
     }
 
-    private fun resolveRequestOperation(request: MemoryRequestResponse): RequestMemory {
+    private fun resolveRequestOperation(request: SampleRequestResponse): RequestSample {
         val invalidRequest = {"Request invalid. The follow fields are required: ApiName, namespace, path, http method, title"}
 
         val (apiName, ns, path, _) = with(request) {
@@ -70,53 +70,52 @@ class RequestMemoryHandler (
 
         val operation = loadApiOperation(apiName, ns, path, methodType, request)
 
-        return createRequestMemory(operation, request)
+        return createRequestSample(operation, request)
     }
 
-    private fun updateRequest(existingMemory: RequestMemory, inputRequest: MemoryRequestResponse): RequestMemory {
-        with(existingMemory) {
+    private fun updateRequest(existingSample: RequestSample, inputRequest: SampleRequestResponse): RequestSample {
+        with(existingSample) {
             // fields already validated on #resolveRequestOperation
             title = inputRequest.title!!
             body = inputRequest.body
             requiredAuthorities.clear()
             inputRequest.requiredAuthorities?.let {requestAuths ->
-                requiredAuthorities.addAll(requestAuths.map { auth -> RequestMemoryAuthority(this, auth) })
+                requiredAuthorities.addAll(requestAuths.map { auth -> RequestSampleAuthority(this, auth) })
             }
         }
-        return existingMemory
+        return existingSample
     }
 
-    private fun loadApiOperation(apiName: String, ns: String, path: String, methodType: MethodType, request: MemoryRequestResponse) =
+    private fun loadApiOperation(apiName: String, ns: String, path: String, methodType: MethodType, request: SampleRequestResponse) =
             (operationRepository.findSingleMatch(apiName, ns, path, methodType)
                     ?: throw BoardApplicationException(
                             """No operation was found matching the request: 
                         |[Api: ${request.apiName}, Namespace: ${request.namespace}, 
                         |Path: ${request.path}, method: ${request.methodType}]""".trimMargin()))
 
-    private fun createRequestMemory(operation: ApiOperation, request: MemoryRequestResponse): RequestMemory {
-        return RequestMemory(operation).apply {
+    private fun createRequestSample(operation: ApiOperation, request: SampleRequestResponse) =
+        RequestSample(operation).apply {
             visibility = RequestVisibility.PUBLIC       // FUTURE: control where the request is available
-            this.title = request.title!!
-            this.body = request.body
+            title = request.title!!
+            body = request.body
             contentType = MediaType.APPLICATION_JSON       // FUTURE: receive from request. For now, supports only JSON
             request.requiredAuthorities?.let { authsList ->
-                requiredAuthorities.addAll(authsList.map { RequestMemoryAuthority(this, it) })
+                requiredAuthorities.addAll(authsList.map { RequestSampleAuthority(this, it) })
             }
         }
-    }
 
-    private fun processParameters(sourceRequest: MemoryRequestResponse, target: RequestMemory) {
+    private fun processParameters(sourceRequest: SampleRequestResponse, target: RequestSample) {
         target.parameters.clear()
         sourceRequest.parameters.filter { it.kind != ParameterType.HEADER }.forEach { pr ->
-            val paramManaged = ParameterMemory(pr.id).apply {
+            val paramManaged = ParameterSample(pr.id).apply {
                 this.value = pr.value
                 this.parameterType = pr.kind
                 this.name = pr.name
             }
-            target.addParameterMemory(paramManaged)
+            target.addParameterSample(paramManaged)
         }
         sourceRequest.requestHeaders.forEach { h ->
-            target.addParameterMemory(ParameterMemory(h.id).apply {
+            target.addParameterSample(ParameterSample(h.id).apply {
                 this.name = h.name
                 this.value = h.value
                 this.parameterType = ParameterType.HEADER
@@ -130,22 +129,22 @@ class RequestMemoryHandler (
         requestRepository.deleteById(requestId)
     }
 
-    /** Searches based on memory title or operation path, matching start.
+    /** Searches based on sample title or operation path, matching start.
      * @see QueryResult
      * */
     @Transactional(readOnly = true)
     @AssertRequiredAuthorities
-    fun search(query: String?, offset: Int): QueryResult<MemoryRequestResponse> {
+    fun search(query: String?, offset: Int): QueryResult<SampleRequestResponse> {
         assertValid((query?.length ?: 0) >= MIN_SIZE_SEARCHING) {
             "This query requires at least $MIN_SIZE_SEARCHING characters. Found: ${query?.length}" }
 
         val data = requestRepository.findRequestsByFilter(query ?: "", PageRequest.of(offset, QUERY_PAGE_SIZE))
-                .map(::mapMemoryToView)
+                .map(::mapSampleToView)
         return QueryResult(data, (data.size < QUERY_PAGE_SIZE && offset == 0))
     }
 
-    private fun mapMemoryToView(source: RequestMemory): MemoryRequestResponse {
-        return MemoryRequestResponse(source.id,
+    private fun mapSampleToView(source: RequestSample): SampleRequestResponse {
+        return SampleRequestResponse(source.id,
                 source.operation.apiRecord.namespace,
                 source.operation.apiRecord.name,
                 source.operation.path,
@@ -154,11 +153,11 @@ class RequestMemoryHandler (
             this.body = source.body
 
             source.parameters.filter { it.parameterType != ParameterType.HEADER }
-                    .mapTo(this.parameters){ParameterMemoryTO(it.id, it.parameterType, it.name, it.value)}
+                    .mapTo(this.parameters){ParameterSampleTO(it.id, it.parameterType, it.name, it.value)}
 
             source.parameters
                     .filter { it.parameterType == ParameterType.HEADER }
-                    .mapTo(this.requestHeaders){ParameterMemoryTO(it.id, it.parameterType, it.name, it.value)}
+                    .mapTo(this.requestHeaders){ParameterSampleTO(it.id, it.parameterType, it.name, it.value)}
         }
     }
 

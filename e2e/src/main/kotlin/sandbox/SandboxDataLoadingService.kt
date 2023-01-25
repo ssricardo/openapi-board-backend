@@ -3,8 +3,8 @@ package sandbox
 import com.fasterxml.jackson.annotation.JsonAutoDetect
 import io.rss.openapiboard.server.persistence.MethodType
 import io.rss.openapiboard.server.persistence.entities.request.ParameterType
-import io.rss.openapiboard.server.services.to.ParameterMemoryTO
-import io.rss.openapiboard.server.services.to.MemoryRequestResponse
+import io.rss.openapiboard.server.services.to.ParameterSampleTO
+import io.rss.openapiboard.server.services.to.SampleRequestResponse
 import io.rss.openapiboard.server.services.to.SubscriptionRequestResponse
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.http.HttpEntity
@@ -65,7 +65,7 @@ class SandboxDataLoadingService {
 
             val apiRecordList = createApiRecords(petStoreSource)
 
-            createExampleMemory(apiRecordList)
+            createRequestSample(apiRecordList)
             createSubscriptions()
 
             println("Loading completed")
@@ -148,21 +148,21 @@ class SandboxDataLoadingService {
         println("Subscriptions created")
     }
 
-    private fun createExampleMemory(items: MutableList<ApiRecordDto>) {
+    private fun createRequestSample(items: MutableList<ApiRecordDto>) {
         items.forEach {
             for (i in 0..3) {
                 try {
-                    val memory = MemoryRequestResponse(null, it.namespace, it.name,
+                    val sample = SampleRequestResponse(null, it.namespace, it.name,
                             "/pets", if (i % 2 == 0) MethodType.GET else MethodType.POST).apply {
                         title = if (i % 2 == 0) "Test resource for bla" else "Special request"
                         body = "{'val': 'Any silly sample'}"
-                        requestHeaders.addAll(arrayOf(ParameterMemoryTO(null, ParameterType.HEADER, "type", "yaml")))
-                        parameters.addAll(arrayOf(ParameterMemoryTO(null, ParameterType.QUERY, "city", "Sao Paulo")))
+                        requestHeaders.addAll(arrayOf(ParameterSampleTO(null, ParameterType.HEADER, "type", "yaml")))
+                        parameters.addAll(arrayOf(ParameterSampleTO(null, ParameterType.QUERY, "city", "Sao Paulo")))
                     }
 
                     restTemplate
                         .postForEntity("${serverBase}/requests",
-                                HttpEntity(memory, HttpHeaders().apply {
+                                HttpEntity(sample, HttpHeaders().apply {
                                     contentType = MediaType.APPLICATION_JSON
                                 }), Response::class.java)
                 } catch (e: RestClientResponseException) {

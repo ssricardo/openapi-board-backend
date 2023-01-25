@@ -4,12 +4,12 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.whenever
 import io.rss.openapiboard.server.persistence.MethodType
 import io.rss.openapiboard.server.persistence.dao.ApiOperationRepository
-import io.rss.openapiboard.server.persistence.dao.RequestMemoryRepository
+import io.rss.openapiboard.server.persistence.dao.RequestSampleRepository
 import io.rss.openapiboard.server.persistence.entities.ApiOperation
 import io.rss.openapiboard.server.persistence.entities.ApiRecord
 import io.rss.openapiboard.server.persistence.entities.request.ParameterType
-import io.rss.openapiboard.server.persistence.entities.request.ParameterMemory
-import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
+import io.rss.openapiboard.server.persistence.entities.request.ParameterSample
+import io.rss.openapiboard.server.persistence.entities.request.RequestSample
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -28,7 +28,7 @@ internal class ApiSourceProcessorTest {
     lateinit var operationRepository: ApiOperationRepository
 
     @Mock
-    lateinit var requestRepository: RequestMemoryRepository
+    lateinit var requestRepository: RequestSampleRepository
 
     @InjectMocks
     lateinit var tested: ApiSourceProcessor
@@ -87,18 +87,18 @@ internal class ApiSourceProcessorTest {
     }
 
     @Test
-    fun enrichNoMemory() {
+    fun enrichNoSample() {
         val record = createSimpleAppRecord()
         whenever(requestRepository.findByApiNamespace(record.name, record.namespace)) doReturn listOf()
         tested.enrichApiRecordSource(record)
     }
 
     @Test
-    fun enrichSingleMemoryMatching() {
+    fun enrichSingleSampleMatching() {
         val record = createSimpleAppRecord()
         val sampleOp = ApiOperation(record, 10).apply { path = "/pets"; methodType = MethodType.POST }
         whenever(requestRepository.findByApiNamespace(record.name, record.namespace)).thenReturn(arrayListOf(
-                createRexMemory(sampleOp, MediaType.APPLICATION_JSON) ))
+                createReqSample(sampleOp, MediaType.APPLICATION_JSON) ))
         val result = tested.enrichApiRecordSource(record)
         assert(sourceTest != result.source)
         assert(result.source?.contains("examples") == true)
@@ -109,11 +109,11 @@ internal class ApiSourceProcessorTest {
     @CsvSource("/patos,application/json,POST",
             "/pets,application/yml,POST",
             "/pets,application/json,PATCH")
-    fun enrichSingleMemoryNonMatchingMatch(paramPath: String, paramContent: String, paramMethod: String) {
+    fun enrichSingleSampleNonMatchingMatch(paramPath: String, paramContent: String, paramMethod: String) {
         val record = createSimpleAppRecord()
         val sampleOp = ApiOperation(record, 10).apply { path = paramPath; methodType = MethodType.valueOf(paramMethod) }
         whenever(requestRepository.findByApiNamespace(record.name, record.namespace)).thenReturn(arrayListOf(
-                createRexMemory(sampleOp, paramContent)
+                createReqSample(sampleOp, paramContent)
         ))
         val result = tested.enrichApiRecordSource(record)
         assert(result.source?.contains("examples") == false)
@@ -125,8 +125,8 @@ internal class ApiSourceProcessorTest {
         val record = createSimpleAppRecord()
         val sampleOp = ApiOperation(record, 10).apply { this.path = "/pets" }
         whenever(requestRepository.findByApiNamespace(record.name, record.namespace)).thenReturn(arrayListOf(
-            createRexMemory(sampleOp, MediaType.APPLICATION_JSON),
-            RequestMemory(sampleOp, 7897).apply {
+            createReqSample(sampleOp, MediaType.APPLICATION_JSON),
+            RequestSample(sampleOp, 7897).apply {
                 this.title = "Clients new"
                 this.body = """{"id": 10101, "name": "Pluto"}"""
                 this.contentType = MediaType.APPLICATION_JSON
@@ -143,23 +143,23 @@ internal class ApiSourceProcessorTest {
         val record = createSimpleAppRecord()
         val operation = ApiOperation(record, 10).apply {
             this.path = "/pets/{id}"; this.methodType = MethodType.GET }
-        val memory = createRexMemory(operation, MediaType.APPLICATION_JSON)
-        memory.parameters.add(ParameterMemory().apply {
+        val sample = createReqSample(operation, MediaType.APPLICATION_JSON)
+        sample.parameters.add(ParameterSample().apply {
             this.value = "pipoca"
             this.parameterType = ParameterType.PATH
             this.name = "id"
         })
-        memory.parameters.add(ParameterMemory().apply {
+        sample.parameters.add(ParameterSample().apply {
             this.value = "Milano"
             this.parameterType = ParameterType.PATH
             this.name = "city"
         })
-        memory.parameters.add(ParameterMemory().apply {
+        sample.parameters.add(ParameterSample().apply {
             this.value = "idOnQuery"
             this.parameterType = ParameterType.QUERY
             this.name = "id"
         })
-        `when`(requestRepository.findByApiNamespace(record.name!!, record.namespace!!)).thenReturn(arrayListOf(memory))
+        whenever(requestRepository.findByApiNamespace(record.name, record.namespace)).thenReturn(arrayListOf(sample))
 
         val result = tested.enrichApiRecordSource(record)
         assert(result.source?.contains("pipoca") == true)
@@ -167,8 +167,8 @@ internal class ApiSourceProcessorTest {
         assert(result.source?.contains("idOnQuery") == false)
     }
 
-    private fun createRexMemory(sampleOp: ApiOperation, paramContent: String): RequestMemory =
-        RequestMemory(sampleOp, 1).apply {
+    private fun createReqSample(sampleOp: ApiOperation, paramContent: String): RequestSample =
+        RequestSample(sampleOp, 1).apply {
             this.title = "Clients with account"
             this.body = """{"id": 33, "name": "Rex"}"""
             this.contentType = paramContent

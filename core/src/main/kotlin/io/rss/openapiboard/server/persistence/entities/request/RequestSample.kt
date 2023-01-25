@@ -1,8 +1,7 @@
 package io.rss.openapiboard.server.persistence.entities.request
 
-import io.rss.openapiboard.server.persistence.entities.ApiAuthority
 import io.rss.openapiboard.server.persistence.entities.ApiOperation
-import io.rss.openapiboard.server.persistence.entities.RequestMemoryAuthority
+import io.rss.openapiboard.server.persistence.entities.RequestSampleAuthority
 import org.hibernate.annotations.BatchSize
 import java.io.Serializable
 import javax.persistence.*
@@ -16,7 +15,7 @@ import javax.validation.constraints.NotEmpty
 @NamedEntityGraph(name = "request.parameters", attributeNodes = [
     NamedAttributeNode("parameters")
 ])
-class RequestMemory (
+class RequestSample (
 
     @JoinColumn(nullable = false)
     @ManyToOne
@@ -48,12 +47,12 @@ class RequestMemory (
 
     @OneToMany(mappedBy = "request", cascade = [CascadeType.ALL], orphanRemoval = true)
     @BatchSize(size = 15)    // WARN: provider specific
-    val parameters = mutableListOf<ParameterMemory>()
+    val parameters = mutableListOf<ParameterSample>()
 
     @OneToMany(orphanRemoval = true, cascade = [CascadeType.ALL])
-    val requiredAuthorities: MutableList<RequestMemoryAuthority> = mutableListOf()
+    val requiredAuthorities = mutableListOf<RequestSampleAuthority>()
 
-    fun addParameterMemory(pm: ParameterMemory) {
+    fun addParameterSample(pm: ParameterSample) {
         pm.request = this
         parameters.add(pm)
     }

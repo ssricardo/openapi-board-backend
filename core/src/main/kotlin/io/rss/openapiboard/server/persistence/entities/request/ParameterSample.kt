@@ -4,8 +4,8 @@ import java.io.Serializable
 import javax.persistence.*
 
 @Entity
-@Table(name = "parameter_memory")
-data class ParameterMemory (
+@Table(name = "parameter_sample")
+data class ParameterSample (
 
         @Id
         @GeneratedValue
@@ -23,7 +23,7 @@ data class ParameterMemory (
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_id", nullable = true)
-    var request: RequestMemory? = null
+    var request: RequestSample? = null
 }
 
 enum class ParameterType {

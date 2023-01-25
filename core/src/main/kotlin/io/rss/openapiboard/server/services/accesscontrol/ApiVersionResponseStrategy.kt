@@ -7,7 +7,7 @@ import kotlin.reflect.KClass
 
 @Component
 class ApiVersionResponseStrategy (
-        val repository: ApiRecordRepository
+        private val repository: ApiRecordRepository
 ): TypeVerifierStrategy<ApiVersionResponse> {
 
     override fun getType(): KClass<ApiVersionResponse> = ApiVersionResponse::class

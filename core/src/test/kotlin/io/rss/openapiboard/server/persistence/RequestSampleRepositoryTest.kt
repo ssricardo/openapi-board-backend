@@ -1,6 +1,6 @@
 package io.rss.openapiboard.server.persistence
 
-import io.rss.openapiboard.server.persistence.dao.RequestMemoryRepository
+import io.rss.openapiboard.server.persistence.dao.RequestSampleRepository
 import io.rss.openapiboard.server.persistence.entities.ApiOperation
 import io.rss.openapiboard.server.persistence.entities.ApiRecord
 import io.rss.openapiboard.server.persistence.entities.request.*
@@ -19,10 +19,10 @@ import javax.persistence.EntityManager
 @ExtendWith(SpringExtension::class)
 @DataJpaTest
 @Tag("db")
-class RequestMemoryRepositoryTest {
+class RequestSampleRepositoryTest {
 
     @Resource
-    lateinit var tested: RequestMemoryRepository
+    lateinit var tested: RequestSampleRepository
 
     @Resource
     lateinit var em: EntityManager
@@ -31,7 +31,7 @@ class RequestMemoryRepositoryTest {
     var operationIdMaster: Int? = null
 
     companion object {
-        val fileContent = RequestMemoryRepositoryTest::class.java
+        val fileContent = RequestSampleRepositoryTest::class.java
                 .getResource("/test-data/petstore-expanded.yaml")
                 .readText()
     }
@@ -65,7 +65,7 @@ class RequestMemoryRepositoryTest {
     @ParameterizedTest
     @CsvSource("'My test Request', 'testValue'")
     fun persistRequest(pTitle: String, someValue: String) {
-        val request = RequestMemory(em.getReference(ApiOperation::class.java, operationId)).apply {
+        val request = RequestSample(em.getReference(ApiOperation::class.java, operationId)).apply {
             body ="""
                 {
                     "openAPI": "v3",
@@ -77,12 +77,12 @@ class RequestMemoryRepositoryTest {
             visibility = RequestVisibility.PUBLIC
             contentType = "application/json"
         }
-        request.addParameterMemory(ParameterMemory().apply {
+        request.addParameterSample(ParameterSample().apply {
             name = "contentType"
             value = "application/json"
             parameterType = ParameterType.HEADER
         })
-        request.addParameterMemory(ParameterMemory().apply {
+        request.addParameterSample(ParameterSample().apply {
             name = "cache"
             value = "false"
             parameterType = ParameterType.PATH
@@ -101,7 +101,7 @@ class RequestMemoryRepositoryTest {
         persistRequest("First request", "Munich")
         persistRequest("Second request", "Tokyo")
 
-        val request = RequestMemory(em.getReference(ApiOperation::class.java, operationIdMaster)).apply {
+        val request = RequestSample(em.getReference(ApiOperation::class.java, operationIdMaster)).apply {
             body ="""
                 {
                     "openAPI": "v2",
@@ -138,6 +138,6 @@ class RequestMemoryRepositoryTest {
 
     @Test
     fun `check authorities access`() {
-        val result = tested.findDeniedMemoriesForAuthorities(listOf(1), listOf("TEST_ROLE"))
+        val result = tested.findDeniedSamplesForAuthorities(listOf(1), listOf("TEST_ROLE"))
     }
 }

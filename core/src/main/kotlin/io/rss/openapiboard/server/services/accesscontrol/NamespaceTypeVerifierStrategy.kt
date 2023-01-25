@@ -7,7 +7,7 @@ import kotlin.reflect.KClass
 
 @Component
 class NamespaceTypeVerifierStrategy(
-        val repository: NamespaceCachedRepository
+        private val repository: NamespaceCachedRepository
 ): TypeVerifierStrategy<Namespace> {
 
     override fun getType(): KClass<Namespace> = Namespace::class

@@ -6,10 +6,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.ObjectWriter
 import io.rss.openapiboard.server.persistence.MethodType
 import io.rss.openapiboard.server.persistence.dao.ApiOperationRepository
-import io.rss.openapiboard.server.persistence.dao.RequestMemoryRepository
+import io.rss.openapiboard.server.persistence.dao.RequestSampleRepository
 import io.rss.openapiboard.server.persistence.entities.ApiOperation
 import io.rss.openapiboard.server.persistence.entities.ApiRecord
-import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
+import io.rss.openapiboard.server.persistence.entities.request.RequestSample
 import io.rss.openapiboard.server.services.exceptions.BoardApplicationException
 import io.swagger.parser.OpenAPIParser
 import io.swagger.v3.oas.models.Operation
@@ -28,17 +28,17 @@ import javax.transaction.Transactional
 
 /**
  * Handles operations with actual source (API spec) of ApiRecord.
- * Performs validations and especially matching/mixing the original source with related RequestMemory.
+ * Performs validations and especially matching/mixing the original source with related RequestSample.
  *
  * @see ApiRecord
- * @see RequestMemory
+ * @see RequestSample
  *
  * @author ricardo saturnino
  */
 @Service
 class ApiSourceProcessor(
     private val operationRepository: ApiOperationRepository,
-    private val requestRepository: RequestMemoryRepository
+    private val requestRepository: RequestSampleRepository
 ) {
 
     private lateinit var parser:OpenAPIParser
@@ -112,7 +112,7 @@ class ApiSourceProcessor(
 
         requestRepository.findByApiNamespace(inputApi.name, inputApi.namespace)
             .filter { it.operation.path != null }
-            .forEachIndexed { index, reqMemory -> processMatchingPath(paths, reqMemory, index) }
+            .forEachIndexed { index, reqSample -> processMatchingPath(paths, reqSample, index) }
 
         return inputApi.apply { source = openWriter.writeValueAsString(openApi) }
     }
@@ -124,25 +124,25 @@ class ApiSourceProcessor(
                 throw BoardApplicationException("The API is invalid. It could not be parsed", e)
             }
 
-    private fun processMatchingPath(paths: Paths, rm: RequestMemory, index: Int) =
+    private fun processMatchingPath(paths: Paths, rm: RequestSample, index: Int) =
         paths[rm.operation.path]?.let { pi -> processMatchingContent(rm, pi, index) }
 
-    private fun processMatchingContent(rm: RequestMemory, pi: PathItem, index: Int) {
-        val methodOperation = getHttpMethodForOperation(rm.operation, pi)
-        rm.parameters.forEach { memParam ->
+    private fun processMatchingContent(rSample: RequestSample, pi: PathItem, index: Int) {
+        val methodOperation = getHttpMethodForOperation(rSample.operation, pi)
+        rSample.parameters.forEach { requestParam ->
             methodOperation?.parameters?.forEachIndexed { index, specParam ->
-                if (specParam.name == memParam.name && specParam.`in` == memParam.parameterType.toString().lowercase()) {
+                if (specParam.name == requestParam.name && specParam.`in` == requestParam.parameterType.toString().lowercase()) {
                     specParam.examples = specParam.examples ?: mutableMapOf()
-                    specParam.examples["oab-example#$index"] = Example().apply { this.value = memParam.value }
+                    specParam.examples["oab-example#$index"] = Example().apply { this.value = requestParam.value }
                 }
             }
         }
 
         val content = methodOperation?.requestBody?.content ?: return
-        val mediaType = rm.contentType ?: return
+        val mediaType = rSample.contentType ?: return
 
         content[mediaType]?.let { media ->
-            addMemoryAsExample(media, rm, index)
+            addSampleAsOpenApiExample(media, rSample, index)
         }
     }
 
@@ -157,7 +157,7 @@ class ApiSourceProcessor(
         }
     }
 
-    private fun addMemoryAsExample(content: MediaType, rm: RequestMemory, index: Int) {
+    private fun addSampleAsOpenApiExample(content: MediaType, rm: RequestSample, index: Int) {
         content.examples = content.examples ?: mutableMapOf()
         content.examples?.let { ex ->
             ex["oab-example#$index"] = Example().apply {

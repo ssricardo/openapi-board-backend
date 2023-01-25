@@ -8,8 +8,8 @@ import kotlin.reflect.KClass
 
 @Component
 class ApiRecordTypeVerifierStrategy (
-        val apiRepository: ApiRecordRepository,
-        val namespaceRepository: NamespaceCachedRepository
+        private val apiRepository: ApiRecordRepository,
+        private val namespaceRepository: NamespaceCachedRepository
 ): TypeVerifierStrategy<ApiRecord> {
 
     override fun getType(): KClass<ApiRecord> = ApiRecord::class

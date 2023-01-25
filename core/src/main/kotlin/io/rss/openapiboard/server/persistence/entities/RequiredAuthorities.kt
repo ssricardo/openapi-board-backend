@@ -1,6 +1,6 @@
 package io.rss.openapiboard.server.persistence.entities
 
-import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
+import io.rss.openapiboard.server.persistence.entities.request.RequestSample
 import javax.persistence.*
 
 @Entity
@@ -56,12 +56,12 @@ class NamespaceAuthority (
 ): RequiredAuthorities (authority)
 
 @Entity
-@DiscriminatorValue("mem")
-class RequestMemoryAuthority(
+@DiscriminatorValue("req")
+class RequestSampleAuthority(
 
         @ManyToOne
-        @JoinColumn(name = "mem_id")
-        val requestMemory: RequestMemory,
+        @JoinColumn(name = "req_id")
+        val requestSample: RequestSample,
 
         authority: String
 ) : RequiredAuthorities(authority)

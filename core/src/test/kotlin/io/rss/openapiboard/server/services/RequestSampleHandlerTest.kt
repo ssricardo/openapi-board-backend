@@ -4,12 +4,12 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.whenever
 import io.rss.openapiboard.server.persistence.MethodType
 import io.rss.openapiboard.server.persistence.dao.ApiOperationRepository
-import io.rss.openapiboard.server.persistence.dao.RequestMemoryRepository
+import io.rss.openapiboard.server.persistence.dao.RequestSampleRepository
 import io.rss.openapiboard.server.persistence.entities.ApiOperation
 import io.rss.openapiboard.server.persistence.entities.ApiRecord
-import io.rss.openapiboard.server.persistence.entities.request.RequestMemory
+import io.rss.openapiboard.server.persistence.entities.request.RequestSample
 import io.rss.openapiboard.server.services.exceptions.BoardApplicationException
-import io.rss.openapiboard.server.services.to.MemoryRequestResponse
+import io.rss.openapiboard.server.services.to.SampleRequestResponse
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -21,13 +21,13 @@ import javax.validation.Validator
 import com.nhaarman.mockitokotlin2.any as some
 
 @ExtendWith(MockitoExtension::class)
-class RequestMemoryHandlerTest {
+class RequestSampleHandlerTest {
 
     @InjectMocks
-    lateinit var tested: RequestMemoryHandler
+    lateinit var tested: RequestSampleHandler
 
     @Mock
-    private lateinit var requestRepository: RequestMemoryRepository
+    private lateinit var requestRepository: RequestSampleRepository
 
     @Mock
     private lateinit var operationRepository: ApiOperationRepository
@@ -42,9 +42,9 @@ class RequestMemoryHandlerTest {
     fun testSaveOK() {
         val operation = ApiOperation(ApiRecord("name", "ns", "v1"), 1)
         whenever(operationRepository.findSingleMatch(some(), some(), some(), some())) doReturn operation
-        whenever(requestRepository.save( any(RequestMemory::class.java) )) doReturn RequestMemory(operation)
+        whenever(requestRepository.save( any(RequestSample::class.java) )) doReturn RequestSample(operation)
 
-        tested.saveRequest(MemoryRequestResponse(
+        tested.saveRequest(SampleRequestResponse(
                 namespace = "Prod", apiName = "testing", path = "/test", methodType = MethodType.POST
         ).apply { title = "Meu test app" })
     }
@@ -52,7 +52,7 @@ class RequestMemoryHandlerTest {
     @Test
     fun testSaveMissingField() {
         assertThrows(BoardApplicationException::class.java) {
-            tested.saveRequest(MemoryRequestResponse(
+            tested.saveRequest(SampleRequestResponse(
                     namespace = "Prod", apiName = "testing", path = "/test"
             ))
         }
