@@ -1,7 +1,11 @@
 package io.rss.apicenter.server.web.resource
 
+import io.rss.apicenter.server.persistence.entities.ApiSubscription
 import io.rss.apicenter.server.services.support.SubscriptionHandler
+import io.rss.apicenter.server.services.to.SubscriptionRequest
 import io.rss.apicenter.server.services.to.SubscriptionRequestResponse
+import io.rss.apicenter.server.services.to.SubscriptionResponse
+import io.rss.apicenter.server.services.to.toRequestResponseTO
 import java.lang.IllegalArgumentException
 import javax.inject.Inject
 import javax.ws.rs.*
@@ -17,38 +21,31 @@ class SubscriptionResource {
     private lateinit var handler: SubscriptionHandler
 
     @GET
-    fun getSubscribers(): List<SubscriptionRequestResponse> =
-        handler.find().map {
-            SubscriptionRequestResponse(it)
-        }
+    fun getSubscribers(): List<SubscriptionResponse> =
+        handler.listAll().map (ApiSubscription::toRequestResponseTO)
 
     @POST
-    fun create(value: SubscriptionRequestResponse): Response {
-        handler.addSubscription(value.unwrap())
-        return Response.status(Response.Status.CREATED).build()
+    fun create(value: SubscriptionRequest): Response {
+        return handler.addSubscription(value.toApiSubscription())
+            .let { result ->
+                Response.status(Response.Status.CREATED)
+                    .entity(result)
+                    .build()
+            }
     }
 
     @Path("{id}")
     @PUT
-    fun update(@PathParam("id") id: Long, value: SubscriptionRequestResponse) {
+    fun update(@PathParam("id") id: Long, value: SubscriptionRequest): Response {
         value.id = id
-        handler.saveOrUpdate(value.unwrap())
+        handler.saveOrUpdate(value.toApiSubscription())
+        return Response.ok().build();
     }
 
     @Path("{id}")
     @DELETE
     fun removeSubscription(@PathParam("id") id: Long) {
         handler.removeById(id)
-    }
-
-    /* @see PATH_UNSUBSCRIBE */
-    @Path("unsub-link")
-    @GET    // FIXME DELETE BY token
-    fun removeSubscription(@QueryParam("tk") token: String?): String {
-        handler.removeIfVerified(token
-            ?: throw IllegalArgumentException("A token is required through 'tk' parameter")
-        )
-        return "Subscription removed successfully"
     }
 
 }

@@ -2,6 +2,7 @@ package io.rss.apicenter.server.services.to
 
 import io.rss.apicenter.server.persistence.MethodType
 import io.rss.apicenter.server.persistence.entities.request.ParameterType
+import java.util.UUID
 import javax.validation.constraints.NotEmpty
 import javax.validation.constraints.NotNull
 
@@ -10,8 +11,8 @@ import javax.validation.constraints.NotNull
  * @see RequestSampleResource
  * */
 data class RequestSampleTO (var requestId: Long? = null,
-                            @field:NotNull @field:NotEmpty val namespace: String? = null,
-                            @field:NotNull @field:NotEmpty val apiName: String? = null,
+                            @field:NotNull val apiId: UUID? = null,
+                            @field:NotNull val sameNamespaceOnly: Boolean = false,
                             @field:NotNull @field:NotEmpty val path: String? = null,
                             @field:NotNull val methodType: MethodType? = null) {
 

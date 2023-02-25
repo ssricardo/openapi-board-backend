@@ -2,50 +2,44 @@ package io.rss.apicenter.server.services.support
 
 import io.rss.apicenter.server.helper.TokenHelper
 import io.rss.apicenter.server.helper.assertGetStringsRequired
-import io.rss.apicenter.server.helper.assertStringRequired
-import io.rss.apicenter.server.persistence.dao.AlertSubscriptionRepository
-import io.rss.apicenter.server.persistence.entities.AlertSubscription
+import io.rss.apicenter.server.persistence.dao.ApiSubscriptionRepository
+import io.rss.apicenter.server.persistence.entities.ApiSubscription
 import io.rss.apicenter.server.security.Roles
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
+import org.springframework.validation.annotation.Validated
 import javax.transaction.Transactional
 import javax.validation.Valid
 import javax.validation.constraints.NotEmpty
-/** Handles CRUD operations for AlertSubscription */
-@Service
-class SubscriptionHandler (private val repository: AlertSubscriptionRepository) {
 
-    fun find(): List<AlertSubscription> =
+@Service
+@Validated
+class SubscriptionHandler (private val repository: ApiSubscriptionRepository) {
+
+    fun listAll(): List<ApiSubscription> =
         repository.findAll()
 
     @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
     @Transactional
-    fun addSubscription(subscription: AlertSubscription): AlertSubscription {
+    fun addSubscription(@Valid subscription: ApiSubscription): ApiSubscription {
         require(subscription.id == null) { "New subscriptions must not have an id" }
         return saveOrUpdate(subscription)
     }
 
     @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
     @Transactional
-    fun saveOrUpdate(@Valid input: AlertSubscription): AlertSubscription {
-        assertStringRequired(input.email) { "Email is mandatory" }
-        assertStringRequired(input.apiName) { "API is mandatory" }
-        val (email, apiName) = assertGetStringsRequired({ "Email and API are mandatory" }, input.email, input.apiName)
+    fun saveOrUpdate(@Valid input: ApiSubscription): ApiSubscription {
+        val (webhook, apiName) = assertGetStringsRequired({ "Webhook address and API are mandatory" }, input.targetWebhook, input.apiName)
 
-        return repository.findByMailApi(email, apiName)?.let {
-            it.basePaths = input.basePaths
-            it
-        } ?: repository.save(input)
-    }
+        val existingSubscription = repository.findByHookApi(webhook, apiName)
+            ?.let {
+                it.basePaths = input.basePaths
+                it
+            }
 
-    @Transactional
-    fun removeIfVerified(@NotEmpty token: String) {
-        val subscriptionId = TokenHelper.validateRetrieveMailInfo(token)
-
-        repository.findByMailApi(subscriptionId.email, subscriptionId.apiName)?.let {
-            repository.delete(it)
-        }
+        return existingSubscription
+            ?: repository.save(input)
     }
 
     @PreAuthorize("hasAuthority('${Roles.MANAGER}')")

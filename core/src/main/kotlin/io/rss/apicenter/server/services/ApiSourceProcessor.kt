@@ -22,7 +22,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
-import org.springframework.util.Assert
 import javax.annotation.PostConstruct
 import javax.transaction.Transactional
 
@@ -80,11 +79,11 @@ class ApiSourceProcessor(
     }
 
     private fun storePath(inputApi: ApiRecord, pathStr: String, oppType: MethodType) {
-        Assert.state(inputApi.id != null) { "Api ID must be not null before storing an Operation" }
+        val apiId = requireNotNull(inputApi.id) { "Api ID must be not null before storing an Operation" }
         val apiName = checkNotNull(inputApi.name)
         val namespace = checkNotNull(inputApi.namespace)
 
-        val operation = operationRepository.findSingleMatch(apiName, namespace, pathStr, oppType)
+        val operation = operationRepository.findSingleMatch(apiId, pathStr, oppType)
                 ?: ApiOperation(inputApi).apply {
                     path = pathStr
                     methodType = oppType
@@ -98,10 +97,6 @@ class ApiSourceProcessor(
         if (LOGGER.isDebugEnabled) {
             LOGGER.debug("Skipping OpenAPI enriching, due to: $message")
         }
-    }
-
-    fun listOperationsByApi(apiName: String, namespace: String): List<ApiOperation> {
-        return operationRepository.findByApiNamespace(apiName, namespace)
     }
 
     @Transactional(Transactional.TxType.NOT_SUPPORTED)

@@ -21,9 +21,9 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.util.UUID
 import javax.validation.Validator
 import javax.ws.rs.core.MediaType
-
 /** Handles CRUD operations related to RequestSample and conversions to related TOs */
 
 @Service
@@ -42,7 +42,7 @@ class RequestSampleHandler (
         return saveRequest(request)
     }
 
-    @Transactional()
+    @Transactional
     @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
     @AssertRequiredAuthorities
     fun saveRequest(request: RequestSampleInput): RequestSampleResponse {
@@ -56,17 +56,18 @@ class RequestSampleHandler (
     private fun resolveRequestOperation(request: RequestSampleInput): RequestSample {
         val invalidRequest = {"Request invalid. The follow fields are required: ApiName, namespace, path, http method, title"}
 
-        val (apiName, ns, path, _) = with(request) {
-             assertGetStringsRequired(invalidRequest, apiName, namespace, path, title)
+        val apiId = assertRequired(request.apiId, invalidRequest)
+        val (path, _) = with(request) {
+            assertGetStringsRequired(invalidRequest, path, title)
         }
         val methodType = assertRequired(request.methodType, invalidRequest)
 
-        val requestDb = request.requestId?.let { requestRepository.findByIdOrNull(it) }
+        val requestDb = request.requestId?.let(requestRepository::findByIdOrNull)
         requestDb?.let {
             return updateRequest(it, request) // existing request
         }
 
-        val operation = loadApiOperation(apiName, ns, path, methodType, request)
+        val operation = loadApiOperation(apiId, path, methodType, request)
 
         return createRequestSample(operation, request)
     }
@@ -76,6 +77,7 @@ class RequestSampleHandler (
             // fields already validated on #resolveRequestOperation
             title = inputRequest.title!!
             body = inputRequest.body
+            namespaceAttached = inputRequest.sameNamespaceOnly
             requiredAuthorities.clear()
             inputRequest.requiredAuthorities?.let {requestAuths ->
                 requiredAuthorities.addAll(requestAuths.map { auth -> RequestSampleAuthority(this, auth) })
@@ -84,18 +86,19 @@ class RequestSampleHandler (
         return existingSample
     }
 
-    private fun loadApiOperation(apiName: String, ns: String, path: String, methodType: MethodType, request: RequestSampleInput) =
-            (operationRepository.findSingleMatch(apiName, ns, path, methodType)
-                    ?: throw BoardApplicationException(
-                            """No operation was found matching the request: 
-                        |[Api: ${request.apiName}, Namespace: ${request.namespace}, 
-                        |Path: ${request.path}, method: ${request.methodType}]""".trimMargin()))
+    private fun loadApiOperation(apiId: UUID, path: String, methodType: MethodType, request: RequestSampleInput): ApiOperation {
+        return operationRepository.findSingleMatch(apiId, path, methodType)
+            ?: throw BoardApplicationException("""No operation was found matching the request:  
+                |[Api: ${request.apiId}  
+                |Path: ${request.path}, method: ${request.methodType}]""".trimMargin())
+    }
 
     private fun createRequestSample(operation: ApiOperation, request: RequestSampleInput) =
         RequestSample(operation).apply {
             visibility = RequestVisibility.PUBLIC       // FUTURE: control where the request is available
             title = request.title!!
             body = request.body
+            namespaceAttached = request.sameNamespaceOnly
             contentType = MediaType.APPLICATION_JSON       // FUTURE: receive from request. For now, supports only JSON
             request.requiredAuthorities?.let { authsList ->
                 requiredAuthorities.addAll(authsList.map { RequestSampleAuthority(this, it) })
@@ -143,10 +146,11 @@ class RequestSampleHandler (
 
     private fun mapSampleToView(source: RequestSample): RequestSampleResponse {
         return RequestSampleResponse(source.id,
-                source.operation.apiRecord.namespace,
-                source.operation.apiRecord.name,
+                source.operation.apiRecord.id,
+                source.namespaceAttached,
                 source.operation.path,
                 source.operation.methodType).apply {
+
             this.title = source.title
             this.body = source.body
 
@@ -165,3 +169,4 @@ class RequestSampleHandler (
     }
 
 }
+

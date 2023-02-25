@@ -17,9 +17,8 @@ import java.util.*
 object TokenHelper {
 
     private const val DUMMY_PASSWORD = "dummy"      // Filler for password field on User. Not needed after JWT auth
-    private const val OAB_ISSUER: String = "oaBoard"
+    private const val OAB_ISSUER: String = "openApiCenter"
     private const val DAYS_VALID_LOGIN = 5L
-    private const val DAYS_VALID_MAIL = 2L
     private const val ROLES_ATTRIBUTE = "roles"
 
     private lateinit var algorithmHS: Algorithm
@@ -51,16 +50,6 @@ object TokenHelper {
         val roles = jwtValue.getClaim(ROLES_ATTRIBUTE).asList(String::class.java)
                 .mapTo(mutableListOf()) { r -> SimpleGrantedAuthority(r) }
         return User(jwtValue.subject, DUMMY_PASSWORD, roles)
-    }
-
-    fun generateMailToken(info: SubscriptionMailId): String {
-        val expire = LocalDateTime.now().plusDays(DAYS_VALID_MAIL)
-        return JWT.create()
-                .withIssuer(OAB_ISSUER)
-                .withExpiresAt(Date.from(expire.atZone(ZoneId.systemDefault()).toInstant()))
-                .withClaim(info::apiName.name, info.apiName)
-                .withClaim(info::email.name, info.email)
-                .sign(algorithmHS)
     }
 
     /** Retrieves Subscription information if token is valid.

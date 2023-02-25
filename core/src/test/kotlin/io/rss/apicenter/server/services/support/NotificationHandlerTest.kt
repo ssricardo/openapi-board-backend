@@ -1,15 +1,17 @@
 package io.rss.apicenter.server.services.support
 
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import io.rss.apicenter.server.config.EnvironmentConfig
 import io.rss.apicenter.server.helper.TokenHelper
-import io.rss.apicenter.server.persistence.dao.AlertSubscriptionRepository
+import io.rss.apicenter.server.persistence.dao.ApiSubscriptionRepository
 import io.rss.apicenter.server.persistence.dao.ApiSnapshotRepository
-import io.rss.apicenter.server.persistence.entities.AlertSubscription
+import io.rss.apicenter.server.persistence.entities.ApiSubscription
 import io.rss.apicenter.server.persistence.entities.ApiRecord
+import org.apache.http.concurrent.BasicFuture
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -20,8 +22,12 @@ import org.mockito.Mock
 import org.mockito.Spy
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.data.domain.Page
-import org.springframework.mail.javamail.JavaMailSender
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import javax.ws.rs.client.Client
+import javax.ws.rs.core.Response
 
 @ExtendWith(MockitoExtension::class)
 class NotificationHandlerTest {
@@ -30,7 +36,7 @@ class NotificationHandlerTest {
     lateinit var apiSnapshotRepository: ApiSnapshotRepository
 
     @Mock
-    lateinit var subscriptionRepository: AlertSubscriptionRepository
+    lateinit var subscriptionRepository: ApiSubscriptionRepository
 
     @Mock
     lateinit var executorService: ExecutorService
@@ -39,16 +45,22 @@ class NotificationHandlerTest {
     val envConfig = EnvironmentConfig("http://bla", true)
 
     @Mock
-    private lateinit var emailSender: JavaMailSender
+    lateinit var restClient: Client
 
-    @InjectMocks
     lateinit var underTest: NotificationHandler
 
     @BeforeEach
     fun setUp() {
-        TokenHelper.setupAlgorithm("test")
         whenever(apiSnapshotRepository.findTopPreviousVersion(anyString(), anyString(), anyString(), any()))
                 .thenReturn(Page.empty())
+        whenever(executorService.submit(any())).thenAnswer {
+            val runnable: Runnable = it.getArgument(0)
+            runnable.run()
+            Thread.sleep(500)
+            CompletableFuture.completedFuture("Ok")
+        }
+
+        underTest = NotificationHandler(apiSnapshotRepository, subscriptionRepository, executorService, envConfig, restClient)
     }
 
     @Test
@@ -60,18 +72,22 @@ class NotificationHandlerTest {
     @Test
     fun `send changes OK`() {
         whenever(subscriptionRepository.findByApi(anyString())).thenReturn(
-                listOf(AlertSubscription(1).apply {
+                listOf(ApiSubscription(1).apply {
                     apiName = "videos"
-                    email = "ricardo@test.com"
-                }, AlertSubscription(2).apply {
+                    targetWebhook = "http://other-service"
+                }, ApiSubscription(2).apply {
                     apiName = "videos"
-                    email = "anna@test.com"
+                    targetWebhook = "http://http-mail"
                 })
         )
+
         underTest.notifyUpdate(ApiRecord("videos","master", "1.5")
                 .apply {
                     updateDate()
                 })
+
         verify(executorService, times(2)).submit(any())
+        verify(restClient, times(1)).target("http://other-service")
+        verify(restClient, times(1)).target("http://http-mail")
     }
 }

@@ -1,114 +1,154 @@
 package io.rss.apicenter.server.services.support
 
+import com.fasterxml.jackson.core.util.JacksonFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.rss.apicenter.server.config.EnvironmentConfig
-import io.rss.apicenter.server.config.PATH_UNSUBSCRIBE
-import io.rss.apicenter.server.helper.TokenHelper
 import io.rss.apicenter.server.helper.assertGetStringsRequired
 import io.rss.apicenter.server.helper.assertRequired
-import io.rss.apicenter.server.persistence.dao.AlertSubscriptionRepository
+import io.rss.apicenter.server.persistence.dao.ApiSubscriptionRepository
 import io.rss.apicenter.server.persistence.dao.ApiSnapshotRepository
-import io.rss.apicenter.server.persistence.entities.AlertSubscription
+import io.rss.apicenter.server.persistence.entities.ApiSubscription
 import io.rss.apicenter.server.persistence.entities.ApiRecord
 import io.rss.apicenter.server.security.Roles
-import io.rss.apicenter.server.services.to.SubscriptionMailId
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
-import org.springframework.mail.javamail.JavaMailSender
-import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.scheduling.annotation.Async
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
-import java.nio.charset.StandardCharsets
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.ExecutorService
+import javax.annotation.PostConstruct
+import javax.ws.rs.client.Client
+import javax.ws.rs.client.ClientBuilder
+import javax.ws.rs.client.Entity
+import javax.ws.rs.core.HttpHeaders
+import javax.ws.rs.core.MediaType
 
 /** Responsible for notify the subscribers according to its needs */
 @Service
 @PreAuthorize("hasAuthority('${Roles.MANAGER}')")
 class NotificationHandler (
-        private val apiSnapshotRepository: ApiSnapshotRepository,
-        private val subscriptionRepository: AlertSubscriptionRepository,
-        private val executorService: ExecutorService,
-        private val envConfig: EnvironmentConfig,
-        private val emailSender: JavaMailSender
+    private val apiSnapshotRepository: ApiSnapshotRepository,
+    private val subscriptionRepository: ApiSubscriptionRepository,
+    private val executorService: ExecutorService,
+    private val envConfig: EnvironmentConfig,
+    private val restClient: Client = DEFAULT_REST_CLIENT
 ) {
+
+//    @PostConstruct
+//    internal fun init() {
+//        restClient = ClientBuilder.newBuilder()
+//            .register(JacksonFeature::class)
+//            .register(JavaTimeModule::class)
+//            .build()
+//    }
 
     @Async("threadPoolTaskExecutor")
     fun notifyUpdate(apiRecord: ApiRecord) {
-        if (! envConfig.mailNotificationEnabled) {
+        if (!envConfig.hooksNotificationEnabled) {
             return
         }
-        assertRequired(apiRecord.name){"Invalid AppRecord given. Name is mandatory"}
+        assertRequired(apiRecord.name){"Invalid ApiRecord given. Name is mandatory"}
 
-        LOGGER.info("Notify API change for ${apiRecord.namespace}/${apiRecord.name}")
-        getAppChangeSpec(apiRecord)?.let { change ->
-            getListOfSubscribers(apiRecord.name)
-                    .filter { subs -> isSubscriptionMatchDiff(change, subs) }
-                    .forEach { subs -> submitNotification(change, subs) }
+        LOGGER.info("Notify API change for ${apiRecord.name} in ${apiRecord.namespace}")
+        val change = getApiChangeSpec(apiRecord)
 
-        }
+        getListOfSubscribers(apiRecord.name)
+                .filter { subs -> isSubscriptionMatchDiff(change, subs) }
+                .forEach { subs -> handleNotification(change, subs) }
     }
 
-    private fun getAppChangeSpec(apiRecord: ApiRecord): AppChange? {
+    private fun getApiChangeSpec(apiRecord: ApiRecord): ApiChange {
         val previous = apiSnapshotRepository.findTopPreviousVersion(apiRecord.name,
-                envConfig.mainNamespace, apiRecord.version, PageRequest.of(0, 1))
+                apiRecord.namespace, apiRecord.version, PageRequest.of(0, 1))
                 .firstOrNull()
+            ?: return ApiChange(apiRecord, ChangeType.NEW_API)
 
-        // simplified first version. Idea for later: parse the definitions, find specific paths changed
+        // simplified first version, doesn't filter paths yet. Idea for later: parse the definitions, find specific paths changed
 
-        val areSame =  previous?.source?.equals(apiRecord.source)
-                ?: return AppChange(apiRecord, "NEW")
-        return if (areSame) null else AppChange(apiRecord, "NOT_YET_DEFINED")
+        val areSame =  previous.source?.equals(apiRecord.source) ?: false
+
+        return if (areSame)
+            ApiChange(apiRecord, ChangeType.NO_CHANGE, previous.version)
+        else
+            ApiChange(apiRecord, ChangeType.SOURCE_DIFF, previous.version)
     }
 
     /** Does the subscription filters match what was changed? */
-    private fun isSubscriptionMatchDiff(change: AppChange, subs: AlertSubscription): Boolean {
-        return true // for this first version, filtering is not yet supported. TODO later
+    private fun isSubscriptionMatchDiff(change: ApiChange, subs: ApiSubscription): Boolean {
+        if (subs.onlyOnChange && change.type == ChangeType.NO_CHANGE) {
+            return false
+        }
+
+        val shouldFilterMatchingNamespace = subs.namepace != null
+        if (shouldFilterMatchingNamespace && !subs.namepace.equals(change.api.namespace)) {
+            return false
+        }
+
+        return true
     }
 
-    private fun submitNotification(change: AppChange, subs: AlertSubscription) {
-        val (email) = assertGetStringsRequired({ "Missing email" }, subs.email)
+    private fun handleNotification(change: ApiChange, subscription: ApiSubscription) {
+        try {
+            submitNotification(change, subscription)
+        } catch (e: Exception) {
+            LOGGER.warn("""Error on submitting a notification: ${e.message}. 
+                |Subscription ${subscription.id} (${subscription.targetWebhook}) will be ignored for ${change.api.name}
+                |""".trimMargin())
+        }
+    }
 
-        val unsubscribeLink = createUnsubsLink(change.app.name, email)
-        val mailContent = NotificationTemplate(date = change.app.modifiedDate,
-                appName = change.app.name, newVersion = change.app.version,
-                unsubscribeLink = unsubscribeLink)
+    private fun submitNotification(change: ApiChange, subscription: ApiSubscription) {
+        val (email) = assertGetStringsRequired({ "Missing webhook spec on subscription ${subscription.id}" },
+            subscription.targetWebhook)
+
+        val hookContent = NotificationHookData(
+            apiName = change.api.name,
+            namespace = change.api.namespace,
+            newVersion = change.api.version,
+            changeDate = change.api.modifiedDate,
+            oldVersion = change.previousVersion
+        )
 
         executorService.submit {
-            sendMail(email, mailContent)
+            sendMail(email, hookContent)
         }
     }
 
-    private fun createUnsubsLink(appName: String, email: String): String {
-        val token = createToken(appName, email)
-        return "${envConfig.serverAddress}$PATH_UNSUBSCRIBE$token"
-    }
+    private fun sendMail(targetHook: String, content: NotificationHookData) {
+        val response = restClient.target(targetHook)
+            .request()
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+            .post(Entity.json(content))
 
-    private fun sendMail(emailAddress: String, mailContent: String) {
-        val message = emailSender.createMimeMessage().apply {
-            subject = NOTIFICATION_MAIL_SUBJECT
+        if (response.status < 300) {
+            LOGGER.debug("Notification sent to $targetHook, for ${content.apiName}")
         }
-
-        val h = MimeMessageHelper(message, true, StandardCharsets.UTF_8.name()).apply {
-            setFrom("oaBoard@noreply")
-            setBcc(emailAddress)
-            setText(mailContent, true)
-        }
-
-        emailSender.send(h.mimeMessage)
     }
 
     private fun getListOfSubscribers(appName: String) =
             subscriptionRepository.findByApi(appName)
 
-    private fun createToken(appId: String, email: String): String =
-            TokenHelper.generateMailToken(SubscriptionMailId(appId, email))
-
     /** Holds the diff and kind of diff: path removed? changed?... */
-    data class AppChange(val app: ApiRecord, val kind: String? = null)
+    private data class ApiChange(val api: ApiRecord, val type: ChangeType, val previousVersion: String? = null)
+
+    private enum class ChangeType {
+        NEW_API,
+        SOURCE_DIFF,
+        PATH_DIFF,
+        NO_CHANGE
+    }
 
     private companion object {
-        const val NOTIFICATION_MAIL_SUBJECT: String = "[OpenApiCenter Notification] An API that you follow was updated"
+        val DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm")
         val LOGGER: Logger = LoggerFactory.getLogger(NotificationHandler::class.java)
+
+        val DEFAULT_REST_CLIENT: Client by lazy {
+            ClientBuilder.newBuilder()
+                .register(JacksonFeature::class)
+                .register(JavaTimeModule::class)
+                .build()
+        }
     }
 }

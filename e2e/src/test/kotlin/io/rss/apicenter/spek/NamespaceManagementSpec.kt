@@ -27,7 +27,7 @@ class NamespaceManagementSpec: Spek({
             ThenResponseIsOK()
 
             When("Remove 'simpleNs'") {
-                val namespaceId = getFromResponse<String>("$.name")
+                val namespaceId = getFromResponse<String>("$.id")
                 deleteHttp("namespaces/$namespaceId")
             }
 

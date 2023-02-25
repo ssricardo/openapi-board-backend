@@ -53,7 +53,6 @@ class ApiRecordResource {
     @GET
     @Path("{api}/source")
     fun loadApiSource(@PathParam("api") apiId: UUID): String? {
-//        namespaceHandler.assertUserHasAccess(nm)
         return apiHandler.loadApiSource(apiId)
     }
 
@@ -61,7 +60,6 @@ class ApiRecordResource {
     @GET
     @Path("{api}/versions")
     fun getApiVersionList(@PathParam("api") apiId: UUID): List<String> {
-//        namespaceHandler.assertUserHasAccess(nm)
         return snapshotHandler.listVersionsByApi(apiId)
     }
 
@@ -84,7 +82,6 @@ class ApiRecordResource {
     fun createComparison(@Parameter(description = "Name of 1st app") @QueryParam("srcName") srcName: String?,
                          @Parameter(description = "Namespace of 1st app") @QueryParam("srcNs") srcNs: String?,
                          @Parameter(description = "Version of 1st app") @QueryParam("srcVersion") srcVersion: String?,
-                         @Parameter(description = "Name of 2nd app")  @QueryParam("compareName") compName: String?,
                          @Parameter(description = "Namespace of 2nd app") @QueryParam("compareNs") compNs: String?,
                          @Parameter(description = "Version of 2nd app") @QueryParam("compareVersion") compVersion: String?): ApiComparisonResponse {
 
@@ -97,7 +94,7 @@ class ApiRecordResource {
                         srcNs,
                         srcVersion ?: throw IllegalArgumentException("Parameter required: srcVersion")),
                 ApiSnapshotId(
-                        compName ?: throw IllegalArgumentException("Parameter required: compareName"),
+                        srcName,
                         compNs,
                         compVersion ?: throw IllegalArgumentException("Parameter required: compareVersion"))
         )

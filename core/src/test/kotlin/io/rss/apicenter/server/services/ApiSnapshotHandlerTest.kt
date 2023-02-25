@@ -53,14 +53,13 @@ internal class ApiSnapshotHandlerTest {
     }
 
     @Test
-    @Disabled("TO FIX")
     internal fun listVersionsByApp() {
-        whenever(repository.findApiVersionList("GoApp", "Winterfell"))
+        whenever(apiRecordRepository.findApiNamespace(any())).thenReturn(ApiNamespace("GoApi", "Winterfell"))
+        whenever(repository.findApiVersionList("GoApi", "Winterfell"))
                 .thenReturn(listOf("1.0", "1.2", "2.0"))
-        whenever(apiRecordRepository.findApiNamespace(any())).thenReturn(ApiNamespace("GoAp", "Winterfell"))
 
         val result: List<String> = tested.listVersionsByApi(UUID.randomUUID())
-        assert(result.size == 3)
+        assertEquals(3, result.size)
     }
 
     @Test

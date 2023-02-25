@@ -1,5 +1,6 @@
 package io.rss.apicenter.server.services.accesscontrol
 
+import io.rss.apicenter.server.persistence.dao.ApiRecordRepository
 import io.rss.apicenter.server.persistence.dao.NamespaceCachedRepository
 import io.rss.apicenter.server.persistence.dao.RequestSampleRepository
 import io.rss.apicenter.server.services.to.RequestSampleTO
@@ -9,16 +10,15 @@ import kotlin.reflect.KClass
 @Component
 class RequestSampleVerifierStrategy(
         private val repository: RequestSampleRepository,
+        private val apiRecordRepository: ApiRecordRepository,
         private val namespaceRepository: NamespaceCachedRepository
 ): TypeVerifierStrategy<RequestSampleTO> {
 
     override fun getType(): KClass<RequestSampleTO> = RequestSampleTO::class
 
     override fun hasUserAccess(data: List<RequestSampleTO>): Boolean {
-        val userAuthorities = getAuthoritiesString()
-        val hasAccessToAllNamespaces = data.asSequence().mapNotNull { it.namespace }.all { hasAccessToNamespace(it, userAuthorities) }
-
-        if (!hasAccessToAllNamespaces) {
+        val namespaceList = apiRecordRepository.findDistinctNamespaces(data.mapNotNull { it.apiId })
+        if (!namespaceList.all { hasAccessToNamespace(it, getAuthoritiesString()) }) {
             return false
         }
 
@@ -42,7 +42,8 @@ class RequestSampleVerifierStrategy(
         val deniedRequests = repository.findDeniedSamplesForAuthorities(data.mapNotNull { it.requestId },
                 getAuthoritiesString())
 
-        return data.filter { it.requestId !in deniedRequests }
+        return data
+            .filter { it.requestId !in deniedRequests }
     }
 
 }

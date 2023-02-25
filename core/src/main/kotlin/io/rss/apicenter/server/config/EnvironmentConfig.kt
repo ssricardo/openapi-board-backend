@@ -7,6 +7,6 @@ import org.springframework.boot.context.properties.ConstructorBinding
 @ConfigurationProperties(prefix = "env")
 data class EnvironmentConfig (
     val serverAddress: String,
-    val mailNotificationEnabled: Boolean = false,
+    val hooksNotificationEnabled: Boolean = false,
     val mainNamespace: String = "master"
 )

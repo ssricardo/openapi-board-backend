@@ -1,6 +1,6 @@
 package io.rss.apicenter.server.persistence
 
-import io.rss.apicenter.server.persistence.dao.AlertSubscriptionRepository
+import io.rss.apicenter.server.persistence.dao.ApiSubscriptionRepository
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Tag
@@ -13,10 +13,10 @@ import javax.annotation.Resource
 @ExtendWith(SpringExtension::class)
 @DataJpaTest
 @Tag("db")
-class AlertSubscriptionRepositoryTest {
+class ApiSubscriptionRepositoryTest {
 
     @Resource
-    lateinit var tested: AlertSubscriptionRepository
+    lateinit var tested: ApiSubscriptionRepository
 
     @Test
     fun testFindByApp() {
@@ -26,7 +26,7 @@ class AlertSubscriptionRepositoryTest {
 
     @Test
     internal fun testFindByApiMail() {
-        val res = tested.findByMailApi("ricardo@test.com", "books")
+        val res = tested.findByHookApi("http://test.my.hook", "books")
         assertNull(res)
     }
 }

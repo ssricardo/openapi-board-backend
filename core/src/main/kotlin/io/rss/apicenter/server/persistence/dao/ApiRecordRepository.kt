@@ -34,6 +34,13 @@ interface ApiRecordRepository: JpaRepository<ApiRecord, UUID> {
     fun findApiVersionByNamespace(namespace: String): List<ApiVersionResponse>
 
     @Query("""
+        SELECT DISTINCT a.namespace   
+        FROM ApiRecord a 
+        WHERE a.id IN (:apiIdList)
+    """)
+    fun findDistinctNamespaces(@Param("apiIdList") requestIdList: List<UUID>): List<String>
+
+    @Query("""
         SELECT DISTINCT ar.id 
         FROM ApiRecord ar 
             LEFT JOIN ar.requiredAuthorities au  

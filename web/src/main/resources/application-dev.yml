@@ -47,15 +47,14 @@ spring:
 
 env:
   server-address: http://localhost:8080
-  mail-notification-enabled: true
+  hooks-notification-enabled: true
   main-namespace: Production
+  namespace:
+    auto-create: true
 
 jwt:
   private:
     key: DXnC^E8xFm6-ectU4rXv8T7jNnxW2rdXazwxQvWwshCiEzcLQvMbDYAKECFBtyWWzqQnv5tzpGoWRdbNxXPmaLKR/jSx_FSWoij88uHaLu6zVQPfvPRUwAmRimqcUTba
-
-namespace:
-  auto-create: true
 
 
 #security:

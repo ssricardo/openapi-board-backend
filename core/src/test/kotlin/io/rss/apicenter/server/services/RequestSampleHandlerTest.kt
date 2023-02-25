@@ -17,6 +17,7 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
+import java.util.*
 import javax.validation.Validator
 import com.nhaarman.mockitokotlin2.any as some
 
@@ -41,11 +42,11 @@ class RequestSampleHandlerTest {
     @Test
     fun testSaveOK() {
         val operation = ApiOperation(ApiRecord("name", "ns", "v1"), 1)
-        whenever(operationRepository.findSingleMatch(some(), some(), some(), some())) doReturn operation
+        whenever(operationRepository.findSingleMatch(some(), some(), some())) doReturn operation
         whenever(requestRepository.save( any(RequestSample::class.java) )) doReturn RequestSample(operation)
 
         tested.saveRequest(RequestSampleTO(
-                namespace = "Prod", apiName = "testing", path = "/test", methodType = MethodType.POST
+                apiId = UUID.randomUUID(), path = "/test", methodType = MethodType.POST
         ).apply { title = "Meu test app" })
     }
 
@@ -53,7 +54,7 @@ class RequestSampleHandlerTest {
     fun testSaveMissingField() {
         assertThrows(BoardApplicationException::class.java) {
             tested.saveRequest(RequestSampleTO(
-                    namespace = "Prod", apiName = "testing", path = "/test"
+                    apiId = UUID.randomUUID(), path = "/test"
             ))
         }
     }

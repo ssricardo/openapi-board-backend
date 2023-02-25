@@ -30,7 +30,7 @@ class ApiRecordHandler (
         private val apiSourceProcessor: ApiSourceProcessor,
         private val notificationHandler: NotificationHandler,
 
-        @Value("\${namespace.auto-create:false}")
+        @Value("\${env.namespace.auto-create:false}")
         private val autoCreateNamespace: Boolean = false
 ) {
 
@@ -78,7 +78,7 @@ class ApiRecordHandler (
         }
 
         if (autoCreateNamespace) {
-            LOGGER.info("Namespace '$namespace' doesn't exists, but auto-create option is enabled. Will be created.")
+            LOGGER.info("Namespace '$namespace' doesn't exist, but auto-create option is enabled. Will be created.")
             namespaceHandler.saveNamespace(Namespace(namespace), listOf())
             return
         }

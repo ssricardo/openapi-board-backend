@@ -34,18 +34,14 @@ class SandboxDataLoadingService {
 
     private val serverBase = "http://localhost:8080"
     private val restTemplate: RestTemplate = RestTemplateBuilder()
-            .basicAuthentication("admin", "test")
+            .basicAuthentication("admin", "test00")
+            .defaultHeader("accept", MediaType.APPLICATION_JSON_VALUE)
+            .defaultHeader("content-type", MediaType.APPLICATION_JSON_VALUE)
             .build()
 
-    val randomizer = Random(30)
+    private val randomizer = Random(30)
 
-    private companion object {
-        const val PRODUCTION = "Production"
-        const val TEST = "Test"
-        const val FEATURE = "feature-1_1"
-    }
-
-    // TODO: either create namespace before - or create parameter to allow creating namespace automatically if missing
+    private val apiIdList = mutableListOf<UUID>()
 
     @PostConstruct
     fun init() {
@@ -58,10 +54,10 @@ class SandboxDataLoadingService {
                         it.bufferedReader().readText()
                     }
 
-            val authorities: Collection<GrantedAuthority> = createAuthorityList("MANAGER")
-            val authentication: Authentication = UsernamePasswordAuthenticationToken(
-                    "admin", "MANAGER", authorities)
-            SecurityContextHolder.getContext().authentication = authentication
+//            val authorities: Collection<GrantedAuthority> = createAuthorityList("MANAGER")
+//            val authentication: Authentication = UsernamePasswordAuthenticationToken(
+//                    "admin", "MANAGER", authorities)
+//            SecurityContextHolder.getContext().authentication = authentication
 
             val apiRecordList = createApiRecords(petStoreSource)
 
@@ -118,7 +114,10 @@ class SandboxDataLoadingService {
                             UUID::class.java)
 
             val newId = response.body
-            println("$newId was inserted")
+            newId?.let {
+                apiIdList.add(newId)
+                println("$newId was inserted")
+            }
 
         }
 
@@ -133,16 +132,18 @@ class SandboxDataLoadingService {
 
     private fun createSubscriptions() {
         for (i in 0..10) {
-            val subs = SubscriptionRequestResponse().apply {
-                apiName = "Products"
-                email = "ricardo.test$i@testMail.com"
-            }
+            val subs = SubscriptionRequestResponse(
+                hookAddress = "http://hook-server.com",
+                apiName = "Products",
+                namespace = "Production",
+                onlyOnChange = true
+            )
 
             restTemplate
                 .postForEntity("$serverBase/subscriptions",
                         HttpEntity(subs, HttpHeaders().apply {
                             contentType = MediaType.APPLICATION_JSON
-                        }), Response::class.java)
+                        }), String::class.java)
 
         }
         println("Subscriptions created")
@@ -152,10 +153,13 @@ class SandboxDataLoadingService {
         items.forEach {
             for (i in 0..3) {
                 try {
-                    val sample = RequestSampleTO(null, it.namespace, it.name,
+                    val apiId = apiIdList[randomizer.nextInt(apiIdList.size)]
+                    val sample = RequestSampleTO(null, apiId, false,
                             "/pets", if (i % 2 == 0) MethodType.GET else MethodType.POST).apply {
-                        title = if (i % 2 == 0) "Test resource for bla" else "Special request"
-                        body = "{'val': 'Any silly sample'}"
+                        title = if (i % 2 == 0) "Test resource for $i" else "A Sample request .$i"
+                        body = """{
+                            |"val": "Any silly sample#$i"
+                            |}""".trimMargin()
                         requestHeaders.addAll(arrayOf(ParameterSampleTO(null, ParameterType.HEADER, "type", "yaml")))
                         parameters.addAll(arrayOf(ParameterSampleTO(null, ParameterType.QUERY, "city", "Sao Paulo")))
                     }
@@ -164,7 +168,7 @@ class SandboxDataLoadingService {
                         .postForEntity("${serverBase}/requests",
                                 HttpEntity(sample, HttpHeaders().apply {
                                     contentType = MediaType.APPLICATION_JSON
-                                }), Response::class.java)
+                                }), String::class.java)
                 } catch (e: RestClientResponseException) {
                     if (e.rawStatusCode != 409) {
                         throw e
@@ -194,5 +198,11 @@ class SandboxDataLoadingService {
             result = result.replace("unexpected error", "Oh NOOO!")
         }
         return result
+    }
+
+    private companion object {
+        const val PRODUCTION = "Production"
+        const val TEST = "Test"
+        const val FEATURE = "feature-1_1"
     }
 }
