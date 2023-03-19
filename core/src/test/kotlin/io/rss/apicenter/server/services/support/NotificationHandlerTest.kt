@@ -1,33 +1,26 @@
 package io.rss.apicenter.server.services.support
 
 import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import io.rss.apicenter.server.config.EnvironmentConfig
-import io.rss.apicenter.server.helper.TokenHelper
 import io.rss.apicenter.server.persistence.dao.ApiSubscriptionRepository
 import io.rss.apicenter.server.persistence.dao.ApiSnapshotRepository
 import io.rss.apicenter.server.persistence.entities.ApiSubscription
 import io.rss.apicenter.server.persistence.entities.ApiRecord
-import org.apache.http.concurrent.BasicFuture
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Spy
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.data.domain.Page
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
 import javax.ws.rs.client.Client
-import javax.ws.rs.core.Response
 
 @ExtendWith(MockitoExtension::class)
 class NotificationHandlerTest {
@@ -81,7 +74,7 @@ class NotificationHandlerTest {
                 })
         )
 
-        underTest.notifyUpdate(ApiRecord("videos","master", "1.5")
+        underTest.notifyUpdateAsync(ApiRecord("videos","master", "1.5")
                 .apply {
                     updateDate()
                 })

@@ -32,7 +32,7 @@ logging:
 
 #env:
 #  server-address: http://localhost:8080
-#  mail-notification-enabled: true
+#  hooks-notification-enabled: true
 #  main-namespace: Production
 #
 #jwt:

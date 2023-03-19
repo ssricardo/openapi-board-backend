@@ -32,7 +32,7 @@ import kotlin.random.Random
 @Service
 class SandboxDataLoadingService {
 
-    private val serverBase = "http://localhost:8080"
+    private val serverBase = "http://localhost/api"
     private val restTemplate: RestTemplate = RestTemplateBuilder()
             .basicAuthentication("admin", "test00")
             .defaultHeader("accept", MediaType.APPLICATION_JSON_VALUE)
@@ -53,11 +53,6 @@ class SandboxDataLoadingService {
                     .use {
                         it.bufferedReader().readText()
                     }
-
-//            val authorities: Collection<GrantedAuthority> = createAuthorityList("MANAGER")
-//            val authentication: Authentication = UsernamePasswordAuthenticationToken(
-//                    "admin", "MANAGER", authorities)
-//            SecurityContextHolder.getContext().authentication = authentication
 
             val apiRecordList = createApiRecords(petStoreSource)
 

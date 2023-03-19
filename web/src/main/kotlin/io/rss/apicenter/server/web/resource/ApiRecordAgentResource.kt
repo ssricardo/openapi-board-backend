@@ -33,14 +33,15 @@ class ApiRecordAgentResource {
                     @FormDataParam("file") apiSpec: InputStream,
                     @FormDataParam("version") versionParam: String,
                     @FormDataParam("url") url: String,
-                    @FormDataParam("requiredAuthority") authority: String?): UUID? {
+                    @FormDataParam("requiredAuths") authorities: String?): UUID? {
 
         return apiHandlerService.createOrUpdate(ApiRecord(name, nm, versionParam).apply {
             apiUrl = url
             source = String(apiSpec.readBytes())
-            authority?.let { auth ->
-                requiredAuthorities = listOf(ApiAuthority(this, auth))
-            }
+            requiredAuthorities = authorities?.split(",")
+                    ?.map { auth ->
+                        ApiAuthority(this, auth)
+                    } ?: listOf()
         }).id
     }
 

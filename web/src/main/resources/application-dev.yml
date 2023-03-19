@@ -27,18 +27,6 @@ spring:
     hibernate:
       ddl-auto: update
 
-  mail:
-    host: localhost
-    port: 1025
-    username: oab_server
-    password: superSecret
-    protocol: smtp
-    properties:
-#      - name: mail.smtp.auth
-#        value: true
-      - name: mail.smtp.starttls
-        value: true
-
   h2:
     console.enabled: true
 

@@ -18,7 +18,6 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.ExecutorService
-import javax.annotation.PostConstruct
 import javax.ws.rs.client.Client
 import javax.ws.rs.client.ClientBuilder
 import javax.ws.rs.client.Entity
@@ -27,7 +26,7 @@ import javax.ws.rs.core.MediaType
 
 /** Responsible for notify the subscribers according to its needs */
 @Service
-@PreAuthorize("hasAuthority('${Roles.MANAGER}')")
+@PreAuthorize("hasAnyAuthority('${Roles.MANAGER}', '${Roles.AGENT}')")
 class NotificationHandler (
     private val apiSnapshotRepository: ApiSnapshotRepository,
     private val subscriptionRepository: ApiSubscriptionRepository,
@@ -36,16 +35,8 @@ class NotificationHandler (
     private val restClient: Client = DEFAULT_REST_CLIENT
 ) {
 
-//    @PostConstruct
-//    internal fun init() {
-//        restClient = ClientBuilder.newBuilder()
-//            .register(JacksonFeature::class)
-//            .register(JavaTimeModule::class)
-//            .build()
-//    }
-
     @Async("threadPoolTaskExecutor")
-    fun notifyUpdate(apiRecord: ApiRecord) {
+    fun notifyUpdateAsync(apiRecord: ApiRecord) {
         if (!envConfig.hooksNotificationEnabled) {
             return
         }

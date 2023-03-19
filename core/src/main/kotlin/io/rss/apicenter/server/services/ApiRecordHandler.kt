@@ -10,11 +10,13 @@ import io.rss.apicenter.server.services.exceptions.BoardApplicationException
 import io.rss.apicenter.server.services.support.NotificationHandler
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionTemplate
 import org.springframework.validation.annotation.Validated
 import java.util.*
 import javax.validation.Valid
@@ -30,6 +32,9 @@ class ApiRecordHandler (
         private val apiSourceProcessor: ApiSourceProcessor,
         private val notificationHandler: NotificationHandler,
 
+        @Qualifier("requiresNew")
+        private val transactionTemplate: TransactionTemplate,
+
         @Value("\${env.namespace.auto-create:false}")
         private val autoCreateNamespace: Boolean = false
 ) {
@@ -42,19 +47,27 @@ class ApiRecordHandler (
 
         apiRecord.version = apiRecord.version.ifBlank { DEFAULT_VERSION }
 
-        val existingRecord = repository.findByNamespaceName(apiRecord.namespace, apiRecord.name)
+        val result = storeApiAndSnapshotInNewTransaction(apiRecord)
 
-        LOGGER.info("Storing API record: [${apiRecord.name}] in namespace [${apiRecord.namespace}]")
-        val result = existingRecord
-                ?.let {updateExistingRecord(it, apiRecord) }
-                ?: repository.saveAndFlush(apiRecord)
-
-        snapshotService.create(result)
-        notificationHandler.notifyUpdate(result)
-        doSourceProcessing(result)
+        notificationHandler.notifyUpdateAsync(result)
+        apiSourceProcessor.processApiRecordAsync(result)
 
         return result
     }
+
+    private fun storeApiAndSnapshotInNewTransaction(apiRecord: ApiRecord) =
+            transactionTemplate.execute {
+                val existingRecord = repository.findByNamespaceName(apiRecord.namespace, apiRecord.name)
+
+                LOGGER.info("Storing API record: [${apiRecord.name}] in namespace [${apiRecord.namespace}]")
+                val savedRecord = existingRecord
+                        ?.let { updateExistingRecord(it, apiRecord) }
+                        ?: repository.saveAndFlush(apiRecord)
+
+                snapshotService.create(savedRecord)
+
+                savedRecord
+            }!!
 
     private fun validateRecordFromRequest(apiRecord: ApiRecord) {
         assertStringRequired(apiRecord.source) { "Api specification must have some value" }
@@ -85,8 +98,6 @@ class ApiRecordHandler (
 
         throw BoardApplicationException("Fail when creating API record: Namespace '$namespace' does not exist")
     }
-
-    private fun doSourceProcessing(result: ApiRecord) = apiSourceProcessor.processApiRecordAsync(result)
 
     /** Retrieves list of "app with its version" matching given namespace */
     @AssertRequiredAuthorities

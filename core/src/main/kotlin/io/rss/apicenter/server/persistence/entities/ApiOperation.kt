@@ -34,8 +34,7 @@ class ApiOperation(
     @PreUpdate
     protected fun updateHash() {
         val strLine = StringJoiner(":")
-                .add(apiRecord.name)
-                .add(apiRecord.namespace)
+                .add(apiRecord.id.toString())
                 .add(path)
                 .add(methodType?.name)
         this.uniqueHash = DigestUtils.sha1Hex(strLine.toString())
